@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { friendlyAuthError } from '../auth/errors'
 import { RayFocusExplainer } from '../render'
+import { Logo } from './Logo'
 import './AuthScreen.css'
 
 type Mode = 'signin' | 'signup'
@@ -67,10 +68,7 @@ export function AuthScreen() {
     <div className="auth">
       <section className="auth__hero">
         <h1 className="auth__brand">
-          <span className="auth__sun" aria-hidden="true">
-            ☀️
-          </span>
-          LensLab
+          <Logo size={54} />
         </h1>
         <p className="auth__tag">
           Play with light! Drag, focus, and watch the rays bend. 🔬

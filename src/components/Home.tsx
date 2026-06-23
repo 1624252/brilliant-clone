@@ -4,6 +4,7 @@ import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
+import { Logo } from './Logo'
 import './Home.css'
 
 interface HomeProps {
@@ -35,7 +36,7 @@ export function Home({
   return (
     <div className="home">
       <header className="home__bar">
-        <span className="home__brand">LensLab</span>
+        <Logo size={28} className="home__brand" />
         <div className="home__user">
           <span className="home__streak" title="Daily streak">
             <FlameIcon /> {streak}

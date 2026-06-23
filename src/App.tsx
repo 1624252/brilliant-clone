@@ -14,13 +14,14 @@ import { useProgress, type ProgressState } from './data/useProgress'
 import { AuthScreen } from './components/AuthScreen'
 import { Home } from './components/Home'
 import { LessonView } from './components/LessonView'
+import { Logo } from './components/Logo'
 import { lessons } from './content'
 import './App.css'
 
 function Splash() {
   return (
     <div className="splash">
-      <span className="splash__brand">LensLab</span>
+      <Logo size={44} className="splash__brand" />
       <span className="splash__hint">Loading…</span>
     </div>
   )
