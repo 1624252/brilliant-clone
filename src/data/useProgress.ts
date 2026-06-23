@@ -10,22 +10,30 @@ export interface ProgressState {
   loading: boolean
 }
 
-const EMPTY: ProgressState = { byLesson: {}, streak: null, loading: true }
+/** Fresh state for a user: empty data, loading until snapshots arrive. */
+const initialFor = (uid: string | null): ProgressState => ({
+  byLesson: {},
+  streak: null,
+  loading: !!uid, // logged out -> nothing to load
+})
 
 /** Live-subscribe to the signed-in user's progress docs and streak. */
 export function useProgress(uid: string | null): ProgressState {
-  const [state, setState] = useState<ProgressState>(EMPTY)
+  const [state, setState] = useState<ProgressState>(() => initialFor(uid))
+
+  // Reset state during render when the signed-in user changes, so a new user
+  // never sees the previous user's progress or streak. This is React's
+  // "adjust state when a prop changes" pattern: doing it here (rather than in an
+  // effect) avoids a flash of stale data between accounts, and avoids calling
+  // setState synchronously inside an effect.
+  const [trackedUid, setTrackedUid] = useState(uid)
+  if (uid !== trackedUid) {
+    setTrackedUid(uid)
+    setState(initialFor(uid))
+  }
 
   useEffect(() => {
-    if (!uid) {
-      // Logged out: clear any prior user's data. Deferred so we don't setState
-      // synchronously inside the effect body.
-      const id = setTimeout(
-        () => setState({ byLesson: {}, streak: null, loading: false }),
-        0,
-      )
-      return () => clearTimeout(id)
-    }
+    if (!uid) return
 
     const unsubProgress = onSnapshot(
       collection(db, 'users', uid, 'progress'),
