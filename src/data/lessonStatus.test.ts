@@ -27,7 +27,7 @@ describe('deriveChapterStatus', () => {
   it('keeps placeholders locked', () => {
     const s = deriveChapterStatus(lessons, {})
     expect(find(s, 'ray-tracing').unlocked).toBe(false)
-    expect(find(s, 'lensmaker').unlocked).toBe(false)
+    expect(find(s, 'convex-concave').unlocked).toBe(false)
   })
 
   it('unlocks the next lesson once the previous is completed', () => {

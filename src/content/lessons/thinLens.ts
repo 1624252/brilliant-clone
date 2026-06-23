@@ -21,7 +21,7 @@ const objectControl = {
 export const thinLensLesson: LessonDefinition = {
   id: 'thin-lens-equation',
   title: 'The Thin Lens Equation',
-  order: 3,
+  order: 5,
   estMinutes: 4,
   summary: 'Drag the candle to control where and how big the image forms.',
   intro: {

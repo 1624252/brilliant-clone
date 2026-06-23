@@ -1,8 +1,8 @@
 import type { LessonDefinition } from '../types'
 
-// "Focusing Light": the first lesson. It introduces the focal point with an
-// animated explainer (parallel rays bending to meet at F), then two quick
-// hands-on steps that connect dragging the candle to what F actually means.
+// "Convex Lenses": the first lesson. It introduces the focal point with an
+// animated explainer (a slab morphing into a convex lens, rays bending to meet
+// at F), then quick hands-on steps connecting dragging the candle to what F means.
 
 const FOCAL_LENGTH = 20
 const objectControl = {
@@ -19,11 +19,12 @@ const objectControl = {
 }
 
 export const focusLesson: LessonDefinition = {
+  // Id kept as 'focusing-light' so saved progress and existing links stay valid.
   id: 'focusing-light',
-  title: 'Focusing Light',
+  title: 'Convex Lenses',
   order: 1,
   estMinutes: 3,
-  summary: 'See where parallel rays meet — the focal point F.',
+  summary: 'See how a convex lens bends parallel rays to a focus — the focal point F.',
   intro: {
     heading: 'Where light comes to a focus',
     animation: 'convex',
