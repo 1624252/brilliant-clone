@@ -34,6 +34,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: setupPath,
     css: true,
+    // Pin the Vitest UI server to a fixed IPv4 port. Windows (with WSL/Hyper-V)
+    // reserves large high-port ranges, so Vitest's default random port can hit
+    // an "EACCES: permission denied" block. 5174 sits outside those ranges.
+    api: {
+      host: '127.0.0.1',
+      port: 5174,
+    },
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
