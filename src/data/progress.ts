@@ -33,7 +33,7 @@ export interface UserProfile {
   streak: Streak
 }
 
-/** Local calendar day as YYYY-MM-DD (offset in days, e.g. -1 = yesterday). */
+/** Local calendar day as YYYY-MM-DD (offset in days, e.g., -1 = yesterday). */
 export function localDay(offsetDays = 0): string {
   const d = new Date()
   d.setDate(d.getDate() + offsetDays)

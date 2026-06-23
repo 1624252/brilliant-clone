@@ -17,7 +17,7 @@ interface LensDiagramProps {
   showRays?: boolean
   /** Which measurement overlays to draw. Each maps a symbol onto the picture. */
   measures?: MeasureFlags
-  /** Overlay content (e.g. a drag handle) rendered on top of the diagram. */
+  /** Overlay content (e.g., a drag handle) rendered on top of the diagram. */
   children?: ReactNode
 }
 

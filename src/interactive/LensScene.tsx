@@ -29,7 +29,7 @@ function pointerToOpticalX(
   scene: SceneParams,
 ): number | null {
   const ctm = svg.getScreenCTM()
-  if (!ctm) return null // e.g. jsdom in tests
+  if (!ctm) return null // e.g., jsdom in tests
   const local = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse())
   return svgXToOpticalX(local.x, scene)
 }

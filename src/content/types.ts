@@ -6,7 +6,7 @@ import type { ImageFormation } from '../engine'
 export type ControlType = 'drag-axis' | 'slider'
 
 export interface Control {
-  /** State key this control writes, e.g. "objectDistance". */
+  /** State key this control writes, e.g., "objectDistance". */
   key: string
   type: ControlType
   min: number
@@ -25,7 +25,7 @@ export interface StepDefinition {
   controls: Control[]
   /** Starting values for the controls. */
   initial: StepState
-  /** Values the learner cannot change (e.g. a fixed focal length). */
+  /** Values the learner cannot change (e.g., a fixed focal length). */
   fixed?: StepState
   /** True when the learner's attempt is correct. */
   success: (state: StepState, image: ImageFormation) => boolean

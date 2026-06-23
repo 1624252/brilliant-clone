@@ -46,17 +46,22 @@ export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
           </div>
         </section>
 
-        <ul className="lesson-list">
+        <ol className="roadmap">
           {status.items.map((item, i) => (
-            <LessonCard key={item.lesson.id} item={item} index={i + 1} onOpen={onOpen} />
+            <RoadmapItem
+              key={item.lesson.id}
+              item={item}
+              index={i + 1}
+              onOpen={onOpen}
+            />
           ))}
-        </ul>
+        </ol>
       </main>
     </div>
   )
 }
 
-function LessonCard({
+function RoadmapItem({
   item,
   index,
   onOpen,
@@ -69,6 +74,14 @@ function LessonCard({
   const isPlaceholder = !!lesson.placeholder
   const clickable = unlocked && !isPlaceholder
 
+  const state = completed
+    ? 'done'
+    : isPlaceholder
+      ? 'soon'
+      : !unlocked
+        ? 'locked'
+        : 'open'
+
   const statusLabel = isPlaceholder
     ? 'Coming soon'
     : completed
@@ -77,42 +90,39 @@ function LessonCard({
         ? 'Locked'
         : inProgress
           ? 'Continue'
-          : recommended
-            ? 'Start'
-            : 'Start'
+          : 'Start'
 
   return (
-    <li>
+    <li
+      className={[
+        'roadmap__item',
+        `is-${state}`,
+        unlocked ? 'is-reached' : '',
+        recommended ? 'is-rec' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <div className="roadmap__track" aria-hidden="true">
+        <span className="roadmap__node">
+          {completed ? <CheckIcon /> : clickable ? index : <LockIcon />}
+        </span>
+      </div>
+
       <button
         type="button"
-        className={[
-          'lesson-card',
-          clickable ? '' : 'lesson-card--locked',
-          completed ? 'lesson-card--done' : '',
-          recommended ? 'lesson-card--rec' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        className="roadmap__card"
         disabled={!clickable}
         onClick={() => clickable && onOpen(lesson.id)}
       >
-        <span className="lesson-card__badge">
-          {completed ? <CheckIcon /> : isPlaceholder || !unlocked ? <LockIcon /> : index}
+        <span className="roadmap__head">
+          <span className="roadmap__title">{lesson.title}</span>
+          {recommended && <span className="tag tag--rec">Recommended</span>}
         </span>
-        <span className="lesson-card__body">
-          <span className="lesson-card__titlerow">
-            <span className="lesson-card__title">{lesson.title}</span>
-            {recommended && <span className="tag tag--rec">Recommended</span>}
-          </span>
-          {lesson.summary && <span className="lesson-card__summary">{lesson.summary}</span>}
-          <span className="lesson-card__meta">~{lesson.estMinutes} min</span>
-        </span>
-        <span
-          className={`lesson-card__status ${completed ? 'is-done' : ''} ${
-            !clickable ? 'is-muted' : ''
-          }`}
-        >
-          {statusLabel}
+        {lesson.summary && <span className="roadmap__summary">{lesson.summary}</span>}
+        <span className="roadmap__foot">
+          <span className="roadmap__meta">~{lesson.estMinutes} min</span>
+          <span className="roadmap__status">{statusLabel}</span>
         </span>
       </button>
     </li>

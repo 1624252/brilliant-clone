@@ -91,22 +91,97 @@
   white-space: nowrap;
 }
 
-.lesson-list {
+/* Roadmap: a vertical path of nodes (left) with a lesson card (right). The
+   connecting line fills green as lessons are reached/completed. */
+.roadmap {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
 }
 
-.lesson-card {
-  width: 100%;
+.roadmap__item {
+  --node: 3rem;
+  display: grid;
+  grid-template-columns: var(--node) 1fr;
+  gap: 1.1rem;
+  align-items: stretch;
+}
+
+/* Track column: vertical line above + below the node. */
+.roadmap__track {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  justify-content: center;
+}
+.roadmap__track::before,
+.roadmap__track::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  background: var(--border);
+}
+.roadmap__track::before {
+  top: 0;
+  height: calc(50% - var(--node) / 2);
+}
+.roadmap__track::after {
+  bottom: 0;
+  height: calc(50% - var(--node) / 2);
+}
+/* Trim the dangling ends on the first/last nodes. */
+.roadmap__item:first-child .roadmap__track::before,
+.roadmap__item:last-child .roadmap__track::after {
+  display: none;
+}
+/* Reached lessons turn the incoming segment green; completed ones the outgoing. */
+.roadmap__item.is-reached .roadmap__track::before {
+  background: var(--accent);
+}
+.roadmap__item.is-done .roadmap__track::after {
+  background: var(--accent);
+}
+
+.roadmap__node {
+  position: relative;
+  z-index: 1;
+  margin: 0.9rem 0;
+  width: var(--node);
+  height: var(--node);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: var(--bg-elev-2);
+  color: var(--text-mute);
+  border: 3px solid var(--border-strong);
+  flex: none;
+}
+.roadmap__item.is-open .roadmap__node {
+  background: var(--brand);
+  color: var(--brand-ink);
+  border-color: var(--brand);
+}
+.roadmap__item.is-done .roadmap__node {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.roadmap__item.is-rec .roadmap__node {
+  box-shadow: 0 0 0 4px rgba(111, 179, 255, 0.25);
+}
+
+/* Lesson card */
+.roadmap__card {
+  width: 100%;
   text-align: left;
-  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+  padding: 0.9rem 1.1rem;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--bg-elev);
@@ -117,83 +192,61 @@
     transform 0.06s ease,
     background 0.15s ease;
 }
-.lesson-card:hover:not(:disabled) {
+.roadmap__card:hover:not(:disabled) {
   border-color: var(--border-strong);
   transform: translateY(-1px);
 }
-.lesson-card:focus-visible {
+.roadmap__card:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
-.lesson-card--locked {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-.lesson-card--rec {
+.roadmap__item.is-rec .roadmap__card {
   border-color: var(--brand);
   background: linear-gradient(180deg, rgba(111, 179, 255, 0.08), transparent);
 }
-.lesson-card--done {
-  border-color: rgba(46, 230, 166, 0.4);
+.roadmap__item.is-done .roadmap__card {
+  border-color: rgba(46, 230, 166, 0.35);
+}
+.roadmap__card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
-.lesson-card__badge {
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  background: var(--bg-elev-2);
-  color: var(--text-dim);
-}
-.lesson-card--rec .lesson-card__badge {
-  background: var(--brand);
-  color: var(--brand-ink);
-}
-.lesson-card--done .lesson-card__badge {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-.lesson-card__body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-.lesson-card__titlerow {
+.roadmap__head {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
-.lesson-card__title {
+.roadmap__title {
   font-size: 1.15rem;
   font-weight: 650;
 }
-.lesson-card__summary {
+.roadmap__summary {
   color: var(--text-dim);
   font-size: 0.95rem;
 }
-.lesson-card__meta {
+.roadmap__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+}
+.roadmap__meta {
   color: var(--text-mute);
   font-size: 0.85rem;
 }
-
-.lesson-card__status {
-  flex: none;
-  font-size: 0.95rem;
+.roadmap__status {
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--brand);
 }
-.lesson-card__status.is-done {
+.roadmap__item.is-done .roadmap__status {
   color: var(--accent);
 }
-.lesson-card__status.is-muted {
+.roadmap__item.is-locked .roadmap__status,
+.roadmap__item.is-soon .roadmap__status {
   color: var(--text-mute);
   font-weight: 500;
 }
@@ -212,8 +265,9 @@
 }
 
 @media (max-width: 560px) {
-  .lesson-card__summary {
-    display: none; /* keep cards compact on small phones */
+  .roadmap__item {
+    --node: 2.6rem;
+    gap: 0.85rem;
   }
   .home__name {
     display: none;
