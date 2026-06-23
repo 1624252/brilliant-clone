@@ -50,6 +50,20 @@ the Firebase project once in the [console](https://console.firebase.google.com/)
 Each user can read/write only their own `users/{uid}` document and
 `users/{uid}/progress/{lessonId}` docs. Lesson content is in the app, not the DB.
 
+### Deploying
+
+After the one-time console setup above, deploy with the Firebase CLI:
+
+```bash
+npm install -g firebase-tools   # if not already installed
+firebase login                  # one-time, interactive (opens a browser)
+npm run deploy                  # builds, then deploys Hosting + Firestore rules
+```
+
+The live site is served at **https://brilliantclone-4d010.web.app** (and the
+mirror `https://brilliantclone-4d010.firebaseapp.com`). Both are authorized auth
+domains by default, so Google sign-in works there with no extra setup.
+
 ### Data model (Firestore)
 
 ```
@@ -69,6 +83,9 @@ users/{uid}/progress/{lessonId}  status, currentStepIndex, completedAt, updatedA
 | `npm run test:run` | Run the test suite once (CI-style). |
 | `npm run test:ui` | Open the Vitest UI in a browser. |
 | `npm run coverage` | Run tests and print a coverage report. |
+| `npm run deploy` | Build, then deploy Hosting + Firestore rules (needs `firebase login`). |
+| `npm run deploy:hosting` | Build and deploy only Hosting. |
+| `npm run deploy:rules` | Deploy only the Firestore security rules. |
 
 ## Testing
 
