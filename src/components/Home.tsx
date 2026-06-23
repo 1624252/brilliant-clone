@@ -9,12 +9,22 @@ import './Home.css'
 interface HomeProps {
   displayName: string
   progress: ProgressState
+  settingsOpen: boolean
+  onOpenSettings: () => void
+  onCloseSettings: () => void
   onOpen: (lessonId: string) => void
   onSignOut: () => void
 }
 
-export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
-  const [showSettings, setShowSettings] = useState(false)
+export function Home({
+  displayName,
+  progress,
+  settingsOpen,
+  onOpenSettings,
+  onCloseSettings,
+  onOpen,
+  onSignOut,
+}: HomeProps) {
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const status = deriveChapterStatus(lessons, progress.byLesson)
   const pct = status.totalCount
@@ -33,7 +43,7 @@ export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
           <button
             type="button"
             className="home__avatar"
-            onClick={() => setShowSettings(true)}
+            onClick={onOpenSettings}
             title="Account settings"
             aria-label="Account settings"
           >
@@ -50,7 +60,7 @@ export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
         </div>
       </header>
 
-      {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {settingsOpen && <Settings onClose={onCloseSettings} />}
 
       {confirmSignOut && (
         <ConfirmDialog
