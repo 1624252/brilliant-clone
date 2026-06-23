@@ -54,5 +54,34 @@ export const focusLesson: LessonDefinition = {
       correctFeedback: 'A faraway object focuses close to F — that is why F is "the focus."',
       hint: 'Drag the candle far from the lens (past 60).',
     },
+    {
+      kind: 'predict',
+      id: 'predict-parallel-rays',
+      prompt:
+        'A star is so far away its rays reach the lens essentially parallel. Predict where they cross before you reveal it.',
+      scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+      choices: [
+        {
+          id: 'never',
+          label: 'They stay parallel and never cross',
+          feedback:
+            'A converging lens bends parallel rays inward, so they must cross somewhere.',
+        },
+        {
+          id: 'focal',
+          label: 'They cross right at the focal point, F',
+          correct: true,
+          feedback: 'Yes — F is defined as where parallel rays converge.',
+        },
+        {
+          id: 'twice',
+          label: 'They cross farther out, at 2F',
+          feedback:
+            'Rays from an object at 2F meet at 2F. Truly parallel rays come from infinitely far away, so they focus closer — right at F.',
+        },
+      ],
+      reveal:
+        'Parallel rays converge exactly at F — that is what "focal point" means. The farther the object, the closer its image creeps toward F.',
+    },
   ],
 }

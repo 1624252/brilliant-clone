@@ -4,6 +4,8 @@ import type { RenderResult } from '@testing-library/react'
 import { ProblemRunner } from './ProblemRunner'
 import { thinLensLesson } from './lessons/thinLens'
 import { focusLesson } from './lessons/focus'
+import { isPredictStep } from './types'
+import type { LessonDefinition } from './types'
 import { formImage } from '../engine'
 
 /** Set the object-distance range input (avoids simulating SVG pointer drag). */
@@ -27,7 +29,7 @@ describe('ProblemRunner intro screen', () => {
     // Steps are hidden until the learner starts.
     expect(screen.queryByText(/step 1 of/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /start lesson/i }))
-    expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 6/i)).toBeInTheDocument()
   })
 })
 
@@ -35,7 +37,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
   it('shows the first prompt and step counter', () => {
     renderStarted(thinLensLesson)
     expect(screen.getByText(/drag the candle/i)).toBeInTheDocument()
-    expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 6/i)).toBeInTheDocument()
   })
 
   it('gives a specific hint on a wrong attempt', () => {
@@ -62,7 +64,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
 
-    expect(screen.getByText(/step 2 of 5/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 2 of 6/i)).toBeInTheDocument()
     setObjectDistance(container, 10) // inside f -> virtual, upright
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/inside f the lens/i)).toBeInTheDocument()
@@ -80,9 +82,11 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
 
 describe('Thin Lens extreme steps', () => {
   const f = 20
+  // Return an interactive step by id (these extreme steps are interactive, not predict).
   const stepById = (id: string) => {
     const s = thinLensLesson.steps.find((step) => step.id === id)
     if (!s) throw new Error(`no step ${id}`)
+    if (isPredictStep(s)) throw new Error(`step ${id} is not interactive`)
     return s
   }
 
@@ -104,9 +108,64 @@ describe('Thin Lens extreme steps', () => {
 describe('ProblemRunner (Focusing Light lesson)', () => {
   it('accepts placing the object at the focal point', () => {
     const { container } = renderStarted(focusLesson)
-    expect(screen.getByText(/step 1 of 2/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
     setObjectDistance(container, 20) // object at f -> rays leave parallel
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/races off to infinity/i)).toBeInTheDocument()
+  })
+})
+
+describe('ProblemRunner predict-then-reveal step', () => {
+  const predictLesson: LessonDefinition = {
+    id: 'predict-demo',
+    title: 'Predict demo',
+    order: 99,
+    estMinutes: 1,
+    steps: [
+      {
+        kind: 'predict',
+        id: 'p1',
+        prompt: 'Where do parallel rays cross?',
+        scene: { objectDistance: 12, focalLength: 20 },
+        choices: [
+          { id: 'wrong', label: 'They never cross', feedback: 'They do cross.' },
+          { id: 'right', label: 'At the focal point', correct: true, feedback: 'Yes, at F.' },
+        ],
+        reveal: 'Parallel rays meet at F.',
+      },
+    ],
+  }
+
+  it('hides the image and Next until the learner commits, then reveals both', () => {
+    render(<ProblemRunner lesson={predictLesson} />)
+
+    // Before committing: outcome is hidden and there is no Next button.
+    expect(screen.getByRole('img')).toHaveAttribute(
+      'aria-label',
+      expect.stringMatching(/predict where the image forms/i),
+    )
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /at the focal point/i }))
+
+    // After committing: correct verdict, the choice-specific why, the reveal, Next.
+    expect(screen.getByText(/^correct\.?$/i)).toBeInTheDocument()
+    expect(screen.getByText(/yes, at f/i)).toBeInTheDocument()
+    expect(screen.getByText(/parallel rays meet at f/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument()
+    // The diagram no longer shows the "predict" placeholder label.
+    expect(screen.getByRole('img').getAttribute('aria-label')).not.toMatch(
+      /predict where the image forms/i,
+    )
+  })
+
+  it('marks a wrong prediction but still reveals the answer and lets you continue', () => {
+    render(<ProblemRunner lesson={predictLesson} />)
+    fireEvent.click(screen.getByRole('radio', { name: /never cross/i }))
+
+    expect(screen.getByText(/not quite/i)).toBeInTheDocument()
+    expect(screen.getByText(/they do cross/i)).toBeInTheDocument()
+    expect(screen.getByText(/parallel rays meet at f/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument()
   })
 })

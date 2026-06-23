@@ -2,7 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
 import { LensScene, snapValue } from '../interactive'
 import { RayFocusExplainer, RaySourceExplainer, type MeasureFlags } from '../render'
-import type { Control, LessonDefinition, StepState } from './types'
+import { isPredictStep } from './types'
+import type { Choice, Control, LessonDefinition, StepDefinition, StepState } from './types'
 import './ProblemRunner.css'
 
 interface ProblemRunnerProps {
@@ -17,6 +18,10 @@ interface ProblemRunnerProps {
 type Status = 'idle' | 'correct' | 'incorrect'
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '\u221e')
+
+/** Starting control values for a step (predict steps have none to manipulate). */
+const initialValues = (step: StepDefinition): StepState =>
+  isPredictStep(step) ? {} : step.initial
 
 function describe(image: ReturnType<typeof formImage>): string {
   if (image.atInfinity) return 'image at infinity'
@@ -41,22 +46,35 @@ export function ProblemRunner({
   // Skip the intro when resuming partway through a lesson.
   const [started, setStarted] = useState(!lesson.intro || resumeIndex > 0)
   const [stepIndex, setStepIndex] = useState(resumeIndex)
-  const [values, setValues] = useState<StepState>(lesson.steps[resumeIndex].initial)
+  const [values, setValues] = useState<StepState>(initialValues(lesson.steps[resumeIndex]))
   const [status, setStatus] = useState<Status>('idle')
   const [done, setDone] = useState(false)
   const [measures, setMeasures] = useState<MeasureFlags>({})
+  // Predict-then-reveal state: the committed choice (null until submitted).
+  const [chosenId, setChosenId] = useState<string | null>(null)
 
   function toggleMeasure(key: keyof MeasureFlags) {
     setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
   const step = lesson.steps[stepIndex]
-  const merged: StepState = { ...step.fixed, ...values }
-  const image = formImage(merged.objectDistance, merged.focalLength)
+  const predict = isPredictStep(step)
+  const committed = chosenId !== null
 
-  const dragControl = step.controls.find(
-    (c) => c.key === 'objectDistance' && c.type === 'drag-axis',
-  )
+  // The scene to draw: from the learner's controls (interactive) or the fixed
+  // predict scene. In a predict step the outcome stays hidden until they commit.
+  const merged: StepState = predict ? {} : { ...step.fixed, ...values }
+  const objectDistance = predict ? step.scene.objectDistance : merged.objectDistance
+  const focalLength = predict ? step.scene.focalLength : merged.focalLength
+  const image = formImage(objectDistance, focalLength)
+
+  const dragControl = predict
+    ? undefined
+    : step.controls.find((c) => c.key === 'objectDistance' && c.type === 'drag-axis')
+
+  // A step is "solved" (Next becomes available) when an interactive answer is
+  // correct, or when a prediction has been committed (the truth is now revealed).
+  const solved = predict ? committed : status === 'correct'
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -64,6 +82,7 @@ export function ProblemRunner({
   }
 
   function check() {
+    if (isPredictStep(step)) return
     setStatus(step.success(merged, image) ? 'correct' : 'incorrect')
   }
 
@@ -75,8 +94,9 @@ export function ProblemRunner({
     }
     const ni = stepIndex + 1
     setStepIndex(ni)
-    setValues(lesson.steps[ni].initial)
+    setValues(initialValues(lesson.steps[ni]))
     setStatus('idle')
+    setChosenId(null)
     onStepChange?.(ni)
   }
 
@@ -120,7 +140,7 @@ export function ProblemRunner({
     <div className="runner">
       {(() => {
         const total = lesson.steps.length
-        const filled = stepIndex + (status === 'correct' ? 1 : 0)
+        const filled = stepIndex + (solved ? 1 : 0)
         const pct = Math.round((filled / total) * 100)
         return (
           <div className="runner__progress">
@@ -147,51 +167,66 @@ export function ProblemRunner({
       <p className="runner__prompt">{step.prompt}</p>
 
       <LensScene
-        objectDistance={merged.objectDistance}
-        focalLength={merged.focalLength}
+        objectDistance={objectDistance}
+        focalLength={focalLength}
         minObjectDistance={dragControl?.min}
         maxObjectDistance={dragControl?.max}
         snaps={dragControl?.snaps}
         measures={measures}
+        showRays={predict ? committed : true}
+        showImage={predict ? committed : true}
         onObjectDistanceChange={
           dragControl ? (v) => setValue('objectDistance', v) : undefined
         }
       />
 
-      <div className="runner__controls">
-        {step.controls.map((c) => (
-          <SliderControl
-            key={c.key}
-            control={c}
-            value={merged[c.key]}
-            onChange={(v) => setValue(c.key, v)}
-          />
-        ))}
-      </div>
+      {predict ? (
+        <PredictPanel
+          step={step}
+          chosenId={chosenId}
+          onChoose={setChosenId}
+          onNext={next}
+          isLast={stepIndex + 1 >= lesson.steps.length}
+        />
+      ) : (
+        <>
+          <div className="runner__controls">
+            {step.controls.map((c) => (
+              <SliderControl
+                key={c.key}
+                control={c}
+                value={merged[c.key]}
+                onChange={(v) => setValue(c.key, v)}
+              />
+            ))}
+          </div>
 
-      {status === 'correct' && (
-        <div className="feedback feedback--correct" role="status">
-          <strong>Correct.</strong> {step.correctFeedback}
-        </div>
+          {status === 'correct' && (
+            <div className="feedback feedback--correct" role="status">
+              <strong>Correct.</strong> {step.correctFeedback}
+            </div>
+          )}
+          {status === 'incorrect' && (
+            <div className="feedback feedback--incorrect" role="status">
+              <strong>Not yet.</strong> {step.hint}
+            </div>
+          )}
+
+          <div className="runner__actions">
+            {status === 'correct' ? (
+              <button type="button" className="btn btn--primary" onClick={next}>
+                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+              </button>
+            ) : (
+              <button type="button" className="btn btn--primary" onClick={check}>
+                Check answer
+              </button>
+            )}
+          </div>
+        </>
       )}
-      {status === 'incorrect' && (
-        <div className="feedback feedback--incorrect" role="status">
-          <strong>Not yet.</strong> {step.hint}
-        </div>
-      )}
 
-      <div className="runner__actions">
-        {status === 'correct' ? (
-          <button type="button" className="btn btn--primary" onClick={next}>
-            {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
-          </button>
-        ) : (
-          <button type="button" className="btn btn--primary" onClick={check}>
-            Check answer
-          </button>
-        )}
-      </div>
-
+      {(!predict || committed) && (
       <details className="runner__more">
         <summary>Numbers &amp; tools</summary>
 
@@ -227,8 +262,8 @@ export function ProblemRunner({
       </fieldset>
 
       <EquationPanel
-        f={merged.focalLength}
-        dObj={merged.objectDistance}
+        f={focalLength}
+        dObj={objectDistance}
         dImg={image.imageDistance}
         m={image.magnification}
       />
@@ -238,7 +273,7 @@ export function ProblemRunner({
           className="chip chip--do"
           title="Object distance: how far the candle is from the lens"
         >
-          d<sub>o</sub> {fmt(merged.objectDistance)}
+          d<sub>o</sub> {fmt(objectDistance)}
         </span>
         <span
           className="chip chip--di"
@@ -256,7 +291,7 @@ export function ProblemRunner({
           className="chip chip--f"
           title="Focal length: how strongly the lens bends light"
         >
-          f {fmt(merged.focalLength)}
+          f {fmt(focalLength)}
         </span>
         <span
           className={`chip chip--${image.isReal ? 'real' : 'virtual'}`}
@@ -326,6 +361,81 @@ export function ProblemRunner({
         </div>
       </details>
       </details>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The predict-then-reveal control: a set of choices the learner commits to. Once
+ * committed, every option shows whether it was right or wrong with a specific
+ * explanation, and a Next button appears. The diagram (above) reveals the rays
+ * and image at the same moment, so the prediction is checked against the truth.
+ */
+function PredictPanel({
+  step,
+  chosenId,
+  onChoose,
+  onNext,
+  isLast,
+}: {
+  step: { prompt: string; choices: Choice[]; reveal: string }
+  chosenId: string | null
+  onChoose: (id: string) => void
+  onNext: () => void
+  isLast: boolean
+}) {
+  const committed = chosenId !== null
+  const chosen = step.choices.find((c) => c.id === chosenId)
+  const wasRight = !!chosen?.correct
+
+  return (
+    <div className="predict">
+      <ul className="predict__choices" role="radiogroup" aria-label="Your prediction">
+        {step.choices.map((c) => {
+          const isChosen = c.id === chosenId
+          const verdict = committed ? (c.correct ? 'correct' : isChosen ? 'wrong' : 'muted') : ''
+          return (
+            <li key={c.id}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isChosen}
+                disabled={committed}
+                className={`predict__choice ${verdict ? `predict__choice--${verdict}` : ''} ${
+                  isChosen ? 'is-chosen' : ''
+                }`}
+                onClick={() => onChoose(c.id)}
+              >
+                <span className="predict__label">{c.label}</span>
+                {committed && (c.correct || isChosen) && (
+                  <span className="predict__mark" aria-hidden="true">
+                    {c.correct ? '✓' : '✗'}
+                  </span>
+                )}
+              </button>
+              {committed && isChosen && <p className="predict__why">{c.feedback}</p>}
+            </li>
+          )
+        })}
+      </ul>
+
+      {committed && (
+        <div
+          className={`feedback feedback--${wasRight ? 'correct' : 'incorrect'}`}
+          role="status"
+        >
+          <strong>{wasRight ? 'Correct.' : 'Not quite.'}</strong> {step.reveal}
+        </div>
+      )}
+
+      <div className="runner__actions">
+        {committed && (
+          <button type="button" className="btn btn--primary" onClick={onNext}>
+            {isLast ? 'Finish' : 'Next'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

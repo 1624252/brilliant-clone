@@ -89,5 +89,35 @@ export const thinLensLesson: LessonDefinition = {
         'As dₒ → 0, dᵢ → 0 and m → 1: the image collapses onto the lens at the same size.',
       hint: 'Drag the candle onto the lens, or slide dₒ down to 0.',
     },
+    {
+      kind: 'predict',
+      id: 'predict-inside-f',
+      prompt:
+        'The candle now sits inside the focal length (closer than F). Predict the image before you reveal the rays.',
+      scene: { objectDistance: 12, focalLength: FOCAL_LENGTH },
+      choices: [
+        {
+          id: 'real-inverted',
+          label: 'Real and inverted, like a projector',
+          feedback:
+            'Inverted real images need the object beyond F. Inside F the rays diverge after the lens, so they never meet on the far side.',
+        },
+        {
+          id: 'none',
+          label: 'No image forms at all',
+          feedback:
+            'An image still forms — your eye traces the diverging rays backward to a virtual image behind the candle.',
+        },
+        {
+          id: 'virtual-upright',
+          label: 'Virtual, upright, and enlarged — a magnifying glass',
+          correct: true,
+          feedback:
+            'Right: inside F the lens works as a magnifier — upright, enlarged, on the candle’s side.',
+        },
+      ],
+      reveal:
+        'Inside the focal length the outgoing rays diverge, so they only appear to come from a virtual, upright, enlarged image. That is exactly how a magnifying glass works.',
+    },
   ],
 }

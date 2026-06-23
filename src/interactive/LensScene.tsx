@@ -104,6 +104,7 @@ export function LensScene({
       objectHeight={objectHeight}
       scene={scene}
       showRays={showRays}
+      showImage={showImage}
       measures={measures}
     >
       {draggable && (
