@@ -1,0 +1,69 @@
+.confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.confirm__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.7);
+  backdrop-filter: blur(3px);
+}
+.confirm__panel {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  padding: 1.4rem;
+  animation: confirm-pop 0.16s ease-out;
+}
+@keyframes confirm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+.confirm__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+.confirm__msg {
+  margin: 0 0 1.2rem;
+  color: var(--text-dim);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+.confirm__actions .btn {
+  font-size: 0.98rem;
+  padding: 0.55rem 1.1rem;
+}
+.btn--danger {
+  background: linear-gradient(135deg, #ff7a7a, #ff5470);
+  border-color: transparent;
+  color: #2a0710;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(255, 84, 112, 0.3);
+}
+.btn--danger:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 460px) {
+  .confirm__actions {
+    flex-direction: column-reverse;
+  }
+  .confirm__actions .btn {
+    width: 100%;
+  }
+}

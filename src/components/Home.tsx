@@ -3,6 +3,7 @@ import { chapter, lessons } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
 import { Settings } from './Settings'
+import { ConfirmDialog } from './ConfirmDialog'
 import './Home.css'
 
 interface HomeProps {
@@ -14,6 +15,7 @@ interface HomeProps {
 
 export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
   const [showSettings, setShowSettings] = useState(false)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
   const status = deriveChapterStatus(lessons, progress.byLesson)
   const pct = status.totalCount
     ? Math.round((status.completedCount / status.totalCount) * 100)
@@ -38,13 +40,32 @@ export function Home({ displayName, progress, onOpen, onSignOut }: HomeProps) {
             {(displayName[0] ?? '?').toUpperCase()}
           </button>
           <span className="home__name">{displayName}</span>
-          <button type="button" className="btn home__signout" onClick={onSignOut}>
+          <button
+            type="button"
+            className="btn home__signout"
+            onClick={() => setConfirmSignOut(true)}
+          >
             Sign out
           </button>
         </div>
       </header>
 
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+
+      {confirmSignOut && (
+        <ConfirmDialog
+          title="Sign out?"
+          message="You can sign back in anytime — your progress is saved."
+          confirmLabel="Sign out"
+          cancelLabel="Stay signed in"
+          tone="danger"
+          onConfirm={() => {
+            setConfirmSignOut(false)
+            onSignOut()
+          }}
+          onCancel={() => setConfirmSignOut(false)}
+        />
+      )}
 
       <main className="home__main">
         <section className="home__hero">
