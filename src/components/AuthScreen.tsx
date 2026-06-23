@@ -19,18 +19,22 @@ export function AuthScreen() {
   const [error, setError] = useState('')
   // When sign-up hits an existing email, offer a one-tap switch to sign-in.
   const [suggestSignIn, setSuggestSignIn] = useState(false)
+  // When the email already belongs to a Google account, point at the Google button.
+  const [suggestGoogle, setSuggestGoogle] = useState(false)
   const [busy, setBusy] = useState(false)
 
   function switchTo(next: Mode) {
     setMode(next)
     setError('')
     setSuggestSignIn(false)
+    setSuggestGoogle(false)
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
     setSuggestSignIn(false)
+    setSuggestGoogle(false)
     setBusy(true)
     try {
       if (mode === 'signup') await signUp(name, email, password)
@@ -38,7 +42,8 @@ export function AuthScreen() {
     } catch (err) {
       setError(friendlyAuthError(err))
       const code = errorCode(err)
-      if (code === 'auth/email-already-in-use') setSuggestSignIn(true)
+      if (code === 'auth/use-google-signin') setSuggestGoogle(true)
+      else if (code === 'auth/email-already-in-use') setSuggestSignIn(true)
     } finally {
       setBusy(false)
     }
@@ -47,6 +52,7 @@ export function AuthScreen() {
   async function onGoogle() {
     setError('')
     setSuggestSignIn(false)
+    setSuggestGoogle(false)
     setBusy(true)
     try {
       await signInWithGoogle()
@@ -146,6 +152,19 @@ export function AuthScreen() {
                       onClick={() => switchTo('signin')}
                     >
                       Sign in instead
+                    </button>
+                  </>
+                )}
+                {suggestGoogle && (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      className="linklike"
+                      onClick={onGoogle}
+                      disabled={busy}
+                    >
+                      Continue with Google
                     </button>
                   </>
                 )}

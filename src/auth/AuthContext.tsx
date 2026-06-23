@@ -10,6 +10,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
   linkWithCredential,
   onAuthStateChanged,
   reauthenticateWithCredential,
@@ -91,10 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       async signUp(name, email, password) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password)
+        const trimmedEmail = email.trim()
+        // Block making a password account for an email that already signs in with
+        // Google. (The lookup can be blocked by email-enumeration protection, in
+        // which case createUserWithEmailAndPassword still rejects duplicates.)
+        let methods: string[] = []
+        try {
+          methods = await fetchSignInMethodsForEmail(auth, trimmedEmail)
+        } catch {
+          // Ignore lookup failures; account creation below still enforces uniqueness.
+        }
+        if (methods.includes('google.com') && !methods.includes('password')) {
+          const err = new Error('Use Google to sign in') as Error & { code: string }
+          err.code = 'auth/use-google-signin'
+          throw err
+        }
+        const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, password)
         const displayName = name.trim()
         if (displayName) await updateProfile(cred.user, { displayName })
-        await ensureUserDoc(cred.user.uid, displayName, email)
+        await ensureUserDoc(cred.user.uid, displayName, trimmedEmail)
       },
       async signIn(email, password) {
         await signInWithEmailAndPassword(auth, email, password)

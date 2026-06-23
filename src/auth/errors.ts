@@ -11,6 +11,8 @@ export function friendlyAuthError(err: unknown): string {
       return 'Password should be at least 6 characters.'
     case 'auth/email-already-in-use':
       return 'An account already exists for that email.'
+    case 'auth/use-google-signin':
+      return 'That email already signs in with Google. Use “Continue with Google” below.'
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/user-not-found':
