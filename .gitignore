@@ -13,6 +13,11 @@ dist-ssr
 coverage
 *.local
 
+# Firebase CLI local cache/logs (keep firebase.json, .firebaserc, firestore.rules)
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
 # Local env files (never commit real config/secrets); keep the example template
 .env
 .env.*
