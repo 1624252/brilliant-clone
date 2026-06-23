@@ -26,7 +26,7 @@ export const focusLesson: LessonDefinition = {
   summary: 'See where parallel rays meet — the focal point F.',
   intro: {
     heading: 'Where light comes to a focus',
-    animation: 'focus',
+    animation: 'convex',
     paragraphs: [
       'A convex lens (one that bulges outward) converges parallel rays so they all cross at one spot on the axis: the focal point, F.',
       'The distance from the lens to F is the focal length, f — a fixed property of the lens. The stronger the lens, the shorter the f.',

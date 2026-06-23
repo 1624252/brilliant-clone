@@ -1,7 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
 import { LensScene, snapValue } from '../interactive'
-import { RayFocusExplainer, RaySourceExplainer, type MeasureFlags } from '../render'
+import {
+  RayFocusExplainer,
+  RaySourceExplainer,
+  ConvexLensExplainer,
+  type MeasureFlags,
+} from '../render'
 import { isPredictStep } from './types'
 import type { Choice, Control, LessonDefinition, StepDefinition, StepState } from './types'
 import './ProblemRunner.css'
@@ -106,6 +111,7 @@ export function ProblemRunner({
         <h3 className="intro__heading">{lesson.intro.heading}</h3>
         {lesson.intro.animation === 'focus' && <RayFocusExplainer />}
         {lesson.intro.animation === 'source' && <RaySourceExplainer />}
+        {lesson.intro.animation === 'convex' && <ConvexLensExplainer />}
         {lesson.intro.paragraphs.map((p, i) => (
           <p key={i} className="intro__para">
             {p}

@@ -5,6 +5,7 @@ export {
   RaySourceAnimation,
   RaySourceExplainer,
 } from './RayFocusAnimation'
+export { ConvexLensAnimation, ConvexLensExplainer } from './ConvexLensAnimation'
 export {
   DEFAULT_SCENE,
   scaleOf,

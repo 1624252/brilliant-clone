@@ -87,7 +87,7 @@ export interface LessonIntro {
   /** A few short paragraphs (kept brief; mostly-visual lessons). */
   paragraphs: string[]
   /** Optional animated explainer to show alongside the text. */
-  animation?: 'focus' | 'source'
+  animation?: 'focus' | 'source' | 'convex'
 }
 
 export interface LessonDefinition {

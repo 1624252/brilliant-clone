@@ -178,6 +178,34 @@
   font-family: system-ui, sans-serif;
 }
 
+/* Convex-lens morph: rays whose geometry is tweened in JS (no draw-on dash). */
+.focus-anim .beam {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.focus-anim .beam--in {
+  stroke: var(--c-f, #ffb84d);
+}
+.focus-anim .beam--out {
+  stroke: #ff6b9d;
+}
+.focus-anim .clens-tag {
+  fill: #ffd27a;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+}
+.focus-anim .clens-stage {
+  fill: #8b93a7;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+}
+.focus-anim .clens-stage--convex {
+  fill: #8cc2ff;
+}
+
 @media (max-width: 600px) {
   .focus-anim .flabel {
     font-size: 26px;
