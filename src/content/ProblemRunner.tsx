@@ -318,17 +318,25 @@ export function ProblemRunner({
             <dt>
               <span className="swatch swatch--f" />f <span className="term">focal length</span>
             </dt>
-            <dd>How strongly the lens bends light — the distance to the focal mark F.</dd>
+            <dd>
+              {renderRich(
+                'How strongly the lens **bends light** — the distance to the **focal mark F**.',
+              )}
+            </dd>
             <dt>
               <span className="swatch swatch--do" />d<sub>o</sub>{' '}
               <span className="term">object distance</span>
             </dt>
-            <dd>Distance from the candle to the lens.</dd>
+            <dd>{renderRich('Distance from the **candle** to the **lens**.')}</dd>
             <dt>
               <span className="swatch swatch--di" />d<sub>i</sub>{' '}
               <span className="term">image distance</span>
             </dt>
-            <dd>Distance from the image to the lens. Negative = forms on the candle’s side.</dd>
+            <dd>
+              {renderRich(
+                'Distance from the **image** to the lens. **Negative** = forms on the candle’s side.',
+              )}
+            </dd>
             <dt>
               <span className="swatch swatch--m" />m <span className="term">magnification</span>
             </dt>
@@ -340,9 +348,17 @@ export function ProblemRunner({
           <h4>Image type</h4>
           <dl>
             <dt>real</dt>
-            <dd>Light actually meets, so it can land on a screen (forms on the far side).</dd>
+            <dd>
+              {renderRich(
+                'Light **actually meets**, so it can land on a **screen** (forms on the far side).',
+              )}
+            </dd>
             <dt>virtual</dt>
-            <dd>Light only appears to come from there; it can’t be projected (near side).</dd>
+            <dd>
+              {renderRich(
+                'Light only **appears** to come from there; it **can’t be projected** (near side).',
+              )}
+            </dd>
           </dl>
         </div>
 
@@ -350,9 +366,9 @@ export function ProblemRunner({
           <h4>Orientation</h4>
           <dl>
             <dt>upright</dt>
-            <dd>Same way up as the candle.</dd>
+            <dd>{renderRich('Same way **up** as the candle.')}</dd>
             <dt>inverted</dt>
-            <dd>Flipped upside-down (m is negative).</dd>
+            <dd>{renderRich('**Flipped** upside-down (m is negative).')}</dd>
           </dl>
         </div>
 
@@ -360,11 +376,11 @@ export function ProblemRunner({
           <h4>Size</h4>
           <dl>
             <dt>enlarged</dt>
-            <dd>Bigger than the candle (|m| &gt; 1).</dd>
+            <dd>{renderRich('**Bigger** than the candle (|m| > 1).')}</dd>
             <dt>reduced</dt>
-            <dd>Smaller than the candle (|m| &lt; 1).</dd>
+            <dd>{renderRich('**Smaller** than the candle (|m| < 1).')}</dd>
             <dt>same size</dt>
-            <dd>Equal to the candle (|m| = 1).</dd>
+            <dd>{renderRich('**Equal** to the candle (|m| = 1).')}</dd>
           </dl>
         </div>
       </details>
