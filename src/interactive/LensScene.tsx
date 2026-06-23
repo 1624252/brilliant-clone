@@ -18,6 +18,7 @@ interface LensSceneProps {
   onObjectDistanceChange?: (value: number) => void
   scene?: SceneParams
   showRays?: boolean
+  showMeasures?: boolean
 }
 
 /** Map a pointer event to an optical x using the SVG's coordinate transform. */
@@ -42,12 +43,13 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 export function LensScene({
   objectDistance,
   focalLength,
-  objectHeight = 14,
+  objectHeight = 18,
   minObjectDistance = 5,
   maxObjectDistance = 75,
   onObjectDistanceChange,
   scene = DEFAULT_SCENE,
   showRays = true,
+  showMeasures = false,
 }: LensSceneProps) {
   const draggingRef = useRef(false)
   const draggable = Boolean(onObjectDistanceChange)
@@ -86,6 +88,7 @@ export function LensScene({
       objectHeight={objectHeight}
       scene={scene}
       showRays={showRays}
+      showMeasures={showMeasures}
     >
       {draggable && (
         <circle

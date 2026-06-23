@@ -31,6 +31,7 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
   const [values, setValues] = useState<StepState>(lesson.steps[0].initial)
   const [status, setStatus] = useState<Status>('idle')
   const [done, setDone] = useState(false)
+  const [showMeasures, setShowMeasures] = useState(false)
 
   const step = lesson.steps[stepIndex]
   const merged: StepState = { ...step.fixed, ...values }
@@ -83,10 +84,20 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
         focalLength={merged.focalLength}
         minObjectDistance={dragControl?.min}
         maxObjectDistance={dragControl?.max}
+        showMeasures={showMeasures}
         onObjectDistanceChange={
           dragControl ? (v) => setValue('objectDistance', v) : undefined
         }
       />
+
+      <label className="toggle">
+        <input
+          type="checkbox"
+          checked={showMeasures}
+          onChange={(e) => setShowMeasures(e.target.checked)}
+        />
+        Show measurements (f, d<sub>o</sub>, d<sub>i</sub>, heights)
+      </label>
 
       <EquationPanel
         f={merged.focalLength}
@@ -130,28 +141,62 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
 
       <details className="glossary">
         <summary>What do these mean?</summary>
-        <dl>
-          <dt>
-            f <span>focal length</span>
-          </dt>
-          <dd>How strongly the lens bends light — the distance to the focal mark F.</dd>
-          <dt>
-            d<sub>o</sub> <span>object distance</span>
-          </dt>
-          <dd>Distance from the candle to the lens.</dd>
-          <dt>
-            d<sub>i</sub> <span>image distance</span>
-          </dt>
-          <dd>Distance from the image to the lens. Negative means it forms on the candle’s side.</dd>
-          <dt>
-            m <span>magnification</span>
-          </dt>
-          <dd>Image height ÷ object height. Negative means upside-down; bigger than 1 means enlarged.</dd>
-          <dt>real vs virtual</dt>
-          <dd>Real images can be projected on a screen (far side); virtual images only appear to be there (near side).</dd>
-          <dt>inverted vs upright · enlarged vs reduced</dt>
-          <dd>Flipped or same way up; bigger or smaller than the candle.</dd>
-        </dl>
+
+        <div className="glossary__group">
+          <h4>Symbols</h4>
+          <dl>
+            <dt>
+              <span className="swatch swatch--f" />f <span className="term">focal length</span>
+            </dt>
+            <dd>How strongly the lens bends light — the distance to the focal mark F.</dd>
+            <dt>
+              <span className="swatch swatch--do" />d<sub>o</sub>{' '}
+              <span className="term">object distance</span>
+            </dt>
+            <dd>Distance from the candle to the lens.</dd>
+            <dt>
+              <span className="swatch swatch--di" />d<sub>i</sub>{' '}
+              <span className="term">image distance</span>
+            </dt>
+            <dd>Distance from the image to the lens. Negative = forms on the candle’s side.</dd>
+            <dt>
+              <span className="swatch swatch--m" />m <span className="term">magnification</span>
+            </dt>
+            <dd>Image height ÷ object height (h<sub>i</sub> / h₀).</dd>
+          </dl>
+        </div>
+
+        <div className="glossary__group">
+          <h4>Image type</h4>
+          <dl>
+            <dt>real</dt>
+            <dd>Light actually meets, so it can land on a screen (forms on the far side).</dd>
+            <dt>virtual</dt>
+            <dd>Light only appears to come from there; it can’t be projected (near side).</dd>
+          </dl>
+        </div>
+
+        <div className="glossary__group">
+          <h4>Orientation</h4>
+          <dl>
+            <dt>upright</dt>
+            <dd>Same way up as the candle.</dd>
+            <dt>inverted</dt>
+            <dd>Flipped upside-down (m is negative).</dd>
+          </dl>
+        </div>
+
+        <div className="glossary__group">
+          <h4>Size</h4>
+          <dl>
+            <dt>enlarged</dt>
+            <dd>Bigger than the candle (|m| &gt; 1).</dd>
+            <dt>reduced</dt>
+            <dd>Smaller than the candle (|m| &lt; 1).</dd>
+            <dt>same size</dt>
+            <dd>Equal to the candle (|m| = 1).</dd>
+          </dl>
+        </div>
       </details>
 
       <div className="runner__controls">

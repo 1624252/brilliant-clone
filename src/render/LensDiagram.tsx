@@ -15,6 +15,8 @@ interface LensDiagramProps {
   objectHeight?: number
   scene?: SceneParams
   showRays?: boolean
+  /** Overlay dimension lines for f, do, di and the object/image heights. */
+  showMeasures?: boolean
   /** Overlay content (e.g. a drag handle) rendered on top of the diagram. */
   children?: ReactNode
 }
@@ -35,6 +37,7 @@ export function LensDiagram({
   objectHeight = 18,
   scene = DEFAULT_SCENE,
   showRays = true,
+  showMeasures = false,
   children,
 }: LensDiagramProps) {
   const trace = tracePrincipalRays(
@@ -118,8 +121,8 @@ export function LensDiagram({
         const s = toSvg({ x: m.x, y: 0 }, scene)
         return (
           <g key={i} className="focal">
-            <circle cx={s.x} cy={s.y} r={3} />
-            <text x={s.x} y={center.y + 17} textAnchor="middle">
+            <circle cx={s.x} cy={s.y} r={4} />
+            <text x={s.x} y={center.y - 12} textAnchor="middle">
               {m.label}
             </text>
           </g>
@@ -156,6 +159,54 @@ export function LensDiagram({
           tipY={toSvg(img.tip, scene).y}
           variant={imageIsVirtual ? 'virtual' : 'real'}
         />
+      )}
+
+      {/* toggleable measurement overlays mapping each symbol onto the picture */}
+      {showMeasures && (
+        <g className="dims">
+          <HDim
+            kind="f"
+            x1={center.x}
+            x2={toSvg({ x: focalLength, y: 0 }, scene).x}
+            y={center.y + 30}
+            axisY={center.y}
+            label="f"
+          />
+          <HDim
+            kind="do"
+            x1={objBase.x}
+            x2={center.x}
+            y={center.y + 56}
+            axisY={center.y}
+            label="dₒ"
+          />
+          {img && (
+            <HDim
+              kind="di"
+              x1={center.x}
+              x2={toSvg(img.base, scene).x}
+              y={center.y + 82}
+              axisY={center.y}
+              label="dᵢ"
+            />
+          )}
+          <VDim
+            kind="m"
+            x={objBase.x}
+            y1={center.y}
+            y2={objTip.y}
+            label="h₀"
+          />
+          {img && (
+            <VDim
+              kind="m"
+              x={toSvg(img.base, scene).x}
+              y1={center.y}
+              y2={toSvg(img.tip, scene).y}
+              label="hᵢ"
+            />
+          )}
+        </g>
       )}
 
       {children}
@@ -252,6 +303,77 @@ function Figure({
       />
       <path className="figure__flame" d={teardrop(flameW, fb, ft)} />
       <path className="figure__flame-core" d={teardrop(flameW * 0.5, at(0.78), at(0.96))} />
+    </g>
+  )
+}
+
+/** A horizontal distance measurement with end ticks, axis guides, and a label pill. */
+function HDim({
+  kind,
+  x1,
+  x2,
+  y,
+  axisY,
+  label,
+}: {
+  kind: 'f' | 'do' | 'di'
+  x1: number
+  x2: number
+  y: number
+  axisY: number
+  label: string
+}) {
+  if (Math.abs(x2 - x1) < 2) return null
+  const mid = (x1 + x2) / 2
+  const pillW = label.length * 11 + 16
+  return (
+    <g className={`dim dim--${kind}`}>
+      <line className="dim__guide" x1={x1} y1={axisY} x2={x1} y2={y} />
+      <line className="dim__guide" x2={x2} y1={axisY} x1={x2} y2={y} />
+      <line className="dim__line" x1={x1} y1={y} x2={x2} y2={y} />
+      <line className="dim__tick" x1={x1} y1={y - 5} x2={x1} y2={y + 5} />
+      <line className="dim__tick" x1={x2} y1={y - 5} x2={x2} y2={y + 5} />
+      <rect
+        className="dim__pill"
+        x={mid - pillW / 2}
+        y={y - 12}
+        width={pillW}
+        height={24}
+        rx={12}
+      />
+      <text className="dim__label" x={mid} y={y + 6} textAnchor="middle">
+        {label}
+      </text>
+    </g>
+  )
+}
+
+/** A vertical height measurement (used for object/image heights -> magnification). */
+function VDim({
+  kind,
+  x,
+  y1,
+  y2,
+  label,
+}: {
+  kind: 'm'
+  x: number
+  y1: number
+  y2: number
+  label: string
+}) {
+  if (Math.abs(y2 - y1) < 2) return null
+  const mid = (y1 + y2) / 2
+  const bx = x - 20 // nudge the bracket just left of the candle body
+  return (
+    <g className={`dim dim--${kind}`}>
+      <line className="dim__line" x1={bx} y1={y1} x2={bx} y2={y2} />
+      <line className="dim__tick" x1={bx - 5} y1={y1} x2={bx + 5} y2={y1} />
+      <line className="dim__tick" x1={bx - 5} y1={y2} x2={bx + 5} y2={y2} />
+      <rect className="dim__pill" x={bx - 18} y={mid - 12} width={36} height={24} rx={12} />
+      <text className="dim__label" x={bx} y={mid + 6} textAnchor="middle">
+        {label}
+      </text>
     </g>
   )
 }

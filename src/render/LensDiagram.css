@@ -24,8 +24,47 @@
 }
 .lens-diagram .focal text {
   fill: var(--c-f, #ffb84d);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+}
+
+/* Measurement overlays (toggleable). Each maps a symbol onto the picture. */
+.lens-diagram .dim {
+  color: #cdd3e1;
+}
+.lens-diagram .dim--f {
+  color: var(--c-f, #ffb84d);
+}
+.lens-diagram .dim--do {
+  color: var(--c-do, #6fb3ff);
+}
+.lens-diagram .dim--di {
+  color: var(--c-di, #c08bff);
+}
+.lens-diagram .dim--m {
+  color: var(--c-m, #54d6a0);
+}
+.lens-diagram .dim__line,
+.lens-diagram .dim__tick {
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.lens-diagram .dim__guide {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.45;
+}
+.lens-diagram .dim__pill {
+  fill: #0b1020;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+.lens-diagram .dim__label {
+  fill: currentColor;
+  font-size: 16px;
+  font-weight: 700;
   font-family: system-ui, sans-serif;
 }
 

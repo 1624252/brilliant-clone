@@ -12,7 +12,7 @@ function setObjectDistance(container: HTMLElement, value: number) {
 describe('ProblemRunner (Thin Lens lesson)', () => {
   it('shows the first prompt and step counter', () => {
     render(<ProblemRunner lesson={thinLensLesson} />)
-    expect(screen.getByText(/same size/i)).toBeInTheDocument()
+    expect(screen.getByText(/drag the candle/i)).toBeInTheDocument()
     expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
   })
 
