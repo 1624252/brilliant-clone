@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
-import { LensScene } from '../interactive'
-import { RayFocusAnimation, type MeasureFlags } from '../render'
+import { LensScene, snapValue } from '../interactive'
+import { RayFocusExplainer, RaySourceExplainer, type MeasureFlags } from '../render'
 import type { Control, LessonDefinition, StepState } from './types'
 import './ProblemRunner.css'
 
@@ -84,7 +84,8 @@ export function ProblemRunner({
     return (
       <div className="runner runner--intro">
         <h3 className="intro__heading">{lesson.intro.heading}</h3>
-        {lesson.intro.animation === 'focus' && <RayFocusAnimation />}
+        {lesson.intro.animation === 'focus' && <RayFocusExplainer />}
+        {lesson.intro.animation === 'source' && <RaySourceExplainer />}
         {lesson.intro.paragraphs.map((p, i) => (
           <p key={i} className="intro__para">
             {p}
@@ -106,17 +107,42 @@ export function ProblemRunner({
   if (done) {
     return (
       <div className="runner runner--done" role="status">
-        <h2>Lesson complete</h2>
-        <p>You finished “{lesson.title}”. Nice work building real intuition.</p>
+        <div className="runner__celebrate" aria-hidden="true">
+          🎉
+        </div>
+        <h2>Lesson complete!</h2>
+        <p>You finished “{lesson.title}”. Awesome work — you're really getting this! ✨</p>
       </div>
     )
   }
 
   return (
     <div className="runner">
-      <div className="runner__progress">
-        Step {stepIndex + 1} of {lesson.steps.length}
-      </div>
+      {(() => {
+        const total = lesson.steps.length
+        const filled = stepIndex + (status === 'correct' ? 1 : 0)
+        const pct = Math.round((filled / total) * 100)
+        return (
+          <div className="runner__progress">
+            <div className="runner__progress-head">
+              <span>
+                Step {stepIndex + 1} of {total}
+              </span>
+              <span className="runner__progress-pct">{pct}%</span>
+            </div>
+            <div
+              className="progressbar"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={pct}
+              aria-label="Lesson progress"
+            >
+              <div className="progressbar__fill" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        )
+      })()}
 
       <p className="runner__prompt">{step.prompt}</p>
 
@@ -125,11 +151,49 @@ export function ProblemRunner({
         focalLength={merged.focalLength}
         minObjectDistance={dragControl?.min}
         maxObjectDistance={dragControl?.max}
+        snaps={dragControl?.snaps}
         measures={measures}
         onObjectDistanceChange={
           dragControl ? (v) => setValue('objectDistance', v) : undefined
         }
       />
+
+      <div className="runner__controls">
+        {step.controls.map((c) => (
+          <SliderControl
+            key={c.key}
+            control={c}
+            value={merged[c.key]}
+            onChange={(v) => setValue(c.key, v)}
+          />
+        ))}
+      </div>
+
+      {status === 'correct' && (
+        <div className="feedback feedback--correct" role="status">
+          <strong>Correct.</strong> {step.correctFeedback}
+        </div>
+      )}
+      {status === 'incorrect' && (
+        <div className="feedback feedback--incorrect" role="status">
+          <strong>Not yet.</strong> {step.hint}
+        </div>
+      )}
+
+      <div className="runner__actions">
+        {status === 'correct' ? (
+          <button type="button" className="btn btn--primary" onClick={next}>
+            {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+          </button>
+        ) : (
+          <button type="button" className="btn btn--primary" onClick={check}>
+            Check answer
+          </button>
+        )}
+      </div>
+
+      <details className="runner__more">
+        <summary>Numbers &amp; tools</summary>
 
       <fieldset className="measures">
         <legend>Show on diagram</legend>
@@ -261,40 +325,7 @@ export function ProblemRunner({
           </dl>
         </div>
       </details>
-
-      <div className="runner__controls">
-        {step.controls.map((c) => (
-          <SliderControl
-            key={c.key}
-            control={c}
-            value={merged[c.key]}
-            onChange={(v) => setValue(c.key, v)}
-          />
-        ))}
-      </div>
-
-      {status === 'correct' && (
-        <div className="feedback feedback--correct" role="status">
-          <strong>Correct.</strong> {step.correctFeedback}
-        </div>
-      )}
-      {status === 'incorrect' && (
-        <div className="feedback feedback--incorrect" role="status">
-          <strong>Not yet.</strong> {step.hint}
-        </div>
-      )}
-
-      <div className="runner__actions">
-        {status === 'correct' ? (
-          <button type="button" className="btn btn--primary" onClick={next}>
-            {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
-          </button>
-        ) : (
-          <button type="button" className="btn" onClick={check}>
-            Check answer
-          </button>
-        )}
-      </div>
+      </details>
     </div>
   )
 }
@@ -387,19 +418,43 @@ function SliderControl({
   value: number
   onChange: (v: number) => void
 }) {
+  const isInfinite = !Number.isFinite(value)
+  // A native range input can't hold Infinity, so park it at the max when infinite.
+  const sliderValue = isInfinite ? control.max : value
   return (
     <label className="slider">
       <span>
         {control.label ?? control.key}: {fmt(value)}
       </span>
-      <input
-        type="range"
-        min={control.min}
-        max={control.max}
-        step={control.step ?? 1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
+      <div className="slider__row">
+        <input
+          type="range"
+          min={control.min}
+          max={control.max}
+          step={control.step ?? 1}
+          value={sliderValue}
+          list={control.snaps ? `${control.key}-snaps` : undefined}
+          onChange={(e) => onChange(snapValue(Number(e.target.value), control.snaps))}
+        />
+        {control.snaps && (
+          <datalist id={`${control.key}-snaps`}>
+            {control.snaps.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
+        )}
+        {control.allowInfinity && (
+          <button
+            type="button"
+            className={`slider__inf ${isInfinite ? 'is-on' : ''}`}
+            aria-pressed={isInfinite}
+            title="Move the object infinitely far away"
+            onClick={() => onChange(isInfinite ? control.max : Infinity)}
+          >
+            ∞
+          </button>
+        )}
+      </div>
     </label>
   )
 }

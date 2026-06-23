@@ -8,10 +8,13 @@ const FOCAL_LENGTH = 20
 const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
-  min: 5,
-  max: 75,
+  min: 0,
+  max: 120,
   step: 0.5,
   label: 'Object distance',
+  allowInfinity: true,
+  // Snap to the lens (0), F, 2F, and 3F so key positions are easy to hit.
+  snaps: [0, FOCAL_LENGTH, 2 * FOCAL_LENGTH, 3 * FOCAL_LENGTH],
 }
 
 export const thinLensLesson: LessonDefinition = {
@@ -22,10 +25,12 @@ export const thinLensLesson: LessonDefinition = {
   summary: 'Drag the candle to control where and how big the image forms.',
   intro: {
     heading: 'One equation ties it all together',
+    animation: 'source',
     paragraphs: [
+      'Light leaves each point of an object, fans out through the lens, and meets again at the image — passing through the focal point F.',
+      'This is a convex lens (it bulges outward), so it converges light and its focal length f is positive.',
       'The thin lens equation links the three distances:  1/f = 1/dₒ + 1/dᵢ.',
-      'With f fixed, moving the candle (dₒ) changes where the image forms (dᵢ) — and the magnification m = −dᵢ/dₒ tells you if it flips and by how much.',
-      'In each step, drag the candle to make a specific kind of image. The live equation updates as you go.',
+      'With f fixed, moving the candle (dₒ) changes where the image forms (dᵢ) — and the magnification m = −dᵢ/dₒ tells you if it flips and by how much. The live equation updates as you go.',
     ],
   },
   steps: [
@@ -59,6 +64,30 @@ export const thinLensLesson: LessonDefinition = {
       success: (_state, image) => image.isReal && image.isMagnified,
       correctFeedback: 'Between F and 2F: real, flipped, enlarged.',
       hint: 'Place the candle between F and 2F.',
+    },
+    {
+      id: 'extreme-object-at-infinity',
+      prompt: 'Extreme 1: send the candle infinitely far away (tap ∞). Where does the image form?',
+      controls: [objectControl],
+      fixed: { focalLength: FOCAL_LENGTH },
+      initial: { objectDistance: 60 },
+      // Only a truly infinite dₒ lands the image exactly on F (di → f).
+      success: (state, image) =>
+        image.isReal && Math.abs(image.imageDistance - state.focalLength) < 0.5,
+      correctFeedback:
+        'With dₒ → ∞ the 1/dₒ term vanishes, so 1/dᵢ = 1/f: the image shrinks to a point right at F.',
+      hint: 'Tap the ∞ button so dₒ becomes infinite.',
+    },
+    {
+      id: 'extreme-object-at-lens',
+      prompt: 'Extreme 2: slide the candle all the way onto the lens (dₒ = 0). What happens?',
+      controls: [objectControl],
+      fixed: { focalLength: FOCAL_LENGTH },
+      initial: { objectDistance: 60 },
+      success: (state) => state.objectDistance <= 0.5,
+      correctFeedback:
+        'As dₒ → 0, dᵢ → 0 and m → 1: the image collapses onto the lens at the same size.',
+      hint: 'Drag the candle onto the lens, or slide dₒ down to 0.',
     },
   ],
 }

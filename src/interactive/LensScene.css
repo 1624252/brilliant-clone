@@ -14,3 +14,8 @@
   stroke-width: 3;
   fill-opacity: 0.4;
 }
+/* Pinned to the edge when the object is off-screen / at infinity. */
+.lens-diagram .drag-handle--offscreen {
+  fill-opacity: 0.12;
+  stroke-dasharray: 4 3;
+}

@@ -29,6 +29,26 @@
   font-family: system-ui, sans-serif;
 }
 
+.lens-diagram .lens-label {
+  fill: #bcd6ff;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.lens-diagram .inf-source text {
+  fill: #ffe49c;
+  font-size: 19px;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+}
+.lens-diagram .inf-source .inf-source__sub {
+  fill: #aab2c5;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 /* Measurement overlays (toggleable). Each maps a symbol onto the picture. */
 .lens-diagram .dim {
   color: #cdd3e1;
@@ -73,6 +93,9 @@
 @media (max-width: 600px) {
   .lens-diagram .focal text {
     font-size: 32px;
+  }
+  .lens-diagram .lens-label {
+    font-size: 26px;
   }
   .lens-diagram .dim__label {
     font-size: 28px;
@@ -136,6 +159,43 @@
 .lens-diagram .figure__glow {
   fill: #ffb047;
   opacity: 0.22;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: flame-glow 2.4s ease-in-out infinite;
+}
+.lens-diagram .figure--object .figure__flame {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: flame-flicker 1.6s ease-in-out infinite;
+}
+@keyframes flame-glow {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.32;
+    transform: scale(1.12);
+  }
+}
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+  }
+  35% {
+    transform: scaleY(1.06) scaleX(0.97);
+  }
+  70% {
+    transform: scaleY(0.96) scaleX(1.03);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lens-diagram .figure__glow,
+  .lens-diagram .figure--object .figure__flame {
+    animation: none;
+  }
 }
 .lens-diagram .figure__flame {
   fill: url(#flame);

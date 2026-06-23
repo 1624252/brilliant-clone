@@ -4,6 +4,7 @@ import type { RenderResult } from '@testing-library/react'
 import { ProblemRunner } from './ProblemRunner'
 import { thinLensLesson } from './lessons/thinLens'
 import { focusLesson } from './lessons/focus'
+import { formImage } from '../engine'
 
 /** Set the object-distance range input (avoids simulating SVG pointer drag). */
 function setObjectDistance(container: HTMLElement, value: number) {
@@ -26,7 +27,7 @@ describe('ProblemRunner intro screen', () => {
     // Steps are hidden until the learner starts.
     expect(screen.queryByText(/step 1 of/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /start lesson/i }))
-    expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument()
   })
 })
 
@@ -34,7 +35,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
   it('shows the first prompt and step counter', () => {
     renderStarted(thinLensLesson)
     expect(screen.getByText(/drag the candle/i)).toBeInTheDocument()
-    expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument()
   })
 
   it('gives a specific hint on a wrong attempt', () => {
@@ -61,7 +62,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
 
-    expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 2 of 5/i)).toBeInTheDocument()
     setObjectDistance(container, 10) // inside f -> virtual, upright
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/inside f the lens/i)).toBeInTheDocument()
@@ -74,6 +75,29 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     expect(screen.getByText(/not yet/i)).toBeInTheDocument()
     setObjectDistance(container, 55)
     expect(screen.queryByText(/not yet/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('Thin Lens extreme steps', () => {
+  const f = 20
+  const stepById = (id: string) => {
+    const s = thinLensLesson.steps.find((step) => step.id === id)
+    if (!s) throw new Error(`no step ${id}`)
+    return s
+  }
+
+  it('infinity step passes only when the object is infinitely far (image lands on F)', () => {
+    const step = stepById('extreme-object-at-infinity')
+    expect(step.success({ objectDistance: 120, focalLength: f }, formImage(120, f))).toBe(false)
+    expect(
+      step.success({ objectDistance: Infinity, focalLength: f }, formImage(Infinity, f)),
+    ).toBe(true)
+  })
+
+  it('zero step passes when the object reaches the lens', () => {
+    const step = stepById('extreme-object-at-lens')
+    expect(step.success({ objectDistance: 0, focalLength: f }, formImage(0, f))).toBe(true)
+    expect(step.success({ objectDistance: 30, focalLength: f }, formImage(30, f))).toBe(false)
   })
 })
 

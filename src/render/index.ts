@@ -1,5 +1,10 @@
 export { LensDiagram, type MeasureFlags } from './LensDiagram'
-export { RayFocusAnimation } from './RayFocusAnimation'
+export {
+  RayFocusAnimation,
+  RayFocusExplainer,
+  RaySourceAnimation,
+  RaySourceExplainer,
+} from './RayFocusAnimation'
 export {
   DEFAULT_SCENE,
   scaleOf,

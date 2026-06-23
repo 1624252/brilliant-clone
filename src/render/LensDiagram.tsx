@@ -15,6 +15,8 @@ interface LensDiagramProps {
   objectHeight?: number
   scene?: SceneParams
   showRays?: boolean
+  /** When false, hides the formed image (used to set up predict-then-reveal). */
+  showImage?: boolean
   /** Which measurement overlays to draw. Each maps a symbol onto the picture. */
   measures?: MeasureFlags
   /** Overlay content (e.g., a drag handle) rendered on top of the diagram. */
@@ -45,6 +47,7 @@ export function LensDiagram({
   objectHeight = 18,
   scene = DEFAULT_SCENE,
   showRays = true,
+  showImage = true,
   measures = {},
   children,
 }: LensDiagramProps) {
@@ -71,15 +74,18 @@ export function LensDiagram({
 
   const objBase = toSvg(trace.object.base, scene)
   const objTip = toSvg(trace.object.tip, scene)
+  const objectInfinite = !Number.isFinite(objectDistance)
   const img = trace.image
   const imageIsVirtual = img ? img.base.x < 0 : false
 
-  const label = describeImage(
-    trace.atInfinity,
-    img?.base.x ?? 0,
-    trace.object.tip.y,
-    img?.tip.y ?? 0,
-  )
+  const label = showImage
+    ? describeImage(
+        trace.atInfinity,
+        img?.base.x ?? 0,
+        trace.object.tip.y,
+        img?.tip.y ?? 0,
+      )
+    : 'Lens ray diagram: predict where the image forms.'
 
   return (
     <svg
@@ -142,6 +148,14 @@ export function LensDiagram({
         className={`lens ${isConverging ? 'lens--converging' : 'lens--diverging'}`}
         d={lensPath(center.x, center.y, lensHalf, isConverging)}
       />
+      <text
+        className="lens-label"
+        x={center.x}
+        y={center.y + lensHalf + 24}
+        textAnchor="middle"
+      >
+        {isConverging ? 'convex (converging) lens' : 'concave (diverging) lens'}
+      </text>
 
       {/* principal rays */}
       {showRays &&
@@ -158,9 +172,25 @@ export function LensDiagram({
           </g>
         ))}
 
-      {/* object + image as candle figures (orientation + size read at a glance) */}
-      <Figure cx={objBase.x} baseY={objBase.y} tipY={objTip.y} variant="object" />
-      {img && (
+      {/* object: a candle at a finite distance, or a "from infinity" marker */}
+      {objectInfinite ? (
+        <g className="inf-source">
+          <text x={objBase.x + 6} y={objTip.y - 14} textAnchor="start">
+            ☀️ object at ∞
+          </text>
+          <text
+            className="inf-source__sub"
+            x={objBase.x + 6}
+            y={objTip.y + 4}
+            textAnchor="start"
+          >
+            dₒ = ∞ · parallel rays
+          </text>
+        </g>
+      ) : (
+        <Figure cx={objBase.x} baseY={objBase.y} tipY={objTip.y} variant="object" />
+      )}
+      {img && showImage && (
         <Figure
           cx={toSvg(img.base, scene).x}
           baseY={toSvg(img.base, scene).y}
@@ -181,16 +211,21 @@ export function LensDiagram({
             label="f"
           />
         )}
-        {measures.do && (
-          <HDim
-            kind="do"
-            x1={objBase.x}
-            x2={center.x}
-            y={center.y + 62}
-            axisY={center.y}
-            label="dₒ"
-          />
-        )}
+        {measures.do &&
+          (objectInfinite ? (
+            <text className="dim__label dim__label--do" x={center.x - 80} y={center.y + 62}>
+              dₒ = ∞
+            </text>
+          ) : (
+            <HDim
+              kind="do"
+              x1={objBase.x}
+              x2={center.x}
+              y={center.y + 62}
+              axisY={center.y}
+              label="dₒ"
+            />
+          ))}
         {measures.di && img && (
           <HDim
             kind="di"

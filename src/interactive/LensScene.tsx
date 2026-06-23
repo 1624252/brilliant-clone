@@ -7,6 +7,7 @@ import {
   type SceneParams,
   type MeasureFlags,
 } from '../render'
+import { snapValue } from './snap'
 import './LensScene.css'
 
 interface LensSceneProps {
@@ -16,9 +17,13 @@ interface LensSceneProps {
   /** Drag clamp range for the object distance (optical units). */
   minObjectDistance?: number
   maxObjectDistance?: number
+  /** Values the drag gently snaps to (e.g., 0, f, 2f). */
+  snaps?: number[]
   onObjectDistanceChange?: (value: number) => void
   scene?: SceneParams
   showRays?: boolean
+  /** When false, hides the formed image (predict-then-reveal). */
+  showImage?: boolean
   measures?: MeasureFlags
 }
 
@@ -47,15 +52,25 @@ export function LensScene({
   objectHeight = 18,
   minObjectDistance = 5,
   maxObjectDistance = 75,
+  snaps,
   onObjectDistanceChange,
   scene = DEFAULT_SCENE,
   showRays = true,
+  showImage = true,
   measures,
 }: LensSceneProps) {
   const draggingRef = useRef(false)
   const draggable = Boolean(onObjectDistanceChange)
 
-  const handlePos = toSvg({ x: -objectDistance, y: objectHeight }, scene)
+  // Keep the drag handle on-screen even when the object is far away or at
+  // infinity (where -objectDistance would be off the left edge or non-finite).
+  const edgeX = -scene.halfWidth + 2
+  const safeX = Number.isFinite(objectDistance)
+    ? Math.max(-objectDistance, edgeX)
+    : edgeX
+  const offscreen = !Number.isFinite(objectDistance) || -objectDistance < edgeX
+  const handlePos = toSvg({ x: safeX, y: objectHeight }, scene)
+  const ariaNow = Number.isFinite(objectDistance) ? objectDistance : maxObjectDistance
 
   function updateFromPointer(e: PointerEvent<SVGCircleElement>) {
     const svg = e.currentTarget.ownerSVGElement
@@ -64,7 +79,7 @@ export function LensScene({
     if (opticalX === null) return
     // Object sits to the left of the lens, so its distance is -x.
     const next = clamp(-opticalX, minObjectDistance, maxObjectDistance)
-    onObjectDistanceChange(Number(next.toFixed(2)))
+    onObjectDistanceChange(snapValue(Number(next.toFixed(2)), snaps))
   }
 
   function onPointerDown(e: PointerEvent<SVGCircleElement>) {
@@ -93,7 +108,7 @@ export function LensScene({
     >
       {draggable && (
         <circle
-          className="drag-handle"
+          className={`drag-handle ${offscreen ? 'drag-handle--offscreen' : ''}`}
           cx={handlePos.x}
           cy={handlePos.y}
           r={14}
@@ -101,7 +116,7 @@ export function LensScene({
           aria-label="Object distance"
           aria-valuemin={minObjectDistance}
           aria-valuemax={maxObjectDistance}
-          aria-valuenow={objectDistance}
+          aria-valuenow={ariaNow}
           tabIndex={0}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

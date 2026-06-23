@@ -8,10 +8,13 @@ const FOCAL_LENGTH = 20
 const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
-  min: 5,
-  max: 75,
+  min: 0,
+  max: 120,
   step: 0.5,
   label: 'Object distance',
+  allowInfinity: true,
+  // Snap to the lens (0), F, 2F, and 3F so key positions are easy to hit.
+  snaps: [0, FOCAL_LENGTH, 2 * FOCAL_LENGTH, 3 * FOCAL_LENGTH],
 }
 
 export const focusLesson: LessonDefinition = {
@@ -24,9 +27,9 @@ export const focusLesson: LessonDefinition = {
     heading: 'Where light comes to a focus',
     animation: 'focus',
     paragraphs: [
-      'A converging lens bends parallel rays so they all cross at one spot on the axis: the focal point, F.',
+      'A convex lens (one that bulges outward) converges parallel rays so they all cross at one spot on the axis: the focal point, F.',
       'The distance from the lens to F is the focal length, f — a fixed property of the lens. The stronger the lens, the shorter the f.',
-      'Below, drag the candle and watch how its rays meet. F is the key to where (and how big) the image forms.',
+      'When you start, you can drag the candle and watch how its rays meet. F is the key to where (and how big) the image forms.',
     ],
   },
   steps: [

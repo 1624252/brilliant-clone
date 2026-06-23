@@ -13,14 +13,27 @@ export interface Control {
   max: number
   step?: number
   label?: string
+  /** Show an "∞" button that snaps the value to Infinity (e.g., a far object). */
+  allowInfinity?: boolean
+  /** Values the control gently snaps to (e.g., 0, f, 2f) for easy targeting. */
+  snaps?: number[]
 }
 
 /** Numeric values the learner is manipulating, keyed by control key. */
 export type StepState = Record<string, number>
 
-export interface StepDefinition {
+interface StepBase {
   id: string
   prompt: string
+}
+
+/**
+ * A hands-on step: the learner manipulates controls (drag/slider) until a
+ * success rule reads true off the engine's image classification.
+ */
+export interface InteractiveStep extends StepBase {
+  /** Discriminant; omit for interactive steps. */
+  kind?: 'interactive'
   /** Values the learner can change. */
   controls: Control[]
   /** Starting values for the controls. */
@@ -35,13 +48,46 @@ export interface StepDefinition {
   hint: string
 }
 
+/** One option in a predict-then-reveal question. */
+export interface Choice {
+  id: string
+  label: string
+  /** Exactly one choice should be marked correct. */
+  correct?: boolean
+  /** Why this option is right/wrong — shown after the learner commits. */
+  feedback: string
+}
+
+/**
+ * A "predict-then-reveal" step — Brilliant's signature move. The learner studies
+ * a fixed scene (rays and image hidden), commits to a prediction, and only then
+ * sees the rays converge and the image appear. Forcing a commitment first turns
+ * passive watching into active recall and surfaces misconceptions.
+ */
+export interface PredictStep extends StepBase {
+  kind: 'predict'
+  /** The read-only scene the learner reasons about before committing. */
+  scene: { objectDistance: number; focalLength: number }
+  /** Options to choose from; order is preserved as shown. */
+  choices: Choice[]
+  /** Explanation shown once the truth is revealed (regardless of choice). */
+  reveal: string
+}
+
+export type StepDefinition = InteractiveStep | PredictStep
+
+/** Narrowing helper: true for predict-then-reveal steps. */
+export function isPredictStep(step: StepDefinition): step is PredictStep {
+  return step.kind === 'predict'
+}
+
 /** Short teaching screen shown before a lesson's interactive steps. */
 export interface LessonIntro {
   heading: string
   /** A few short paragraphs (kept brief; mostly-visual lessons). */
   paragraphs: string[]
   /** Optional animated explainer to show alongside the text. */
-  animation?: 'focus'
+  animation?: 'focus' | 'source'
 }
 
 export interface LessonDefinition {
