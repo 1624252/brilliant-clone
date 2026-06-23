@@ -129,13 +129,13 @@ A build is "MVP-complete" when all of these are true:
 ## 6. Functional requirements
 
 ### 6.1 Authentication & accounts
-- FR-1: User can sign up with email/password and set a display name.
+- FR-1: User can sign up with email/password (and set a display name) or with Google sign-in.
 - FR-2: User can sign in and stay signed in across sessions (persisted auth).
 - FR-3: User can sign out.
 - FR-4: Unauthenticated users can see the lesson list but must sign in to start (decision: gate progress behind auth so it can persist).
 
 ### 6.2 Lessons & interactive steps
-- FR-5: The home screen lists the chapter's lessons with locked/unlocked/completed state and a progress indicator.
+- FR-5: The home screen lists the chapter's lessons with locked/unlocked/completed state and a progress indicator. Lessons unlock sequentially; navigating to a not-yet-unlocked lesson is allowed but shows a confirmation/warning popup first.
 - FR-6: A lesson is an ordered sequence of steps; each step renders a prompt + a visual + controls.
 - FR-7: Each interactive step validates the learner's manipulation against a success rule and shows **instant** correct/incorrect feedback.
 - FR-8: A wrong attempt shows a **specific** explanation/hint (not just "incorrect").
@@ -336,8 +336,8 @@ This satisfies "fill gaps before moving on / recommend what's next" without adap
 - **Drag UX on mobile** for ray diagrams may be fiddly; mitigate with large hit targets and SVG scaling.
 - **Streak timezone handling** — store the user's local "YYYY-MM-DD"; decide on a single source of "today."
 - **Scope creep into more topics** — resist; lensmaker/chromatic stay as stretch lessons only.
-- **Open question:** Google sign-in in addition to email/password for MVP? (Leaning optional.)
-- **Open question:** Do we gate later lessons until earlier ones are complete, or allow free navigation? (Leaning: unlock sequentially, allow replay.)
+- **Decided:** Auth supports **email/password + Google sign-in** for the MVP.
+- **Decided:** Lessons **unlock sequentially**, but the learner may navigate to any lesson via a **confirmation/warning popup** (and may always replay completed lessons).
 
 ---
 
