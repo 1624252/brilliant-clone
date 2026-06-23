@@ -32,7 +32,7 @@ const RAY_CLASS: Record<string, string> = {
 export function LensDiagram({
   objectDistance,
   focalLength,
-  objectHeight = 14,
+  objectHeight = 18,
   scene = DEFAULT_SCENE,
   showRays = true,
   children,
@@ -197,17 +197,18 @@ function Figure({
   const len = Math.abs(delta)
   if (len < 1) return null
 
-  // Point at a fraction along base(0) -> tip(1).
+  // Point at a fraction along base(0) -> tip(1). Width (x) is orientation-free.
   const at = (frac: number) => baseY + delta * frac
-  const bodyW = Math.min(28, Math.max(9, len * 0.18))
-  const flameW = bodyW * 0.62
+  const bodyW = Math.min(34, Math.max(11, len * 0.2))
+  const flameW = bodyW * 0.6
+  const rimRy = bodyW * 0.16
 
-  // Body spans 0..0.7; wick 0.7..0.74; flame 0.74..1.
-  const bodyTop = at(0.7)
+  // Body 0..0.64; wax pool at 0.64; wick 0.64..0.71; flame 0.71..1.
+  const bodyTop = at(0.64)
   const bodyRectY = Math.min(baseY, bodyTop)
   const bodyH = Math.abs(baseY - bodyTop)
 
-  const fb = at(0.74) // flame base
+  const fb = at(0.72) // flame base
   const ft = at(1) // flame tip
   const teardrop = (w: number, base: number, tip: number) => {
     const mid = base + (tip - base) * 0.5
@@ -217,20 +218,40 @@ function Figure({
 
   return (
     <g className={`figure figure--${variant}`}>
+      {/* saucer / holder under the candle */}
+      <ellipse className="figure__saucer" cx={cx} cy={baseY} rx={bodyW * 0.85} ry={rimRy} />
+      {/* wax body */}
       <rect
         className="figure__wax"
         x={cx - bodyW / 2}
         y={bodyRectY}
         width={bodyW}
         height={bodyH}
-        rx={bodyW * 0.28}
+        rx={bodyW * 0.22}
       />
-      <line className="figure__wick" x1={cx} y1={at(0.7)} x2={cx} y2={at(0.76)} />
+      {/* soft highlight stripe for a waxy sheen */}
+      <rect
+        className="figure__sheen"
+        x={cx - bodyW * 0.28}
+        y={Math.min(baseY, at(0.6))}
+        width={bodyW * 0.18}
+        height={Math.abs(baseY - at(0.6))}
+        rx={bodyW * 0.09}
+      />
+      {/* molten wax pool on top */}
+      <ellipse className="figure__pool" cx={cx} cy={at(0.64)} rx={bodyW / 2} ry={rimRy} />
+      {/* wick */}
+      <line className="figure__wick" x1={cx} y1={at(0.64)} x2={cx} y2={at(0.72)} />
+      {/* flame glow, then flame, then hot core */}
+      <ellipse
+        className="figure__glow"
+        cx={cx}
+        cy={at(0.86)}
+        rx={flameW * 1.15}
+        ry={Math.abs(ft - fb) * 0.7}
+      />
       <path className="figure__flame" d={teardrop(flameW, fb, ft)} />
-      <path
-        className="figure__flame-core"
-        d={teardrop(flameW * 0.5, at(0.78), at(0.95))}
-      />
+      <path className="figure__flame-core" d={teardrop(flameW * 0.5, at(0.78), at(0.96))} />
     </g>
   )
 }

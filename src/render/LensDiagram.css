@@ -51,15 +51,33 @@
 
 /* Candle figures. All variants use real candle colors; the image is the same
    candle rendered as a translucent projection, outlined to mark it as the image. */
+.lens-diagram .figure__saucer {
+  fill: #2a3550;
+  stroke: #46557d;
+  stroke-width: 1;
+}
 .lens-diagram .figure__wax {
   fill: url(#wax);
   stroke: #b59a63;
   stroke-width: 1;
 }
+.lens-diagram .figure__sheen {
+  fill: #fffaf0;
+  opacity: 0.35;
+}
+.lens-diagram .figure__pool {
+  fill: #fff6dc;
+  stroke: #cdb789;
+  stroke-width: 0.75;
+}
 .lens-diagram .figure__wick {
-  stroke: #5b4a32;
+  stroke: #4a3a26;
   stroke-width: 2;
   stroke-linecap: round;
+}
+.lens-diagram .figure__glow {
+  fill: #ffb047;
+  opacity: 0.22;
 }
 .lens-diagram .figure__flame {
   fill: url(#flame);
