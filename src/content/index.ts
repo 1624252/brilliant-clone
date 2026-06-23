@@ -2,13 +2,15 @@ export { ProblemRunner } from './ProblemRunner'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
 export { lessons, chapter } from './lessons'
-export { isPredictStep } from './types'
+export { topics, type Topic } from './topics'
+export { isPredictStep, isPlotStep } from './types'
 export type {
   LessonDefinition,
   LessonIntro,
   StepDefinition,
   InteractiveStep,
   PredictStep,
+  PlotRaysStep,
   Choice,
   Control,
   ControlType,

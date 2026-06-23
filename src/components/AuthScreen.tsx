@@ -5,14 +5,14 @@ import { RayFocusExplainer } from '../render'
 import { Logo } from './Logo'
 import './AuthScreen.css'
 
-type Mode = 'signin' | 'signup'
+type Mode = 'signin' | 'signup' | 'reset'
 
 function errorCode(err: unknown): string {
   return typeof err === 'object' && err && 'code' in err ? String(err.code) : ''
 }
 
 export function AuthScreen() {
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth()
   const [mode, setMode] = useState<Mode>('signup')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -22,6 +22,8 @@ export function AuthScreen() {
   const [suggestSignIn, setSuggestSignIn] = useState(false)
   // When the email already belongs to a Google account, point at the Google button.
   const [suggestGoogle, setSuggestGoogle] = useState(false)
+  // Confirmation shown after a reset link is sent.
+  const [resetSent, setResetSent] = useState(false)
   const [busy, setBusy] = useState(false)
 
   function switchTo(next: Mode) {
@@ -29,6 +31,7 @@ export function AuthScreen() {
     setError('')
     setSuggestSignIn(false)
     setSuggestGoogle(false)
+    setResetSent(false)
   }
 
   async function onSubmit(e: FormEvent) {
@@ -39,7 +42,10 @@ export function AuthScreen() {
     setBusy(true)
     try {
       if (mode === 'signup') await signUp(name, email, password)
-      else await signIn(email, password)
+      else if (mode === 'reset') {
+        await resetPassword(email)
+        setResetSent(true)
+      } else await signIn(email, password)
     } catch (err) {
       setError(friendlyAuthError(err))
       const code = errorCode(err)
@@ -80,6 +86,18 @@ export function AuthScreen() {
 
       <section className="auth__panel">
         <div className="auth__card">
+          {mode === 'reset' ? (
+            <ResetView
+              email={email}
+              setEmail={setEmail}
+              error={error}
+              resetSent={resetSent}
+              busy={busy}
+              onSubmit={onSubmit}
+              onBack={() => switchTo('signin')}
+            />
+          ) : (
+          <>
           <div className="auth__tabs" role="tablist">
             <button
               type="button"
@@ -137,6 +155,18 @@ export function AuthScreen() {
                 required
               />
             </label>
+
+            {mode === 'signin' && (
+              <div className="auth__forgot">
+                <button
+                  type="button"
+                  className="linklike"
+                  onClick={() => switchTo('reset')}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
             {error && (
               <p className="auth__error" role="alert">
@@ -198,8 +228,78 @@ export function AuthScreen() {
               {mode === 'signup' ? 'Sign in' : 'Create one'}
             </button>
           </p>
+          </>
+          )}
         </div>
       </section>
+    </div>
+  )
+}
+
+interface ResetViewProps {
+  email: string
+  setEmail: (v: string) => void
+  error: string
+  resetSent: boolean
+  busy: boolean
+  onSubmit: (e: FormEvent) => void
+  onBack: () => void
+}
+
+function ResetView({
+  email,
+  setEmail,
+  error,
+  resetSent,
+  busy,
+  onSubmit,
+  onBack,
+}: ResetViewProps) {
+  return (
+    <div className="auth__reset">
+      <h2 className="auth__reset-title">Reset your password</h2>
+
+      {resetSent ? (
+        <>
+          <p className="auth__reset-note" role="status">
+            If an account exists for <strong>{email || 'that email'}</strong>, we’ve sent a
+            link to reset your password. Check your inbox (and spam folder).
+          </p>
+          <button type="button" className="btn btn--primary btn--block" onClick={onBack}>
+            Back to sign in
+          </button>
+        </>
+      ) : (
+        <form className="auth__form" onSubmit={onSubmit}>
+          <p className="auth__reset-note">
+            Enter your email and we’ll send you a link to set a new password.
+          </p>
+          <label className="field">
+            <span>Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+          </label>
+
+          {error && (
+            <p className="auth__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
+            {busy ? 'Sending…' : 'Send reset link'}
+          </button>
+          <button type="button" className="linklike auth__reset-back" onClick={onBack}>
+            ← Back to sign in
+          </button>
+        </form>
+      )}
     </div>
   )
 }

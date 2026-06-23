@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { RenderResult } from '@testing-library/react'
 import { ProblemRunner } from './ProblemRunner'
 import { thinLensLesson } from './lessons/thinLens'
 import { focusLesson } from './lessons/focus'
-import { isPredictStep } from './types'
+import { concaveLesson } from './lessons/concave'
+import { curvatureLesson } from './lessons/curvature'
+import { rayTracingLesson } from './lessons/rayTracing'
+import { isPredictStep, isPlotStep } from './types'
 import type { LessonDefinition } from './types'
 import { formImage } from '../engine'
 
@@ -104,7 +107,7 @@ describe('Thin Lens extreme steps', () => {
   const stepById = (id: string) => {
     const s = thinLensLesson.steps.find((step) => step.id === id)
     if (!s) throw new Error(`no step ${id}`)
-    if (isPredictStep(s)) throw new Error(`step ${id} is not interactive`)
+    if (isPredictStep(s) || isPlotStep(s)) throw new Error(`step ${id} is not interactive`)
     return s
   }
 
@@ -130,6 +133,147 @@ describe('ProblemRunner (Focusing Light lesson)', () => {
     setObjectDistance(container, 20) // object at f -> rays leave parallel
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/races off to infinity/i)).toBeInTheDocument()
+  })
+})
+
+describe('ProblemRunner (Concave Lenses lesson)', () => {
+  it('reveals the virtual, upright, smaller answer after a prediction', () => {
+    renderStarted(concaveLesson)
+    fireEvent.click(
+      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
+    )
+    expect(
+      screen.getByText(/a concave lens always makes a virtual, upright, reduced/i),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
+  })
+
+  it('passes the "try to make a real image" step when the candle is near the lens', () => {
+    const { container } = renderStarted(concaveLesson)
+    // Clear the opening predict step.
+    fireEvent.click(
+      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument()
+    setObjectDistance(container, 4) // up close — still no real image
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/can.t focus light to a real point/i)).toBeInTheDocument()
+  })
+
+  it('keeps the predict step interactive: a drag handle appears after committing', () => {
+    renderStarted(concaveLesson)
+    // No draggable object handle before committing the prediction.
+    expect(
+      screen.queryByRole('slider', { name: /object distance/i }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
+    )
+    // The explore handle (a draggable SVG slider) is now available.
+    expect(
+      screen.getByRole('slider', { name: /object distance/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('passes the half-size step when the candle sits one focal length away', () => {
+    const { container } = renderStarted(concaveLesson)
+    fireEvent.click(
+      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    setObjectDistance(container, 4)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    expect(screen.getByText(/step 3 of 3/i)).toBeInTheDocument()
+    setObjectDistance(container, 20) // one focal length -> m = 0.5
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/at one focal length away/i)).toBeInTheDocument()
+  })
+})
+
+describe('ProblemRunner (Convex & Concave curvature lesson)', () => {
+  /** Move the curvature slider (the lesson's only range control). */
+  function setCurvature(container: HTMLElement, value: number) {
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement
+    fireEvent.change(slider, { target: { value: String(value) } })
+  }
+
+  it('accepts a positive curvature as a converging lens', () => {
+    const { container } = renderStarted(curvatureLesson)
+    expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
+    setCurvature(container, 1) // far right of the continuous slider -> convex
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/positive focal length/i)).toBeInTheDocument()
+  })
+
+  it('reads out the resulting lens as the curvature slider moves', () => {
+    const { container } = renderStarted(curvatureLesson)
+    setCurvature(container, 1)
+    expect(screen.getByText(/convex · f =/i)).toBeInTheDocument()
+    setCurvature(container, -1)
+    expect(screen.getByText(/concave · f =/i)).toBeInTheDocument()
+    setCurvature(container, 0)
+    expect(screen.getByText(/flat — no focusing/i)).toBeInTheDocument()
+  })
+
+  it('shows the diagram as flat when curvature is centered', () => {
+    const { container } = renderStarted(curvatureLesson)
+    setCurvature(container, 0)
+    expect(screen.getByText(/flat \(no focusing\)/i)).toBeInTheDocument()
+  })
+})
+
+describe('ProblemRunner (Ray Tracing lesson)', () => {
+  it('opens with the interactive plot-the-rays step and its rule checklist', () => {
+    renderStarted(rayTracingLesson)
+    expect(screen.getByText(/plot where the three rays cross/i)).toBeInTheDocument()
+    // The three ray-rule badges and the draggable marker are present.
+    expect(screen.getByText(/parallel ray/i)).toBeInTheDocument()
+    expect(screen.getByText(/chief ray/i)).toBeInTheDocument()
+    expect(screen.getByText(/focal ray/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /predicted crossing point/i }),
+    ).toBeInTheDocument()
+    // No Next yet — the rays must be plotted first.
+    expect(screen.queryByRole('button', { name: /next|finish/i })).not.toBeInTheDocument()
+  })
+
+  it('solves the plot step by dragging the marker onto the crossing', () => {
+    renderStarted(rayTracingLesson)
+    const marker = screen.getByRole('button', { name: /predicted crossing point/i })
+    // Marker starts at (50, 10); the true crossing is (30, -9). Walk it there.
+    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowLeft' })
+    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowDown' })
+
+    expect(screen.getByText(/you found it/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/exactly where an object beyond 2f focuses/i),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
+  })
+
+  it('passes the crossing step when the image lands beyond 2F', () => {
+    // Jump straight to step 2 (the first drag step) via saved-progress resume.
+    const { container } = render(
+      <ProblemRunner lesson={rayTracingLesson} initialStepIndex={1} />,
+    )
+    expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument()
+    setObjectDistance(container, 30) // between F and 2F -> image beyond 2F
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/a projector/i)).toBeInTheDocument()
+  })
+
+  it('passes the inside-F step with a virtual, enlarged image', () => {
+    const { container } = render(
+      <ProblemRunner lesson={rayTracingLesson} initialStepIndex={2} />,
+    )
+    expect(screen.getByText(/step 3 of 3/i)).toBeInTheDocument()
+    setObjectDistance(container, 12) // inside F -> virtual, upright, enlarged
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/spread apart/i)).toBeInTheDocument()
   })
 })
 
@@ -177,13 +321,45 @@ describe('ProblemRunner predict-then-reveal step', () => {
     )
   })
 
-  it('marks a wrong prediction but still reveals the answer and lets you continue', () => {
+  it('explains a wrong prediction and lets you try again, then reveals on the right answer', () => {
     render(<ProblemRunner lesson={predictLesson} />)
     fireEvent.click(screen.getByRole('radio', { name: /never cross/i }))
 
-    expect(screen.getByText(/not quite/i)).toBeInTheDocument()
+    // Wrong: explain why and invite another try — no reveal or Finish yet.
+    expect(screen.getByText(/not quite — try again/i)).toBeInTheDocument()
     expect(screen.getByText(/they do cross/i)).toBeInTheDocument()
+    expect(screen.queryByText(/parallel rays meet at f/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /finish/i })).not.toBeInTheDocument()
+
+    // Choices stay selectable; the correct one then reveals the answer.
+    fireEvent.click(screen.getByRole('radio', { name: /at the focal point/i }))
+    expect(screen.getByText(/^correct\.?$/i)).toBeInTheDocument()
     expect(screen.getByText(/parallel rays meet at f/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument()
+  })
+
+  it('offers next-lesson, review, and exit actions on the finish screen', () => {
+    const onExit = vi.fn()
+    const onNextLesson = vi.fn()
+    render(
+      <ProblemRunner
+        lesson={predictLesson}
+        onExit={onExit}
+        onNextLesson={onNextLesson}
+        nextLessonTitle="Concave Lenses"
+      />,
+    )
+    fireEvent.click(screen.getByRole('radio', { name: /at the focal point/i }))
+    fireEvent.click(screen.getByRole('button', { name: /finish/i }))
+
+    expect(screen.getByText(/lesson complete/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /next lesson/i }))
+    expect(onNextLesson).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: /back to roadmap/i }))
+    expect(onExit).toHaveBeenCalledTimes(1)
+
+    // Review restarts the lesson from the first step.
+    fireEvent.click(screen.getByRole('button', { name: /review lesson/i }))
+    expect(screen.getByText(/where do parallel rays cross/i)).toBeInTheDocument()
   })
 })

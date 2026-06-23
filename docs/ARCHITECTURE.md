@@ -82,10 +82,11 @@ Stateless components that draw what they're told:
 
 - `App.tsx` defines the client-side routes with `react-router-dom`:
   - `/login` — `AuthScreen` (redirects home if already signed in)
-  - `/` — `Home` roadmap (auth-gated)
+  - `/` — `Topics` landing page: pick a subject (auth-gated)
+  - `/topics/:topicId` — `Home` roadmap for a topic (auth-gated)
   - `/lessons/:lessonId` — `LessonView` → `ProblemRunner` (auth-gated)
-  - `/settings` — `Home` with the settings modal open
   - unknown paths redirect to `/`
+  - Account settings open as a modal from the avatar (no dedicated route)
 - An auth guard redirects signed-out users to `/login` and remembers the intended
   page so deep links resume after sign-in. Firebase Hosting rewrites all paths to
   `index.html`, so deep links and refreshes work in production.

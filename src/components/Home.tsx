@@ -1,42 +1,91 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { chapter, lessons } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
+import {
+  deriveMilestones,
+  earnedMilestoneIds,
+  type Milestone,
+} from '../data/milestones'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Logo } from './Logo'
 import './Home.css'
 
 interface HomeProps {
+  uid: string
   displayName: string
   progress: ProgressState
-  settingsOpen: boolean
-  onOpenSettings: () => void
-  onCloseSettings: () => void
   onOpen: (lessonId: string) => void
+  /** Back to the topics landing page. */
+  onBack: () => void
   onSignOut: () => void
 }
 
 export function Home({
+  uid,
   displayName,
   progress,
-  settingsOpen,
-  onOpenSettings,
-  onCloseSettings,
   onOpen,
+  onBack,
   onSignOut,
 }: HomeProps) {
   const [confirmSignOut, setConfirmSignOut] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const status = deriveChapterStatus(lessons, progress.byLesson)
   const pct = status.totalCount
     ? Math.round((status.completedCount / status.totalCount) * 100)
     : 0
   const streak = progress.streak?.current ?? 0
 
+  const milestones = deriveMilestones(status, progress.streak)
+  const earnedKey = earnedMilestoneIds(milestones).join(',')
+  const [celebrate, setCelebrate] = useState<Milestone[]>([])
+
+  // Pop a small celebration when milestones are newly earned. We remember the
+  // earned set per user in localStorage; the first visit seeds it silently so we
+  // only celebrate things earned *after* this point.
+  useEffect(() => {
+    const key = `lenslab:milestones:${uid}`
+    const earned = earnedMilestoneIds(milestones)
+    const stored = localStorage.getItem(key)
+    if (stored === null) {
+      localStorage.setItem(key, JSON.stringify(earned))
+      return
+    }
+    let seen: string[] = []
+    try {
+      seen = JSON.parse(stored) as string[]
+    } catch {
+      seen = []
+    }
+    const fresh = milestones.filter((m) => m.earned && !seen.includes(m.id))
+    if (fresh.length === 0) return
+    localStorage.setItem(key, JSON.stringify(earned))
+    // setTimeout(0) avoids a synchronous setState during the effect.
+    const show = setTimeout(() => setCelebrate(fresh), 0)
+    const hide = setTimeout(() => setCelebrate([]), 5000)
+    return () => {
+      clearTimeout(show)
+      clearTimeout(hide)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, earnedKey])
+
   return (
     <div className="home">
       <header className="home__bar">
-        <Logo size={28} className="home__brand" />
+        <div className="home__left">
+          <button
+            type="button"
+            className="btn home__back"
+            onClick={onBack}
+            aria-label="Back to topics"
+          >
+            ← Topics
+          </button>
+          <Logo size={28} className="home__brand" />
+        </div>
         <div className="home__user">
           <span className="home__streak" title="Daily streak">
             <FlameIcon /> {streak}
@@ -44,7 +93,7 @@ export function Home({
           <button
             type="button"
             className="home__avatar"
-            onClick={onOpenSettings}
+            onClick={() => setSettingsOpen(true)}
             title="Account settings"
             aria-label="Account settings"
           >
@@ -61,7 +110,19 @@ export function Home({
         </div>
       </header>
 
-      {settingsOpen && <Settings onClose={onCloseSettings} />}
+      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+
+      {celebrate.length > 0 && (
+        <div className="ms-toast" role="status">
+          <span className="ms-toast__spark" aria-hidden="true">
+            🎉
+          </span>
+          <div className="ms-toast__body">
+            <strong>Milestone unlocked!</strong>
+            <span>{celebrate.map((m) => m.label).join(' · ')}</span>
+          </div>
+        </div>
+      )}
 
       {confirmSignOut && (
         <ConfirmDialog
@@ -89,6 +150,23 @@ export function Home({
             <span className="home__progress-label">
               {status.completedCount} / {status.totalCount} lessons
             </span>
+          </div>
+
+          <div className="milestones" aria-label="Milestones">
+            <ul className="milestones__strip">
+              {milestones.map((m) => (
+                <li
+                  key={m.id}
+                  className={`badge ${m.earned ? 'is-earned' : 'is-locked'}`}
+                  title={m.description}
+                >
+                  <span className="badge__icon" aria-hidden="true">
+                    {m.earned ? <CheckIcon /> : <LockIcon />}
+                  </span>
+                  <span className="badge__label">{m.label}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 

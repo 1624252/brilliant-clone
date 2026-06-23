@@ -15,6 +15,7 @@ import {
   onAuthStateChanged,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  sendPasswordResetEmail,
   setPersistence,
   browserLocalPersistence,
   signInWithEmailAndPassword,
@@ -34,6 +35,8 @@ interface AuthContextValue {
   signUp: (name: string, email: string, password: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
+  /** Emails a password-reset link to the address (no-op feedback if unknown). */
+  resetPassword: (email: string) => Promise<void>
   logout: () => Promise<void>
   /** True when the account can sign in with email/password. */
   hasPasswordProvider: () => boolean
@@ -122,6 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           cred.user.displayName ?? '',
           cred.user.email ?? '',
         )
+      },
+      async resetPassword(email) {
+        await sendPasswordResetEmail(auth, email.trim())
       },
       async logout() {
         await signOut(auth)

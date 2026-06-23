@@ -63,14 +63,29 @@ export function LensDiagram({
 
   const center = toSvg({ x: 0, y: 0 }, scene)
   const lensHalf = scene.halfHeight * 0.82 * scale
+  const isFlat = !Number.isFinite(focalLength)
   const isConverging = focalLength > 0
+  // The face bulge tracks focal length: a short f is strongly curved, a long f is
+  // nearly flat. We measure it on a *log* scale of |f| (between ~12 and ~600, the
+  // curvature slider's range) so that — since the slider maps to f logarithmically
+  // — equal slider movement gives equal visual change, with no sudden jump.
+  const bulgeT = isFlat
+    ? 0
+    : Math.min(
+        1,
+        Math.max(0, (Math.log(600) - Math.log(Math.abs(focalLength))) / (Math.log(600) - Math.log(12))),
+      )
+  const bulge = isFlat ? 0 : 3 + bulgeT * 15
 
-  const markers = [
-    { x: focalLength, label: 'F' },
-    { x: -focalLength, label: 'F' },
-    { x: 2 * focalLength, label: '2F' },
-    { x: -2 * focalLength, label: '2F' },
-  ]
+  // A flat lens has no focal points to mark.
+  const markers = isFlat
+    ? []
+    : [
+        { x: focalLength, label: 'F' },
+        { x: -focalLength, label: 'F' },
+        { x: 2 * focalLength, label: '2F' },
+        { x: -2 * focalLength, label: '2F' },
+      ]
 
   const objBase = toSvg(trace.object.base, scene)
   const objTip = toSvg(trace.object.tip, scene)
@@ -143,10 +158,12 @@ export function LensDiagram({
         )
       })}
 
-      {/* lens body (real shape: convex when converging, concave when diverging) */}
+      {/* lens body (real shape: convex converging, concave diverging, flat = none) */}
       <path
-        className={`lens ${isConverging ? 'lens--converging' : 'lens--diverging'}`}
-        d={lensPath(center.x, center.y, lensHalf, isConverging)}
+        className={`lens ${
+          isFlat ? 'lens--flat' : isConverging ? 'lens--converging' : 'lens--diverging'
+        }`}
+        d={lensPath(center.x, center.y, lensHalf, isConverging, isFlat, bulge)}
       />
       <text
         className="lens-label"
@@ -154,7 +171,11 @@ export function LensDiagram({
         y={center.y + lensHalf + 24}
         textAnchor="middle"
       >
-        {isConverging ? 'Convex (converging) lens' : 'Concave (diverging) lens'}
+        {isFlat
+          ? 'Flat (no focusing)'
+          : isConverging
+            ? 'Convex (converging) lens'
+            : 'Concave (diverging) lens'}
       </text>
 
       {/* principal rays */}
@@ -201,7 +222,7 @@ export function LensDiagram({
 
       {/* toggleable measurement overlays mapping each symbol onto the picture */}
       <g className="dims">
-        {measures.f && (
+        {measures.f && Number.isFinite(focalLength) && (
           <HDim
             kind="f"
             x1={center.x}
@@ -260,12 +281,29 @@ function svgStr(p: Point, scene: SceneParams): string {
   return `${s.x},${s.y}`
 }
 
-/** Biconvex (converging) or biconcave (diverging) lens outline. */
-function lensPath(cx: number, cy: number, half: number, converging: boolean): string {
-  const w = 14
+/**
+ * Biconvex (converging), biconcave (diverging), or thin flat (no focusing) lens.
+ * `bulge` is how far the faces bow (SVG units); it tracks the focal length so a
+ * strong lens looks strongly curved and a weak one looks nearly flat.
+ */
+function lensPath(
+  cx: number,
+  cy: number,
+  half: number,
+  converging: boolean,
+  flat = false,
+  bulge = 14,
+): string {
+  if (flat) {
+    // A thin rectangular slab: parallel faces, so it bends nothing.
+    return `M ${cx - 5},${cy - half} L ${cx + 5},${cy - half} L ${cx + 5},${cy + half} L ${cx - 5},${cy + half} Z`
+  }
+  const w = bulge
   if (converging) {
     return `M ${cx},${cy - half} Q ${cx + w},${cy} ${cx},${cy + half} Q ${cx - w},${cy} ${cx},${cy - half} Z`
   }
+  // Biconcave: straight outer edges (half-width w) with faces bowing inward to the
+  // axis. The control point sits on the axis, so the faces never cross.
   return `M ${cx - w},${cy - half} Q ${cx},${cy} ${cx - w},${cy + half} L ${cx + w},${cy + half} Q ${cx},${cy} ${cx + w},${cy - half} Z`
 }
 

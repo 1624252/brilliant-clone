@@ -89,6 +89,21 @@ export function tracePrincipalRays(
   const A: Point = { x: 0, y: objectHeight } // lens crossing of the parallel ray
   const O: Point = { x: 0, y: 0 } // lens center
 
+  // Flat lens (f -> ∞): light passes straight through without bending, so the
+  // parallel ray stays parallel, the chief ray keeps its direction, and the
+  // "image" coincides with the object (you simply see it as-is).
+  if (!Number.isFinite(focalLength)) {
+    return {
+      object: { base: { x: -doDraw, y: 0 }, tip: P },
+      image: { base: { x: -doDraw, y: 0 }, tip: P },
+      atInfinity: false,
+      rays: [
+        { id: 'parallel', solid: [P, A, { x: sceneRightX, y: objectHeight }] },
+        { id: 'chief', solid: [P, O, linePointAtX(P, O, sceneRightX)] },
+      ],
+    }
+  }
+
   const { imageDistance: di, magnification: m, atInfinity } = formImage(
     doDraw,
     focalLength,

@@ -46,3 +46,8 @@ export function toSvg(p: Point, scene: SceneParams): Point {
 export function svgXToOpticalX(svgX: number, scene: SceneParams): number {
   return (svgX - scene.viewWidth / 2) / scaleOf(scene)
 }
+
+/** SVG user-space y -> optical y (y grows downward in SVG, upward in optics). */
+export function svgYToOpticalY(svgY: number, scene: SceneParams): number {
+  return (scene.viewHeight / 2 - svgY) / scaleOf(scene)
+}

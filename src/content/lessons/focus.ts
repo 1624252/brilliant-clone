@@ -84,6 +84,8 @@ export const focusLesson: LessonDefinition = {
       ],
       reveal:
         'Parallel rays converge exactly at **F** — that is what **"focal point"** means. The farther the object, the closer its image creeps toward F.',
+      // After committing, let the learner drag the object in and watch the image.
+      explore: objectControl,
     },
   ],
 }

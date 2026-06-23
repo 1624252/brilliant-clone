@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Firebase web config, read from .env.local (git-ignored). See .env.example
+// Firebase web config, read from .env (git-ignored). See .env.example
 // for the variable names. These web values are not secrets (app security comes
 // from Firebase Auth + Firestore rules), but we keep them out of the repo by
 // convention.

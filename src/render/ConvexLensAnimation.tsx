@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useAnimationProgress } from './useAnimationProgress'
 import './RayFocusAnimation.css'
 
 // A morphing explainer: a flat rectangular slab (which lets parallel rays pass
@@ -16,9 +17,11 @@ const RAY_YS = [60, 85, 135, 160] // parallel ray heights (axis drawn separately
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+const HOLD = 600 // show the flat slab briefly first
+const MORPH = 1900 // then bow into the lens
+const TOTAL = HOLD + MORPH
+const ease = (x: number) =>
+  x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
 
 /** Lens outline at tween t: flat-faced slab (t=0) bulging into a convex lens (t=1). */
 function lensPath(t: number): string {
@@ -34,30 +37,20 @@ function lensPath(t: number): string {
 }
 
 export function ConvexLensAnimation() {
-  // Reduced motion: start (and stay) at the finished convex lens.
-  const [t, setT] = useState(() => (prefersReducedMotion() ? 1 : 0))
+  const elapsed = useAnimationProgress(TOTAL) * TOTAL
+  const nt = elapsed <= HOLD ? 0 : clamp01((elapsed - HOLD) / MORPH)
+  const t = ease(nt)
 
-  useEffect(() => {
-    if (prefersReducedMotion()) return
-    const HOLD = 600 // show the flat slab briefly first
-    const MORPH = 1900
-    const ease = (x: number) =>
-      x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
-    let raf = 0
-    let start = 0
-    const frame = (now: number) => {
-      if (!start) start = now
-      const elapsed = now - start
-      const nt = elapsed <= HOLD ? 0 : clamp01((elapsed - HOLD) / MORPH)
-      setT(ease(nt))
-      if (elapsed < HOLD + MORPH) raf = requestAnimationFrame(frame)
-    }
-    raf = requestAnimationFrame(frame)
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
-  const fOpacity = clamp01((t - 0.4) / 0.5)
   const convexOpacity = clamp01((t - 0.55) / 0.35)
+
+  // The outgoing rays bend by t, so they converge at x = LENS_X + F_LEN / t,
+  // which sweeps in from far right and settles exactly on F at t = 1. We draw the
+  // rays to that crossing and place the focal mark there, so the focus is *formed*
+  // by the rays meeting — not faded in.
+  const trueF = LENS_X + F_LEN
+  const xCross = t > 0.02 ? LENS_X + F_LEN / t : Infinity
+  const xEnd = Math.min(xCross, RIGHT_EDGE)
+  const focusOnScreen = xCross <= RIGHT_EDGE - 6
 
   return (
     <svg
@@ -69,16 +62,17 @@ export function ConvexLensAnimation() {
     >
       <line className="axis" x1={0} y1={CENTER_Y} x2={360} y2={CENTER_Y} />
 
-      {/* parallel incoming rays + outgoing rays that bend more as t grows */}
+      {/* parallel incoming rays + outgoing rays that bend more as t grows, drawn
+          all the way to the live crossing so they visibly meet at one point */}
       {RAY_YS.map((y) => {
         const slope = (CENTER_Y - y) / F_LEN
-        const yEnd = y + t * (slope * (RIGHT_EDGE - LENS_X))
+        const yEnd = y + t * slope * (xEnd - LENS_X)
         return (
           <g key={y}>
             <path className="beam beam--in" d={`M ${LEFT_EDGE},${y} L ${LENS_X},${y}`} />
             <path
               className="beam beam--out"
-              d={`M ${LENS_X},${y} L ${RIGHT_EDGE},${yEnd}`}
+              d={`M ${LENS_X},${y} L ${xEnd},${yEnd}`}
             />
           </g>
         )
@@ -92,13 +86,17 @@ export function ConvexLensAnimation() {
       {/* the morphing lens */}
       <path className="lens" d={lensPath(t)} />
 
-      {/* focal point + label fade in as the lens becomes convex */}
-      <g style={{ opacity: fOpacity }}>
-        <circle className="fpoint" cx={LENS_X + F_LEN} cy={CENTER_Y} r={4} />
-        <text className="flabel" x={LENS_X + F_LEN} y={CENTER_Y - 12} textAnchor="middle">
-          F
-        </text>
-      </g>
+      {/* focal point: appears where the rays actually cross and rides inward to F */}
+      {focusOnScreen && (
+        <g>
+          <circle className="fpoint" cx={xCross} cy={CENTER_Y} r={4} />
+          {xCross <= trueF + 4 && (
+            <text className="flabel" x={xCross} y={CENTER_Y - 12} textAnchor="middle">
+              F
+            </text>
+          )}
+        </g>
+      )}
 
       {/* incoming label, just above the top ray */}
       <text className="clens-tag" x={LEFT_EDGE} y={52}>

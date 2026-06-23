@@ -150,24 +150,24 @@
   }
 }
 
-/* Replay wrapper */
+/* Replay wrapper: the button sits *below* the animation (not overlapping it), so
+   it never covers the diagram or its caption — important on small screens. */
 .focus-explainer {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 .focus-replay {
-  position: absolute;
-  right: 0.6rem;
-  bottom: 0.6rem;
+  align-self: flex-end;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--border-strong, #2c3656);
   background: rgba(13, 19, 34, 0.85);
   color: var(--text, #e8ebf3);
   cursor: pointer;
-  backdrop-filter: blur(2px);
 }
 .focus-replay:hover {
   border-color: var(--brand, #6fb3ff);
@@ -189,6 +189,13 @@
 }
 .focus-anim .beam--out {
   stroke: #ff6b9d;
+}
+/* Dashed backward extension to a virtual focus (diverging lens). */
+.focus-anim .beam--virtual {
+  stroke: #ff6b9d;
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+  opacity: 0.7;
 }
 .focus-anim .clens-tag {
   fill: #ffd27a;

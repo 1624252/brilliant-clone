@@ -1,9 +1,10 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
+import { useAnimationProgress } from './useAnimationProgress'
 import './RayFocusAnimation.css'
 
 // A one-shot explainer: parallel rays draw on one by one, left to right, enter a
-// converging lens, and bend so they all cross at the focal point F. Purely
-// presentational; respects reduced-motion. Replay remounts to restart.
+// converging lens, and bend so they all cross at the focal point F. The draw-on
+// is driven by a single rAF progress value (deterministic; restarts on Replay).
 
 const CENTER_Y = 110
 const LENS_X = 190
@@ -14,8 +15,9 @@ const LEFT_EDGE = 6
 const RAY_YS = [56, 83, CENTER_Y, 137, 164]
 const RAY_STEP = 0.5 // seconds between successive rays starting to draw
 const SEG_DRAW = 0.42 // seconds to draw one segment
+const DURATION_MS = 3000 // whole sweep
 
-type RayStyle = CSSProperties & Record<'--len', number>
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 
 const pathLen = (pts: [number, number][]): number => {
   let len = 0
@@ -28,21 +30,31 @@ const pathLen = (pts: [number, number][]): number => {
 const pathD = (pts: [number, number][]): string =>
   'M ' + pts.map((p) => `${p[0]},${p[1]}`).join(' L ')
 
-/** A single straight segment that "draws on" over SEG_DRAW seconds after `delay`. */
+/** A segment drawn by `frac` (0 = hidden, 1 = fully drawn), via stroke-dashoffset. */
 function RaySeg({
   pts,
   cls,
-  delay,
+  frac,
 }: {
   pts: [number, number][]
   cls: string
-  delay: number
+  frac: number
 }) {
-  const style: RayStyle = { '--len': pathLen(pts), animationDelay: `${delay}s` }
-  return <path className={cls} d={pathD(pts)} style={style} />
+  const len = pathLen(pts)
+  return (
+    <path
+      className={cls}
+      d={pathD(pts)}
+      style={{ strokeDasharray: len, strokeDashoffset: len * (1 - frac), animation: 'none' }}
+    />
+  )
 }
 
+/** Draw fraction for a segment that starts at `delay`s and draws over SEG_DRAW. */
+const segFrac = (timeS: number, delay: number) => clamp01((timeS - delay) / SEG_DRAW)
+
 export function RayFocusAnimation() {
+  const timeS = useAnimationProgress(DURATION_MS) * (DURATION_MS / 1000)
   return (
     <svg
       className="focus-anim"
@@ -65,11 +77,11 @@ export function RayFocusAnimation() {
         const outDelay = inDelay + SEG_DRAW * 0.8
         return (
           <g key={y}>
-            <RaySeg pts={[[LEFT_EDGE, y], [LENS_X, y]]} cls="ray-in" delay={inDelay} />
+            <RaySeg pts={[[LEFT_EDGE, y], [LENS_X, y]]} cls="ray-in" frac={segFrac(timeS, inDelay)} />
             <RaySeg
               pts={[[LENS_X, y], [F_X, CENTER_Y]]}
               cls="ray-out"
-              delay={outDelay}
+              frac={segFrac(timeS, outDelay)}
             />
           </g>
         )
@@ -82,13 +94,13 @@ export function RayFocusAnimation() {
         F
       </text>
 
-      {/* pop-up callouts that label what's happening */}
-      <g className="callout callout--light">
+      {/* pop-up callouts that label what's happening (timed off the sweep) */}
+      <g className="callout" style={{ opacity: timeS > 0.2 ? 1 : 0 }}>
         <text x={44} y={36} textAnchor="middle">
           ☀️ Light
         </text>
       </g>
-      <g className="callout callout--focus">
+      <g className="callout" style={{ opacity: timeS > 2.4 ? 1 : 0 }}>
         <text x={F_X} y={CENTER_Y + 30} textAnchor="middle">
           Focus
         </text>
@@ -109,6 +121,7 @@ export function RayFocusExplainer() {
   const [run, setRun] = useState(0)
   return (
     <div className="focus-explainer">
+      {/* Changing the key remounts the SVG, which restarts the animation. */}
       <RayFocusAnimation key={run} />
       <button
         type="button"
@@ -133,6 +146,7 @@ const FL = { x: 150, y: 110 } // focal point (left)
 const CROSS = { parallel: 62, chief: 110, focal: 170 }
 
 export function RaySourceAnimation() {
+  const timeS = useAnimationProgress(2600) * 2.6
   const rays: { cy: number }[] = [
     { cy: CROSS.parallel },
     { cy: CROSS.chief },
@@ -160,11 +174,11 @@ export function RaySourceAnimation() {
         const outDelay = inDelay + SEG_DRAW * 0.8
         return (
           <g key={i}>
-            <RaySeg pts={[[S.x, S.y], [LENS2_X, r.cy]]} cls="ray-in" delay={inDelay} />
+            <RaySeg pts={[[S.x, S.y], [LENS2_X, r.cy]]} cls="ray-in" frac={segFrac(timeS, inDelay)} />
             <RaySeg
               pts={[[LENS2_X, r.cy], [IMG.x, IMG.y]]}
               cls="ray-out"
-              delay={outDelay}
+              frac={segFrac(timeS, outDelay)}
             />
           </g>
         )
@@ -180,16 +194,22 @@ export function RaySourceAnimation() {
       {/* light source: a glowing dot */}
       <circle className="src-glow" cx={S.x} cy={S.y} r={11} />
       <circle className="src" cx={S.x} cy={S.y} r={5} />
-      {/* image point */}
-      <circle className="img-point" cx={IMG.x} cy={IMG.y} r={4.5} />
+      {/* image point appears once the rays have reconverged */}
+      <circle
+        className="img-point"
+        cx={IMG.x}
+        cy={IMG.y}
+        r={4.5}
+        style={{ opacity: timeS > 1.7 ? 1 : 0, animation: 'none' }}
+      />
 
-      {/* callouts */}
-      <g className="callout callout--light">
+      {/* callouts (timed off the sweep) */}
+      <g className="callout" style={{ opacity: timeS > 0.15 ? 1 : 0 }}>
         <text x={S.x} y={S.y - 16} textAnchor="middle">
           ☀️ Light source
         </text>
       </g>
-      <g className="callout callout--focus">
+      <g className="callout" style={{ opacity: timeS > 1.7 ? 1 : 0 }}>
         <text x={FR.x} y={CENTER_Y + 28} textAnchor="middle">
           Focus
         </text>

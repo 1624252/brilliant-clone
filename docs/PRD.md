@@ -1,30 +1,45 @@
 # Product Requirements Document — "LensLab"
 
-An interactive, Brilliant-style learning app for **geometric optics (lenses)**.
+A learn-by-doing app, built deep for one subject: **geometric optics (lenses)**.
 
-- **Status:** Draft v1 (MVP definition)
+- **Subject (per `spec.txt`):** Geometric optics — thin lenses and image formation.
+- **Status:** MVP product spec (Phase 1).
 - **Last updated:** 2026-06-23
-- **Tech stack:** React (Vite + TypeScript), Firebase (Auth, Firestore, Hosting)
+- **Tech stack:** React 19 + TypeScript (Vite), React Router, Firebase (Auth, Firestore, Hosting).
 
 ---
 
 ## 1. Summary
 
-LensLab teaches one focused chapter — **lenses and image formation** — through short, hands-on lessons. Instead of multiple-choice trivia, every step gives the learner a **visual simulation they manipulate directly** (drag an object, move a screen, reshape a lens) and returns **instant, specific feedback** with a short explanation. Progress is **persisted per account** so a learner can leave mid-lesson and resume on any device, and a lightweight **habit loop** (streaks, milestones, lesson completion) keeps them coming back.
+LensLab teaches a single, coherent chapter — **how lenses form images** — through short, hands-on lessons. Instead of multiple-choice trivia, every step gives the learner a **visual simulation they manipulate directly** (drag the candle along the axis, reshape the lens with a curvature slider, predict-then-reveal where rays cross) and returns **instant, specific feedback** with a short explanation. Progress is **persisted per account** so a learner can leave mid-lesson and resume on any device, and a lightweight **habit loop** (daily streak, milestone badges, lesson-completion celebration, chapter progress) keeps them coming back.
 
-The MVP deliberately excludes AI/model calls. All feedback is computed deterministically from a physics engine and per-step rules.
+Per the project's three-phase cadence, this document specifies **Phase 1 (MVP)**, which **contains no AI**: all feedback is computed deterministically from a pure physics engine and per-step rules. AI (Phase 2) and learning-science layering (Phase 3) are noted as explicit future work in §17.
 
 ---
 
 ## 2. Problem & motivation
 
-Geometric optics is taught with **static diagrams** in textbooks. Learners memorize the thin-lens equation and "real vs. virtual image" rules without building intuition, because they never *move the object and watch the image respond*. Common misconceptions (e.g., "covering half the lens hides half the image") survive because nothing lets students test them.
+Geometric optics is usually taught with **static diagrams**. Learners memorize the thin-lens equation and the "real vs. virtual image" rules without building intuition, because they never *move the object and watch the image respond*. Misconceptions ("a diverging lens can make a real image," "a flatter lens focuses the same") survive because nothing lets students test them.
 
-LensLab fixes this with manipulable simulations and immediate, specific feedback — active learning instead of passive reading.
+LensLab fixes this with manipulable simulations and immediate, specific feedback — **active problem-solving instead of passive reading**, which is exactly what `spec.txt` asks for.
 
 ---
 
-## 3. User persona & domain
+## 3. Spec alignment — the three phases
+
+`spec.txt` mandates a strict build order. This PRD covers Phase 1 only; later phases are deliberately out of scope here (see §17).
+
+| Phase | Deadline | What it adds | This PRD |
+|-------|----------|--------------|----------|
+| **1 — MVP** | "Wednesday" | The core learn-by-doing app. **No AI.** | ✅ Specified here |
+| **2 — AI** | "Friday" | AI does something genuinely useful (e.g., generated hints, free-form Q&A, lesson generation from the content model). | ⏳ Future (§17) |
+| **3 — Learning science** | "Sunday" | Evidence-based techniques (spacing, retrieval practice, deeper mastery modeling). | ⏳ Future (§17) |
+
+The rule behind the order: *if the app does not teach without AI, no AI will save it.* LensLab is therefore designed so the unaided experience already teaches.
+
+---
+
+## 4. User persona & domain
 
 ### Primary persona (niche, MVP focus)
 
@@ -32,333 +47,456 @@ LensLab fixes this with manipulable simulations and immediate, specific feedback
 
 - 16–19 years old, taking **AP Physics 2 / first-year college physics** (or self-studying for it).
 - Comfortable with basic algebra; shaky on optics intuition.
-- Studies on a **laptop at home** and sometimes reviews on a **phone** between classes.
+- Studies on a **laptop at home** and reviews on a **phone** between classes.
 - Motivated by grades and by "finally getting it"; responds well to streaks and visible progress.
 - Frustrated by static textbook diagrams and answer keys that say *what* is right but not *why*.
 
 ### User story (primary)
 
-> **As an** intro physics student, **I want to** manipulate lens diagrams and get instant feedback on what I tried, **so that** I build real intuition for image formation and stop memorizing rules I don't understand.
+> **As an** intro physics student, **I want to** manipulate lens diagrams and get instant feedback on what I tried, **so that** I build real intuition for image formation instead of memorizing rules I don't understand.
 
 ### Domain scope (the "chapter")
 
-**Geometric optics — thin lenses and image formation.** Enough depth for 5–7 short lessons:
+**Geometric optics — thin lenses and image formation**, mapped as a **five-lesson learning path** (§6–§7) that takes a learner from "what is a focal point" to "predict any image with the thin lens equation."
 
-- Converging vs. diverging lenses; refraction basics.
-- Principal rays and ray tracing.
-- Image formation: real/virtual, upright/inverted, magnified/reduced.
-- The thin lens equation: \( \tfrac{1}{f} = \tfrac{1}{d_o} + \tfrac{1}{d_i} \).
-- Magnification: \( m = -\tfrac{d_i}{d_o} \).
-- (Stretch) The lensmaker's equation, chromatic aberration, "cover half the lens."
+### Personas explicitly NOT targeted (MVP)
 
-### Personas explicitly NOT targeted (for MVP)
-
-- Optical engineers / professionals needing aberration modeling, real glass catalogs, or precision tolerances.
+- Optical engineers needing aberration modeling, glass catalogs, or precision tolerances.
 - People without an algebra background.
-- General "all of physics" learners — we stay niche to lenses, not mechanics/E&M/etc.
+- General "all of physics" learners — we stay niche to lenses.
 - Instructors needing a classroom dashboard, assignment management, or grading exports.
 
 ---
 
-## 4. MVP definition
+## 5. MVP definition & acceptance criteria
 
-The MVP is the **smallest product that lets the user complete a real, multi-lesson optics chapter with manipulable problems, instant feedback, persistent progress, and a sense of daily momentum — on phone or laptop.**
+The MVP is the **smallest product that lets a learner complete a real, multi-lesson optics course with manipulable problems, instant feedback, persistent progress, and a sense of daily momentum — on phone or laptop.**
 
-A build is "MVP-complete" when all of these are true:
+A build is "MVP-complete" when all of `spec.txt`'s Phase-1 gates hold:
 
-1. A learner can **create an account and sign in**.
-2. There are **4–7 interactive lessons** on real lens concepts, each a short sequence of steps.
-3. **At least one** problem is directly manipulated (drag / slider / plot a point); in practice most are.
-4. Every interactive step has a **visual element** (diagram / simulation / responsive chart).
-5. Every step gives **instant right/wrong feedback + a short explanation**, and a **hint/explanation on a wrong attempt**.
-6. **Progress persists**: a learner can exit mid-lesson and resume the exact step later, on another device.
-7. The UI is **responsive**: works and resizes on mobile and desktop.
-8. A basic **habit loop** exists: streak counter, lesson-completion celebration, and visible chapter progress.
+1. A **chosen subject**, stated clearly, with the whole app built for a specific persona. ✅ (Lenses; intro-physics student.)
+2. **Interactive lessons on real concepts**, built around hands-on problems — not videos or walls of text. ✅ (Five lessons; see §7.)
+3. **At least one** problem the learner manipulates directly (drag, slider, predict). ✅ (Every interactive step.)
+4. A **visual element that responds** to input. ✅ (Live SVG ray diagram.)
+5. **Instant, specific, hand-written feedback** on each answer, right or wrong, with a short explanation and a hint on a wrong attempt. ✅
+6. **Progress persists**: leave mid-lesson, come back (even on another device), resume the same step. ✅ (Firestore.)
+7. **Accounts and names** (auth). ✅ (Email/password + Google.)
+8. **Works on mobile** screen sizes with touch. ✅ (Responsive SVG + layout.)
+9. **Deployed and public.** ✅ (Firebase Hosting.)
 
-### Lesson plan (MVP target: 5 lessons; 2 stretch)
+### Performance targets (from `spec.txt`)
 
-| # | Lesson | Core interaction | Concept | MVP? |
-|---|--------|------------------|---------|------|
-| 1 | **Meet the Lens** | Tap/toggle lens type; drag parallel rays | Converging vs. diverging, focal point | ✅ Core |
-| 2 | **Ray Tracing** | Drag object; construct/observe principal rays | Image formation, real vs. virtual | ✅ Core |
-| 3 | **The Thin Lens Equation** | Drag screen until sharp ("make it focus") | \( 1/f = 1/d_o + 1/d_i \) | ✅ Core |
-| 4 | **Magnification** | Drag object to hit a target magnification | \( m = -d_i/d_o \), size & orientation | ✅ Core |
-| 5 | **Cover Half the Lens** | Slide a mask over the lens; predict-then-reveal | Misconception buster; image stays whole, dims | ✅ Core |
-| 6 | **The Lensmaker's Equation** | Reshape glass (radii, index) to hit target *f* | \( 1/f = (n-1)(1/R_1 - 1/R_2) \) | ⏳ Stretch |
-| 7 | **Chromatic Aberration** | Spread/recombine wavelengths; build a doublet | Dispersion, why colors focus differently | ⏳ Stretch |
+- Feedback on an answer appears **under 100 ms** (computed locally; no network round-trip to validate).
+- Interactive visuals stay **smooth (~60 FPS)** while dragging.
+- Lessons reach first interaction in **under 2 s**.
+- **Multiple concurrent learners** with no slowdown (static hosting + per-user docs).
+
+### The five MVP testing scenarios (from `spec.txt`)
+
+1. A learner completes **one lesson end to end**, gets some problems wrong, and uses the feedback to recover.
+2. A learner **manipulates the interactive element** and watches the visual respond in real time.
+3. A learner **leaves mid-lesson and returns**; progress and streak persist.
+4. A learner **finishes a lesson** and the path **recommends a sensible next step**.
+5. The whole thing **on a phone-sized screen**.
 
 ---
 
-## 5. In scope vs. out of scope (MVP)
+## 6. Course path & depth over breadth
+
+Per `spec.txt`'s "depth over breadth" rule, LensLab ships **five lessons that build on each other**, not a shallow tour. Each unlocks the next; a learner who starts knowing little comes out able to predict any thin-lens image.
+
+```mermaid
+flowchart LR
+  A["1 · Convex Lenses<br/>focal point, f"] --> B["2 · Concave Lenses<br/>virtual focus, f < 0"]
+  B --> C["3 · Convex & Concave<br/>curvature sets f"]
+  C --> D["4 · Ray Tracing<br/>three principal rays"]
+  D --> E["5 · Thin Lens Equation<br/>1/f = 1/dₒ + 1/dᵢ"]
+```
+
+Lessons unlock **sequentially**: lesson *n* opens once lesson *n−1* is completed (`deriveChapterStatus` in `src/data/lessonStatus.ts`). The home screen recommends the first unlocked, unfinished lesson.
+
+---
+
+## 7. Lesson plan
+
+### 7.1 Overview
+
+| # | Lesson | id | Core interaction | Concept |
+|---|--------|-----|------------------|---------|
+| 1 | **Convex Lenses** | `focusing-light` | Drag the candle along the axis (snaps at 0/f/2f/3f, drag-to-∞) | Converging lens, focal point **F**, focal length **f** |
+| 2 | **Concave Lenses** | `concave-lenses` | Predict once, then drag to size the virtual image | Diverging lens, **f < 0**, always virtual/upright/reduced |
+| 3 | **Convex & Concave Lenses** | `convex-concave` | A **continuous, logarithmic curvature slider** reshapes the lens | Shape sets the **sign and strength** of f (convex / flat / concave) |
+| 4 | **Ray Tracing** | `ray-tracing` | **Plot the three rays** (drag a marker to the crossing), then drag to explore beyond/inside F | The **three principal rays** locate any image |
+| 5 | **The Thin Lens Equation** | `thin-lens-equation` | Drag to targets; explore extremes; predict | \( \tfrac{1}{f} = \tfrac{1}{d_o} + \tfrac{1}{d_i} \), \( m = -\tfrac{d_i}{d_o} \) |
+
+Every lesson opens with a short, mostly-visual **intro** (heading + a few sentences + an optional animated explainer) and then a handful of interactive/predict steps.
+
+### 7.2 Per-lesson breakdown
+
+**Lesson 1 — Convex Lenses (`focusing-light`).**
+*Intro:* a flat slab morphs into a convex lens while parallel rays bend to meet at **F** (`ConvexLensAnimation`).
+*Steps:* (a) slide the candle onto F and see the rays leave parallel; (b) pull it far away and watch the image settle near F; (c) predict where truly parallel rays (object at ∞) cross.
+*Teaches:* the focal point is where a converging lens brings parallel light together.
+
+**Lesson 2 — Concave Lenses (`concave-lenses`).**
+*Intro:* a slab morphs into a concave lens while parallel rays diverge and their dashed back-extensions meet at the **virtual focus** (`ConcaveLensAnimation`).
+*Steps:* (a) **predict** the image of a diverging lens (then drag to explore); (b) drag the candle right up to the lens to confirm it **never** makes a real image; (c) drag the candle until the virtual image is exactly **half size** (object at one focal length).
+*Teaches:* a diverging lens always forms a virtual, upright, reduced image.
+
+**Lesson 3 — Convex & Concave Lenses (`convex-concave`).**
+*Core interaction:* a **continuous, logarithmic curvature slider** reshapes one lens; the runner derives the focal length from its position (`sliderToFocalLength`), and the readout names the result ("Convex · f = …" / "Concave · f = …" / "Flat").
+*Steps:* (a) curve it outward to make it **converging** (f > 0); (b) curve it the other way to make it **diverging** (f < 0); (c) flatten it (toward the center → f → ∞, no focusing). The diagram redraws the lens — and its bulge — as convex / flat / concave to match.
+*Teaches:* lens shape sets the sign and strength of f; a flat lens has no focal point.
+
+**Lesson 4 — Ray Tracing (`ray-tracing`).**
+*Intro:* the three principal rays animation.
+*Steps:* (a) **plot the three rays** for an object beyond 2F — drag a marker until the parallel, chief, and focal rays each obey their rule and cross at the image; (b) drag the candle so the crossing lands **beyond 2F** (real, inverted, reduced); (c) drag the candle **inside F** to watch the rays diverge into a virtual, upright, enlarged image (a magnifier).
+*Teaches:* you only need three special rays to locate any image.
+
+**Lesson 5 — The Thin Lens Equation (`thin-lens-equation`).**
+*Intro:* light fanning from a source back to an image through F (`RaySourceAnimation`); the equation shown live.
+*Steps:* same-size image at 2F; magnifier inside F; projector between F and 2F; two extremes (object at ∞ → image at F; object at the lens → image at the lens); predict the inside-F case. A **live equation panel** plugs in the current numbers.
+*Teaches:* one equation ties object distance, image distance, and magnification together.
+
+---
+
+## 8. In scope vs. out of scope (MVP)
 
 ### In scope
 
-- Email/password authentication (+ optionally Google sign-in) and a display name.
+- Email/password **and** Google authentication, with a display name and account management (change name/email/password, account linking).
 - A **content model** (typed lesson/step definitions) so new lessons are added as data, not new code.
-- A **shared optics engine** (pure functions) powering all simulations.
-- Interactive problem types: **drag-along-axis, slider, toggle/tap, plot-a-point / make-it-focus**.
-- Deterministic, rule-based feedback (correct/incorrect + explanation + one hint).
-- Per-user progress: current lesson, current step, completed lessons, per-step correctness.
-- Habit loop: daily streak, milestone badges (e.g., "first lesson," "chapter complete"), chapter progress bar.
-- Responsive layout (mobile + desktop, resizes with window).
+- A **shared optics engine** (pure functions) powering all simulations and success checks.
+- Interactive problem types: **drag-along-axis** (with snapping + drag-to-infinity), **slider**, **continuous/logarithmic curvature**, **predict-then-reveal** (which can stay interactive via a post-commit drag), and **plot-the-rays** (construct the ray diagram by dragging one marker).
+- Deterministic, rule-based feedback (correct/incorrect + explanation + a hint).
+- Per-user progress: current lesson, current step (resume), completed lessons; daily streak.
+- **Client-side routing** with deep links and working browser back/forward (`/login`, `/`, `/topics/:topicId`, `/lessons/:lessonId`).
+- Responsive layout (mobile + desktop, resizes with the window).
 - Firebase Hosting deployment.
 
-### Out of scope (MVP — explicitly deferred)
+### Out of scope (MVP — deferred)
 
-- **Any AI/LLM features** (no model calls, no generated hints, no chatbot).
-- Authoring UI / CMS for non-developers (content is added by editing typed config).
+- **Any AI/LLM features** (no model calls, no generated hints, no chatbot) — Phase 2.
+- Authoring UI / CMS (content is edited as typed config).
 - Social features: following, leaderboards, sharing, comments.
-- Spaced-repetition scheduling and sophisticated mastery modeling (a *simple* "filled gaps / what's next" suggestion is allowed; adaptive algorithms are not).
+- Spaced repetition and adaptive mastery modeling — a *simple* "what's next" rule is allowed (Phase 3 deepens this).
 - Payments, subscriptions, paywalls.
 - Multi-subject catalog (only the lenses chapter exists).
-- Offline mode / PWA install, push notifications, native apps.
-- Instructor dashboards, classes, assignment management.
-- Internationalization / localization.
-- Accessibility beyond reasonable defaults (full WCAG audit deferred, though we keep semantics sane).
+- Offline/PWA, push notifications, native apps.
+- Instructor dashboards, classes, assignments.
+- Internationalization; full WCAG audit (we keep semantics sane).
 
 ### User stories NOT focused on (MVP)
 
-- *As an instructor, I want to assign lessons and see my class's scores* — out.
-- *As a learner, I want an AI tutor to answer free-form questions* — out.
-- *As a learner, I want to compete on a global leaderboard* — out.
-- *As a power user, I want to author my own lessons in-app* — out.
-- *As a learner, I want the app to schedule reviews via spaced repetition* — out.
+- *As an instructor, I want to assign lessons and see class scores* — out.
+- *As a learner, I want an AI tutor for free-form questions* — out (Phase 2).
+- *As a learner, I want a global leaderboard* — out.
+- *As a power user, I want to author lessons in-app* — out.
+- *As a learner, I want spaced-repetition scheduling* — out (Phase 3).
 
 ---
 
-## 6. Functional requirements
+## 9. Functional requirements
 
-### 6.1 Authentication & accounts
-- FR-1: User can sign up with email/password (and set a display name) or with Google sign-in.
-- FR-2: User can sign in and stay signed in across sessions (persisted auth).
-- FR-3: User can sign out.
-- FR-4: Unauthenticated users can see the lesson list but must sign in to start (decision: gate progress behind auth so it can persist).
+### 9.1 Authentication & accounts
+- FR-1: Sign up with email/password (with a display name) or Google.
+- FR-2: Stay signed in across sessions (persisted auth).
+- FR-3: Sign out (behind a confirmation dialog).
+- FR-4: Manage the account: change display name, change email (re-auth required), change password, and link a same-email Google/password credential. Creating an email account that collides with an existing Google login is blocked with a helpful message.
+- FR-5: Routes are auth-gated: unauthenticated users are sent to `/login`.
 
-### 6.2 Lessons & interactive steps
-- FR-5: The home screen lists the chapter's lessons with locked/unlocked/completed state and a progress indicator. Lessons unlock sequentially; navigating to a not-yet-unlocked lesson is allowed but shows a confirmation/warning popup first.
-- FR-6: A lesson is an ordered sequence of steps; each step renders a prompt + a visual + controls.
-- FR-7: Each interactive step validates the learner's manipulation against a success rule and shows **instant** correct/incorrect feedback.
-- FR-8: A wrong attempt shows a **specific** explanation/hint (not just "incorrect").
-- FR-9: On success, the learner advances; on lesson completion, a celebratory summary appears.
+### 9.2 Lessons & interactive steps
+- FR-6: The home screen lists the five lessons with locked/unlocked/completed state and chapter progress.
+- FR-7: A lesson is an ordered sequence of steps; each renders a prompt + a live diagram + controls (or predict choices, or a draggable plot-the-rays marker).
+- FR-8: Interactive steps validate the manipulation against a `success` rule and show **instant** correct/incorrect feedback.
+- FR-9: A wrong attempt shows a **specific** hint, not just "incorrect."
+- FR-10: Predict-then-reveal steps hide the rays/image until the learner commits, then reveal both with an explanation; an optional `explore` control then lets the learner drag the object and watch the revealed result respond.
+- FR-11: On lesson completion, a celebratory summary appears.
 
-### 6.3 Progress & persistence
-- FR-10: The app records current lesson, current step index, and per-step result to Firestore.
-- FR-11: A learner who exits mid-lesson resumes at the same step on any device after sign-in.
-- FR-12: Completed lessons are marked and contribute to chapter progress.
+### 9.3 Progress & persistence
+- FR-12: The app records current lesson and current step index to Firestore as the learner advances.
+- FR-13: A learner who exits mid-lesson resumes at the same step on any device after sign-in.
+- FR-14: Completed lessons are marked and contribute to chapter progress and lesson unlocking.
 
-### 6.4 Habit loop
-- FR-13: A daily streak increments when the learner completes ≥1 step/lesson on a given day; it resets after a missed day.
-- FR-14: Milestone badges unlock (e.g., first lesson done, 3-day streak, chapter complete).
-- FR-15: Chapter progress (e.g., "3 / 5 lessons") is visible on the home screen.
+### 9.4 Habit loop
+- FR-15: A daily streak increments once per local day on lesson completion and resets after a missed day.
+- FR-16: Chapter progress (e.g., "2 / 5 lessons") is visible on the home screen.
+- FR-16a: **Milestone badges** (first lesson, halfway, course complete, 2-day streak, 7-day streak) are derived client-side from progress and streak data and shown on the home screen; a newly earned milestone triggers a small celebration.
 
-### 6.5 Responsiveness
-- FR-16: Layouts adapt from ~320px (phone) to desktop; simulations scale with the viewport and remain usable with touch and mouse.
-
----
-
-## 7. Non-functional requirements
-
-- **Performance:** simulations animate smoothly (target 60fps for drag interactions); engine functions are synchronous and cheap.
-- **Reliability:** feedback is deterministic and reproducible; no reliance on network round-trips to validate an answer.
-- **Cost:** stays within Firebase free/Spark-tier limits for MVP traffic.
-- **Maintainability:** physics engine has zero React/DOM dependencies and is unit-testable; new lessons require only new content config.
-- **Security:** Firestore rules restrict each user to reading/writing only their own progress documents.
-
-### 7.1 Interactive-problem design principles
-
-Every interactive lesson should follow these (grounded in learning science):
-
-- **Visual-first, minimal text.** Carry meaning with the diagram, color, and motion; keep prompts and feedback to a sentence or two.
-- **Dual coding.** Tie each symbol to its picture and its live value (e.g. `f`/`dₒ`/`dᵢ`/`m` use one consistent color across the equation, the readout chips, and the diagram).
-- **Show the actual concept.** If a lesson is about the thin lens equation, the equation is on screen and updates live; don't just describe it.
-- **Explain terms before using them.** Introduce vocabulary (real/virtual, inverted, focal length, …) visually or via lightweight, on-demand glossary/tooltips before relying on it. (Planned to deepen in a later phase.)
-- **Active recall + immediate, specific feedback.** The learner manipulates something to answer; feedback says *why*, not just right/wrong.
-- **Color and imagery.** Use a coherent palette and real-looking imagery (e.g. a candle as the object) to make scenes appealing and memorable.
+### 9.5 Responsiveness & navigation
+- FR-17: Layouts adapt from ~320 px to desktop; the SVG diagram scales with the viewport and works with touch and mouse.
+- FR-18: Deep links and the browser back/forward buttons work for every screen.
 
 ---
 
-## 8. Architecture overview
+## 10. Non-functional requirements
 
-Four decoupled layers (dependencies point inward; the engine depends on nothing):
+- **Performance:** synchronous, cheap engine functions; SVG animations driven by `requestAnimationFrame`; feedback computed locally (< 100 ms).
+- **Reliability:** feedback is deterministic and reproducible; the engine never throws or returns `NaN` on edge cases (object at 0/∞, flat lens at f = ∞).
+- **Cost:** stays within Firebase Spark-tier limits for MVP traffic.
+- **Maintainability:** the engine has zero React/DOM dependencies and is unit-tested; new lessons are pure content config.
+- **Security:** Firestore rules restrict each user to their own `users/{uid}` documents.
+- **Accessibility:** semantic roles (`slider`, `radiogroup`, `progressbar`), `aria-label`s on the diagram, and `prefers-reduced-motion` support on animations.
 
-```
-content (lesson definitions)  →  interactive (stateful React)  →  render (SVG/canvas)  →  engine (pure math)
-                                                                                  firebase/ (isolated, via hooks)
+### 10.1 Interactive-problem design principles (learning science)
+
+- **Visual-first, minimal text.** Carry meaning with the diagram, color, and motion; keep prompts/feedback to a sentence or two.
+- **Dual coding.** Each symbol (`f`/`dₒ`/`dᵢ`/`m`) uses one consistent color across the equation, the readout chips, and the diagram.
+- **Show the actual concept.** The thin lens equation is on screen and updates live; the curvature lesson reshapes the real lens.
+- **Explain terms before using them.** Vocabulary (real/virtual, inverted, focal length) is introduced visually and via an on-demand glossary.
+- **Active recall + specific feedback.** The learner manipulates something to answer; feedback says *why*. Predict-then-reveal forces a commitment first.
+- **Color and imagery.** A coherent palette and a real-looking candle make scenes memorable.
+
+---
+
+## 11. Architecture overview
+
+Decoupled layers; dependencies point toward the pure engine (which depends on nothing).
+
+```mermaid
+flowchart TD
+  content["content/<br/>typed lessons + ProblemRunner"] --> interactive["interactive/<br/>LensScene, drag, snapping"]
+  interactive --> render["render/<br/>SVG diagram + animations"]
+  render --> engine["engine/<br/>pure optics math"]
+  content -. uses .-> engine
+  subgraph crosscutting["Cross-cutting"]
+    auth["auth/<br/>AuthContext"]
+    data["data/<br/>progress, lessonStatus"]
+    firebase["firebase/<br/>config"]
+  end
+  app["App + routes<br/>(react-router)"] --> content
+  app --> auth
+  app --> data
+  auth --> firebase
+  data --> firebase
 ```
 
 | Layer | Responsibility | Examples |
 |-------|----------------|----------|
-| **engine/** | Pure optics math, no React | `thinLens()`, `magnification()`, `lensmaker()`, principal-ray geometry |
-| **render/** | Draw visuals from computed props | `LensShape`, `RayBundle`, `ObjectArrow`, `ApertureMask` |
-| **interactive/** | State + input wiring | `Draggable`, `Slider`, `LensScene` |
-| **content/** | Typed lesson/step data + runner | `ProblemDefinition`, `ProblemRunner`, lesson configs |
-| **firebase/** | Auth + persistence, accessed via hooks | `useAuth()`, `useProgress()` |
+| **engine/** | Pure optics math, no React | `imageDistance`, `magnification`, `formImage`, `tracePrincipalRays`, `sliderToFocalLength` |
+| **render/** | Draw visuals from computed props | `LensDiagram`, `ConvexLensAnimation`, `ConcaveLensAnimation`, `RayFocusAnimation` |
+| **interactive/** | State + input wiring | `LensScene`, `snapValue` |
+| **content/** | Typed lesson/step data + runner + rich text | `ProblemRunner`, lesson configs, `renderRich` |
+| **auth/** | Auth context + friendly error mapping | `AuthContext`, `friendlyAuthError` |
+| **data/** | Persistence + status derivation | `progress.ts`, `lessonStatus.ts` |
+| **firebase/** | SDK initialization | `config.ts` |
 
-**Content model:** each step is a data object (prompt, which values are fixed, which controls are exposed, a `success(state, derived)` predicate, and feedback text). A generic `ProblemRunner` interprets any definition, so adding a lesson = adding config.
-
----
-
-## 9. Tech stack
-
-- **Frontend:** React 19 + TypeScript, built with Vite. SVG for ray diagrams (resolution-independent, easy to make responsive); canvas reserved for heavier simulations if needed.
-- **Styling:** CSS (responsive via fl/grid + relative units); no heavy UI framework required for MVP.
-- **Backend-as-a-service:** Firebase
-  - **Authentication** — email/password (+ optional Google provider).
-  - **Cloud Firestore** — user profiles, progress, streaks (NoSQL document store).
-  - **Hosting** — static deploy of the built SPA.
-- **Content storage decision (MVP):** lesson content ships as **typed config in the repo** (versioned with code, no read cost, easy to author). Firestore stores only **per-user data**. A future iteration can move content into a Firestore `lessons` collection without changing the content model.
+A generic **`ProblemRunner`** interprets any lesson definition, so adding a lesson = adding config.
 
 ---
 
-## 10. Data schema
+## 12. Tech stack
 
-### 10.1 Where things live
+- **Frontend:** React 19 + TypeScript, built with Vite. SVG for ray diagrams (resolution-independent, easy to make responsive and animate).
+- **Routing:** React Router (`BrowserRouter`) for `/login`, `/`, `/topics/:topicId`, `/lessons/:lessonId`, with auth gating.
+- **Styling:** CSS with variables and responsive units; no heavy UI framework.
+- **Backend-as-a-service:** Firebase — **Auth** (email/password + Google), **Cloud Firestore** (profiles, streaks, per-lesson progress), **Hosting** (static SPA deploy).
+- **Content storage decision (MVP):** lessons ship as **typed config in the repo** (versioned, zero read cost, easy to author). Firestore stores only **per-user data**. A future iteration can move content into a `lessons` collection without changing the content model.
+
+---
+
+## 13. Content model (in-app types)
+
+The actual types live in `src/content/types.ts`:
+
+```ts
+// A control is a slider/drag/curvature input bound to one state key.
+type ControlType = 'drag-axis' | 'slider' | 'curvature'
+
+interface Control {
+  key: string            // state key this control writes, e.g. "objectDistance" | "curvature"
+  type: ControlType
+  min: number
+  max: number
+  step?: number           // small steps (e.g. 0.01) make a curvature slider continuous
+  label?: string
+  allowInfinity?: boolean // show an "∞" button / drag-to-infinity
+  snaps?: number[]        // gently snap to important values (0, f, 2f, …)
+}
+
+// Three kinds of step: a hands-on interactive step, a predict-then-reveal step,
+// or a plot-the-rays step (construct the ray diagram by dragging one marker).
+interface InteractiveStep {
+  id: string
+  prompt: string
+  kind?: 'interactive'
+  controls: Control[]
+  initial: Record<string, number>          // starting control values
+  fixed?: Record<string, number>           // values the learner can't change
+  success: (state, image: ImageFormation) => boolean
+  correctFeedback: string
+  hint: string
+}
+
+interface Choice { id: string; label: string; correct?: boolean; feedback: string }
+
+interface PredictStep {
+  id: string
+  prompt: string
+  kind: 'predict'
+  scene: { objectDistance: number; focalLength: number }
+  choices: Choice[]                        // exactly one correct
+  reveal: string                           // shown once the truth is revealed
+  explore?: Control                        // after committing, drag to keep it hands-on
+}
+
+interface PlotRaysStep {
+  id: string
+  prompt: string
+  kind: 'plot-rays'
+  scene: { objectDistance: number; focalLength: number; objectHeight?: number }
+  reveal: string                           // shown once the rays converge correctly
+  hint?: string                            // nudge shown while still solving
+}
+
+type StepDefinition = InteractiveStep | PredictStep | PlotRaysStep
+
+interface LessonIntro {
+  heading: string
+  paragraphs: string[]
+  animation?: 'focus' | 'source' | 'convex' | 'concave'
+}
+
+interface LessonDefinition {
+  id: string
+  title: string
+  order: number
+  estMinutes: number
+  summary?: string
+  placeholder?: boolean    // a "coming soon" card (none in the current course)
+  intro?: LessonIntro
+  steps: StepDefinition[]
+}
+```
+
+**Curvature control.** Lesson 3's curvature slider is **continuous** (a position `p ∈ [-1, 1]`, step `0.01`); `ProblemRunner` maps it to a focal length via `sliderToFocalLength(p)` using a **logarithmic** interpolation, so equal slider movement multiplies `f` by a constant factor and the lens flattens smoothly toward an **infinite** focal length at the center (`p > 0` convex, `p < 0` concave, `p = 0` → `Infinity`). The engine keeps its `f`-based API and never divides by zero; a very large `|f|` (`> FLAT_FOCAL`) reads as "flat." The rendered lens bows in proportion to `|f|`, so a strong lens looks strongly curved and a near-flat one looks nearly flat.
+
+**Interactive predict steps.** A predict-then-reveal step may carry an optional `explore` control: once the learner commits, a drag handle activates so they can move the object and watch the now-revealed rays and image respond. This keeps the single predict step per lesson hands-on rather than a static multiple-choice.
+
+**Plot-the-rays steps.** Instead of choosing an answer, the learner drags a single marker (their predicted image point). The three principal rays are drawn from their fixed lens-crossings through the marker, and a live checklist lights up as each ray's rule is met — **parallel** bends through F, **chief** stays straight through the center, **focal** exits parallel. All three hold at exactly one place (the true image tip), so the step is solved by *constructing* the diagram, not picking from a list (`PlotRaysScene`, `src/interactive/plotRays.ts`). The geometry rules are pure and unit-tested; the marker is drag- and keyboard-operable for mobile and accessibility. Used for real-image scenes (e.g., Ray Tracing's "where do the three rays cross?").
+
+**Rich text.** Feedback and intro text support lightweight `**bold**`, `__underline__`, and `\frac{num}{den}` syntax, rendered by `renderRich` (`src/content/richText.tsx`).
+
+---
+
+## 14. Data schema
+
+### 14.1 Where things live
 
 | Data | Store | Rationale |
 |------|-------|-----------|
 | Lesson/step **content** | In-app TypeScript config (repo) | Static, versioned, zero read cost, dev-authored |
 | User **profile & streak** | Firestore `users/{uid}` | Per-user, small, frequently read |
-| Per-lesson **progress** | Firestore `users/{uid}/progress/{lessonId}` | Per-user, resumable, queryable |
+| Per-lesson **progress** | Firestore `users/{uid}/progress/{lessonId}` | Per-user, resumable |
 | **Auth credentials** | Firebase Auth (managed) | Never stored in our DB |
 
-### 10.2 Content model (in-app types)
-
-```ts
-type ControlType = 'drag-axis' | 'slider' | 'toggle' | 'plot-point';
-
-interface Control {
-  key: string;            // state key this control writes, e.g. "objectDistance"
-  type: ControlType;
-  min?: number;
-  max?: number;
-  step?: number;
-  label?: string;
-}
-
-interface StepDefinition {
-  id: string;
-  prompt: string;
-  engine: 'thinLens' | 'lensmaker' | 'chromatic';
-  fixed: Record<string, number>;          // values the learner can't change
-  controls: Control[];                     // values the learner manipulates
-  initial: Record<string, number>;         // starting control values
-  success: (state: Record<string, number>, derived: EngineOutput) => boolean;
-  correctFeedback: string;                 // shown on success
-  hint: string;                            // shown on a wrong attempt
-  reveal?: 'rays' | 'graph' | 'none';      // feedback visualization
-}
-
-interface LessonDefinition {
-  id: string;                              // e.g. "thin-lens-equation"
-  title: string;
-  order: number;
-  estMinutes: number;
-  steps: StepDefinition[];
-}
-
-interface ChapterDefinition {
-  id: string;                              // "geometric-optics-lenses"
-  title: string;
-  lessons: LessonDefinition[];
-}
-```
-
-### 10.3 Firestore schema (per-user data)
+### 14.2 Firestore layout (matches `src/data/progress.ts`)
 
 ```
 users/{uid}
   ├─ displayName: string
   ├─ email: string
   ├─ createdAt: Timestamp
-  ├─ streak: {
-  │     current: number,          // consecutive active days
-  │     longest: number,
-  │     lastActiveDate: string    // "YYYY-MM-DD" (user's local day)
-  │  }
-  ├─ badges: string[]             // e.g. ["first-lesson", "chapter-complete"]
-  └─ chapterProgress: {
-        chapterId: string,
-        lessonsCompleted: number,
-        lessonsTotal: number
+  └─ streak: {
+        current: number,          // consecutive active days
+        longest: number,
+        lastActiveDate: string    // "YYYY-MM-DD", user's local day
      }
 
-users/{uid}/progress/{lessonId}      // one doc per lesson
+users/{uid}/progress/{lessonId}   // one doc per lesson
   ├─ lessonId: string
-  ├─ status: 'not-started' | 'in-progress' | 'completed'
-  ├─ currentStepIndex: number       // for resume
-  ├─ steps: {                       // keyed by stepId
-  │     [stepId: string]: {
-  │        attempts: number,
-  │        correct: boolean,
-  │        lastAttemptAt: Timestamp
-  │     }
-  │  }
-  ├─ startedAt: Timestamp
-  └─ completedAt: Timestamp | null
+  ├─ status: 'in-progress' | 'completed'
+  ├─ currentStepIndex: number      // for resume
+  ├─ completedAt?: Timestamp       // set on completion
+  └─ updatedAt: Timestamp
 ```
 
-**Example `users/{uid}/progress/thin-lens-equation`:**
+**Example `users/{uid}/progress/concave-lenses`:**
 
 ```json
 {
-  "lessonId": "thin-lens-equation",
+  "lessonId": "concave-lenses",
   "status": "in-progress",
-  "currentStepIndex": 2,
-  "steps": {
-    "intro-make-it-focus": { "attempts": 1, "correct": true,  "lastAttemptAt": "2026-06-23T13:40:00Z" },
-    "solve-for-f":         { "attempts": 3, "correct": true,  "lastAttemptAt": "2026-06-23T13:43:00Z" },
-    "virtual-image":       { "attempts": 1, "correct": false, "lastAttemptAt": "2026-06-23T13:45:00Z" }
-  },
-  "startedAt": "2026-06-23T13:39:00Z",
-  "completedAt": null
+  "currentStepIndex": 1,
+  "updatedAt": "2026-06-23T13:43:00Z"
 }
 ```
 
-### 10.4 Security rules (intent)
+> Per-step attempt counts are intentionally **not** persisted in the MVP. **Milestone badges** need no schema change either: they are derived client-side from progress and streak data (§15), with the "already seen" set kept in `localStorage` only to decide when to celebrate.
+
+### 14.3 Security rules (intent)
 
 - A user may read/write only documents under their own `users/{uid}` path (`request.auth.uid == uid`).
 - Content is not in Firestore (MVP), so no content read rules are needed.
 
 ---
 
-## 11. "What's next / fill gaps" logic (lightweight, MVP)
+## 15. Habit loop & "what's next" logic (lightweight, MVP)
 
-No ML. A simple rule:
+No ML. A few simple, deterministic rules:
 
-- Recommend the **lowest-order lesson** that is `not-started` or `in-progress`.
-- If a completed lesson has any step with `correct: false` (the learner skipped past via hint reveal or got it wrong), surface it as a **"review this"** suggestion before unlocking purely new material.
+- **Streak:** completing a lesson bumps a daily streak once per local day (`bumpStreak`); a missed day resets it.
+- **Milestones:** `deriveMilestones(status, streak)` derives badges entirely from existing progress + streak data (no extra Firestore writes): first lesson, halfway (3 lessons), course complete (5 lessons), 2-day streak, and 7-day streak. Streak badges use the **longest** streak so they stay earned after a reset. Newly earned badges trigger a small celebration (last-seen set tracked in `localStorage`).
+- **Recommendation:** `deriveChapterStatus` recommends the **lowest-order unlocked, unfinished lesson**. Lessons unlock sequentially as the previous one is completed.
 
-This satisfies "fill gaps before moving on / recommend what's next" without adaptive modeling.
+This satisfies "track mastery, recommend what's next" without adaptive modeling. Phase 3 can layer real spacing/retrieval on top.
 
 ---
 
-## 12. Success metrics (how we'd judge the MVP)
+## 16. Routing & navigation
+
+| Route | Screen | Notes |
+|-------|--------|-------|
+| `/login` | Auth (sign in / sign up) | Redirects to `/` when already signed in |
+| `/` | Topics landing | Auth-gated; pick a subject (today: Geometric Optics: Lenses) |
+| `/topics/:topicId` | Course path / roadmap | The lessons + progress for a topic; unknown topics redirect to `/` |
+| `/lessons/:lessonId` | Lesson runner | Deep-linkable; resumes the saved step |
+
+Account management (name/email/password, sign-in method, linking) opens as a **modal** from the avatar on the landing or roadmap pages, rather than a separate route.
+
+Built on React Router so deep links and the browser **back/forward** buttons work everywhere; unauthenticated access to gated routes redirects to `/login`. The view also scrolls back to the top on each route change and step change.
+
+---
+
+## 17. Future / out of scope (kept for later phases)
+
+These are deliberately **not** in the MVP but the door is left open:
+
+- **More lenses content:** the **Lensmaker's Equation** (reshape glass via radii/index to hit a target *f*) and **Chromatic Aberration** (dispersion; build a doublet). The `placeholder()` helper and sequential-unlock model already accommodate new lessons.
+- **Phase 2 — AI:** generated hints tuned to the learner's wrong attempt, a free-form "explain this" tutor, or generating new lessons from the content model.
+- **Phase 3 — Learning science:** spaced repetition, retrieval-practice scheduling, per-step mastery tracking and "review this" prompts (which would reintroduce per-step attempt persistence in the schema).
+- **Platform:** instructor dashboards, social/leaderboards, offline/PWA, i18n, full WCAG audit.
+
+---
+
+## 18. Success metrics (how we'd judge the MVP)
 
 - **Activation:** % of new accounts that complete Lesson 1.
-- **Completion:** % of starters who finish the chapter (≥5 lessons).
+- **Completion:** % of starters who finish all five lessons.
 - **Retention proxy:** % of users with a streak ≥ 2 days.
-- **Resume works:** % of mid-lesson exits that successfully resume at the right step.
+- **Resume works:** % of mid-lesson exits that resume at the right step.
 - **Feedback quality (qualitative):** learners report the explanations told them *why* they were wrong.
 
 ---
 
-## 13. Risks & open questions
+## 19. Risks & open questions
 
-- **Drag UX on mobile** for ray diagrams may be fiddly; mitigate with large hit targets and SVG scaling.
-- **Streak timezone handling** — store the user's local "YYYY-MM-DD"; decide on a single source of "today."
-- **Scope creep into more topics** — resist; lensmaker/chromatic stay as stretch lessons only.
-- **Decided:** Auth supports **email/password + Google sign-in** for the MVP.
-- **Decided:** Lessons **unlock sequentially**, but the learner may navigate to any lesson via a **confirmation/warning popup** (and may always replay completed lessons).
+- **Drag UX on mobile** for ray diagrams can be fiddly; mitigated with large hit targets, value snapping, and SVG scaling.
+- **Streak timezone handling** — store the user's local "YYYY-MM-DD" as the single source of "today."
+- **Scope creep into more topics** — resist; Lensmaker/Chromatic stay future-only.
+- **Decided:** Auth supports **email/password + Google**, with account linking and a block on email accounts colliding with an existing Google login.
+- **Decided:** Lessons **unlock sequentially**; completed lessons can be replayed.
 
 ---
 
-## 14. Proposed build order
+## 20. Proposed build order
 
-1. Scaffold the four layers + Firebase config (auth + Firestore).
-2. Build the **engine** (`thinLens`, `magnification`) with unit tests.
-3. Build **render** + **interactive** `LensScene` and a generic `ProblemRunner`.
-4. Ship **Lesson 2 (Ray Tracing)** or **Lesson 3 (Thin Lens)** as the first end-to-end vertical slice (auth → interact → feedback → persist).
-5. Add remaining core lessons (1, 4, 5) as content config.
-6. Layer in the habit loop (streaks, badges, progress) + responsive polish.
+1. Scaffold the layers + Firebase config (auth + Firestore).
+2. Build the **engine** (`imageDistance`, `magnification`, `formImage`, `tracePrincipalRays`, `sliderToFocalLength`) with unit tests.
+3. Build **render** + **interactive** (`LensDiagram`, `LensScene`) and the generic **`ProblemRunner`**.
+4. Ship one lesson end-to-end as a vertical slice (auth → interact → feedback → persist).
+5. Add the remaining lessons as content config (Convex → Concave → Convex & Concave → Ray Tracing → Thin Lens).
+6. Layer in the habit loop (streak, progress), routing, account management, and responsive polish.
 7. Deploy to Firebase Hosting.
-8. (Stretch) Lensmaker + chromatic aberration lessons.
+8. (Future) Lensmaker + chromatic lessons; then Phases 2–3.
+```

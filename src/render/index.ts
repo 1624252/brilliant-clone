@@ -6,11 +6,13 @@ export {
   RaySourceExplainer,
 } from './RayFocusAnimation'
 export { ConvexLensAnimation, ConvexLensExplainer } from './ConvexLensAnimation'
+export { ConcaveLensAnimation, ConcaveLensExplainer } from './ConcaveLensAnimation'
 export {
   DEFAULT_SCENE,
   scaleOf,
   sceneRightX,
   toSvg,
   svgXToOpticalX,
+  svgYToOpticalY,
   type SceneParams,
 } from './sceneGeometry'

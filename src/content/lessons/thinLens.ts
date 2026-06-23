@@ -119,6 +119,7 @@ export const thinLensLesson: LessonDefinition = {
       ],
       reveal:
         'Inside the focal length the outgoing rays diverge, so they only appear to come from a **virtual, upright, enlarged** image. That is exactly how a **magnifying glass** works.',
+      explore: objectControl,
     },
   ],
 }

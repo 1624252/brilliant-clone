@@ -28,7 +28,7 @@ npm run dev      # start the dev server, then open the printed localhost URL
 
 ## Firebase setup (required for accounts & saved progress)
 
-The web config lives in a git-ignored `.env.local` (see `.env.example` for the
+The web config lives in a git-ignored `.env` (see `.env.example` for the
 variable names). To make sign-in and progress-saving work end to end, configure
 the Firebase project once in the [console](https://console.firebase.google.com/):
 

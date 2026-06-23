@@ -1,0 +1,104 @@
+.plot-scene {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Incoming rays (before the lens): steady guides. */
+.lens-diagram .plot-in {
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+/* Outgoing rays (after the lens): brighten when the ray's rule is satisfied,
+   stay faint + dashed while it isn't, so the learner sees what to fix. */
+.lens-diagram .plot-out {
+  stroke-width: 2.5;
+}
+.lens-diagram .plot-out--off {
+  stroke-dasharray: 7 7;
+  opacity: 0.5;
+}
+.lens-diagram .plot-out--ok {
+  opacity: 1;
+}
+
+/* The draggable predicted-crossing marker. */
+.lens-diagram .plot-marker {
+  fill: #ffd166;
+  stroke: #0b1020;
+  stroke-width: 2;
+  cursor: grab;
+}
+.lens-diagram .plot-marker:focus {
+  outline: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+.lens-diagram .plot-marker__pulse {
+  fill: none;
+  stroke: #ffd166;
+  stroke-width: 2;
+  opacity: 0.4;
+  animation: plot-pulse 1.8s ease-in-out infinite;
+}
+@keyframes plot-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+    r: 18;
+  }
+  50% {
+    opacity: 0.5;
+    r: 24;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lens-diagram .plot-marker__pulse {
+    animation: none;
+  }
+}
+
+/* Live checklist of the three ray rules. */
+.plot-rules {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+.plot-rules li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.plot-rules li.is-ok {
+  color: var(--text);
+  border-color: #54d6a0;
+  background: rgba(84, 214, 160, 0.12);
+}
+.plot-rules .dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  flex: none;
+}
+.plot-rules .check {
+  color: #54d6a0;
+  font-weight: 700;
+  min-width: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .plot-rules li {
+    font-size: 0.82rem;
+    width: 100%;
+  }
+}

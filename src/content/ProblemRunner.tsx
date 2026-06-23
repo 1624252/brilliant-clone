@@ -1,13 +1,14 @@
-import { useState, type ReactNode } from 'react'
-import { formImage } from '../engine'
-import { LensScene, snapValue } from '../interactive'
+import { useEffect, useState, type ReactNode } from 'react'
+import { formImage, sliderToFocalLength, FLAT_FOCAL } from '../engine'
+import { LensScene, PlotRaysScene, snapValue } from '../interactive'
 import {
   RayFocusExplainer,
   RaySourceExplainer,
   ConvexLensExplainer,
+  ConcaveLensExplainer,
   type MeasureFlags,
 } from '../render'
-import { isPredictStep } from './types'
+import { isPredictStep, isPlotStep } from './types'
 import { renderRich } from './richText'
 import type { Choice, Control, LessonDefinition, StepDefinition, StepState } from './types'
 import './ProblemRunner.css'
@@ -19,15 +20,29 @@ interface ProblemRunnerProps {
   /** Called when the learner advances to a new step (for saving resume state). */
   onStepChange?: (stepIndex: number) => void
   onComplete?: () => void
+  /** Leave the lesson (e.g., back to the roadmap), shown on the finish screen. */
+  onExit?: () => void
+  /** Open the next lesson; omitted when this is the last one. */
+  onNextLesson?: () => void
+  /** Title of the next lesson, to label the finish-screen button. */
+  nextLessonTitle?: string
 }
 
 type Status = 'idle' | 'correct' | 'incorrect'
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '\u221e')
 
-/** Starting control values for a step (predict steps have none to manipulate). */
+/** Readout for a curvature control: the resulting lens type and focal length. */
+function curvatureReadout(control: Control, value: number): string | null {
+  if (control.type !== 'curvature') return null
+  const f = sliderToFocalLength(value)
+  if (!Number.isFinite(f) || Math.abs(f) > FLAT_FOCAL) return 'Flat \u2014 no focusing'
+  return f > 0 ? `Convex \u00b7 f = ${fmt(f)}` : `Concave \u00b7 f = ${fmt(Math.abs(f))}`
+}
+
+/** Starting control values for a step (predict/plot steps have none to set). */
 const initialValues = (step: StepDefinition): StepState =>
-  isPredictStep(step) ? {} : step.initial
+  isPredictStep(step) || isPlotStep(step) ? {} : step.initial
 
 function describe(image: ReturnType<typeof formImage>): string {
   if (image.atInfinity) return 'image at infinity'
@@ -47,6 +62,9 @@ export function ProblemRunner({
   initialStepIndex = 0,
   onStepChange,
   onComplete,
+  onExit,
+  onNextLesson,
+  nextLessonTitle,
 }: ProblemRunnerProps) {
   const resumeIndex = Math.min(Math.max(initialStepIndex, 0), lesson.steps.length - 1)
   // Skip the intro when resuming partway through a lesson.
@@ -63,23 +81,58 @@ export function ProblemRunner({
     setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  // Start each new step/screen at the top — otherwise, on mobile, tapping Next can
+  // leave the learner scrolled partway down the previous step.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [stepIndex, started, done])
+
   const step = lesson.steps[stepIndex]
   const predict = isPredictStep(step)
-  const committed = chosenId !== null
+  const plot = isPlotStep(step)
+  // A prediction is "committed" (rays/image reveal, Next appears) only once the
+  // learner picks the *correct* choice. A wrong pick shows an explanation and
+  // lets them try again — they get multiple chances.
+  const chosenChoice = isPredictStep(step)
+    ? step.choices.find((c) => c.id === chosenId)
+    : undefined
+  const committed = !!chosenChoice?.correct
 
   // The scene to draw: from the learner's controls (interactive) or the fixed
-  // predict scene. In a predict step the outcome stays hidden until they commit.
-  const merged: StepState = predict ? {} : { ...step.fixed, ...values }
-  const objectDistance = predict ? step.scene.objectDistance : merged.objectDistance
-  const focalLength = predict ? step.scene.focalLength : merged.focalLength
+  // predict/plot scene. In a predict step the outcome stays hidden until commit.
+  const merged: StepState = predict || plot ? {} : { ...step.fixed, ...values }
+  // In a predict step the object sits at the fixed scene distance until the
+  // learner commits and starts dragging the optional "explore" handle. Plot
+  // steps read their object distance straight from the fixed scene.
+  const objectDistance = predict
+    ? values.objectDistance ?? step.scene.objectDistance
+    : plot
+      ? step.scene.objectDistance
+      : merged.objectDistance
+  // A curvature control drives the focal length (reshaping the lens); otherwise
+  // focalLength is read directly from the step's fixed/initial values.
+  const focalLength = predict
+    ? step.scene.focalLength
+    : plot
+      ? step.scene.focalLength
+      : 'curvature' in merged
+        ? sliderToFocalLength(merged.curvature)
+        : merged.focalLength
   const image = formImage(objectDistance, focalLength)
 
+  // The draggable object handle: the lesson's drag control normally, or — on a
+  // predict step — its optional "explore" control, active only after committing.
+  // Plot steps manage their own marker, so there's no axis drag control here.
   const dragControl = predict
-    ? undefined
-    : step.controls.find((c) => c.key === 'objectDistance' && c.type === 'drag-axis')
+    ? committed
+      ? step.explore
+      : undefined
+    : plot
+      ? undefined
+      : step.controls.find((c) => c.key === 'objectDistance' && c.type === 'drag-axis')
 
-  // A step is "solved" (Next becomes available) when an interactive answer is
-  // correct, or when a prediction has been committed (the truth is now revealed).
+  // A step is "solved" (Next becomes available) when an interactive/plot answer
+  // is correct, or when a prediction has been committed (the truth is revealed).
   const solved = predict ? committed : status === 'correct'
 
   function setValue(key: string, value: number) {
@@ -88,8 +141,20 @@ export function ProblemRunner({
   }
 
   function check() {
-    if (isPredictStep(step)) return
+    if (isPredictStep(step) || isPlotStep(step)) return
     setStatus(step.success(merged, image) ? 'correct' : 'incorrect')
+  }
+
+  // Replay the whole lesson from the intro (used by "Review lesson" on the finish
+  // screen). Purely local — completion has already been saved.
+  function restart() {
+    setStarted(!lesson.intro)
+    setStepIndex(0)
+    setValues(initialValues(lesson.steps[0]))
+    setStatus('idle')
+    setChosenId(null)
+    setMeasures({})
+    setDone(false)
   }
 
   function next() {
@@ -113,6 +178,7 @@ export function ProblemRunner({
         {lesson.intro.animation === 'focus' && <RayFocusExplainer />}
         {lesson.intro.animation === 'source' && <RaySourceExplainer />}
         {lesson.intro.animation === 'convex' && <ConvexLensExplainer />}
+        {lesson.intro.animation === 'concave' && <ConcaveLensExplainer />}
         {lesson.intro.paragraphs.map((p, i) => (
           <p key={i} className="intro__para">
             {renderRich(p)}
@@ -139,6 +205,21 @@ export function ProblemRunner({
         </div>
         <h2>Lesson complete!</h2>
         <p>You finished “{lesson.title}”. Awesome work — you're really getting this! ✨</p>
+        <div className="runner__actions runner__actions--done">
+          {onNextLesson && (
+            <button type="button" className="btn btn--primary" onClick={onNextLesson}>
+              Next lesson{nextLessonTitle ? `: ${nextLessonTitle}` : ''} →
+            </button>
+          )}
+          <button type="button" className="btn" onClick={restart}>
+            ↻ Review lesson
+          </button>
+          {onExit && (
+            <button type="button" className="btn" onClick={onExit}>
+              Back to roadmap
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -173,25 +254,58 @@ export function ProblemRunner({
 
       <p className="runner__prompt">{renderRich(step.prompt)}</p>
 
-      <LensScene
-        objectDistance={objectDistance}
-        focalLength={focalLength}
-        minObjectDistance={dragControl?.min}
-        maxObjectDistance={dragControl?.max}
-        infinityAtEdge={!!dragControl?.allowInfinity}
-        snaps={dragControl?.snaps}
-        measures={measures}
-        showRays={predict ? committed : true}
-        showImage={predict ? committed : true}
-        onObjectDistanceChange={
-          dragControl ? (v) => setValue('objectDistance', v) : undefined
-        }
-      />
+      {plot ? (
+        <PlotRaysScene
+          scene={step.scene}
+          solved={status === 'correct'}
+          onSolved={() => setStatus('correct')}
+          measures={measures}
+        />
+      ) : (
+        <LensScene
+          objectDistance={objectDistance}
+          focalLength={focalLength}
+          minObjectDistance={dragControl?.min}
+          maxObjectDistance={dragControl?.max}
+          infinityAtEdge={!!dragControl?.allowInfinity}
+          snaps={dragControl?.snaps}
+          measures={measures}
+          showRays={predict ? committed : true}
+          showImage={predict ? committed : true}
+          onObjectDistanceChange={
+            dragControl ? (v) => setValue('objectDistance', v) : undefined
+          }
+        />
+      )}
 
-      {predict ? (
+      {plot ? (
+        <div className="plot-panel">
+          {status === 'correct' ? (
+            <div className="feedback feedback--correct" role="status">
+              <strong>You found it.</strong> {renderRich(step.reveal)}
+            </div>
+          ) : (
+            <p className="plot-panel__hint">
+              {renderRich(
+                step.hint ??
+                  'Drag the dot so every ray follows its rule — they all meet at the image.',
+              )}
+            </p>
+          )}
+          <div className="runner__actions">
+            {status === 'correct' && (
+              <button type="button" className="btn btn--primary" onClick={next}>
+                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : predict ? (
         <PredictPanel
           step={step}
           chosenId={chosenId}
+          solved={committed}
+          canExplore={committed && !!step.explore}
           onChoose={setChosenId}
           onNext={next}
           isLast={stepIndex + 1 >= lesson.steps.length}
@@ -234,7 +348,7 @@ export function ProblemRunner({
         </>
       )}
 
-      {(!predict || committed) && (
+      {((!predict && !plot) || committed || (plot && solved)) && (
       <details className="runner__more">
         <summary>Numbers &amp; tools</summary>
 
@@ -391,72 +505,101 @@ export function ProblemRunner({
 }
 
 /**
- * The predict-then-reveal control: a set of choices the learner commits to. Once
- * committed, every option shows whether it was right or wrong with a specific
- * explanation, and a Next button appears. The diagram (above) reveals the rays
- * and image at the same moment, so the prediction is checked against the truth.
+ * The predict-then-reveal control: a set of choices the learner picks from. A
+ * wrong pick explains *why* it's wrong and lets them try again (multiple
+ * chances); the rays/image stay hidden. The correct pick reveals the diagram,
+ * explains *why* it's right, shows the takeaway, and unlocks Next. `solved` is
+ * true once the right answer has been chosen.
  */
 function PredictPanel({
   step,
   chosenId,
+  solved,
+  canExplore,
   onChoose,
   onNext,
   isLast,
 }: {
   step: { prompt: string; choices: Choice[]; reveal: string }
   chosenId: string | null
+  solved: boolean
+  canExplore: boolean
   onChoose: (id: string) => void
   onNext: () => void
   isLast: boolean
 }) {
-  const committed = chosenId !== null
   const chosen = step.choices.find((c) => c.id === chosenId)
-  const wasRight = !!chosen?.correct
 
   return (
     <div className="predict">
       <ul className="predict__choices" role="radiogroup" aria-label="Your prediction">
         {step.choices.map((c) => {
           const isChosen = c.id === chosenId
-          const verdict = committed ? (c.correct ? 'correct' : isChosen ? 'wrong' : 'muted') : ''
+          // Once solved: highlight the correct answer, dim the rest. While trying:
+          // mark only the currently chosen option (green if right, red if wrong).
+          const verdict = solved
+            ? c.correct
+              ? 'correct'
+              : 'muted'
+            : isChosen
+              ? c.correct
+                ? 'correct'
+                : 'wrong'
+              : ''
+          const showMark = (solved && c.correct) || (isChosen && !solved)
           return (
             <li key={c.id}>
               <button
                 type="button"
                 role="radio"
                 aria-checked={isChosen}
-                disabled={committed}
+                // Stay clickable until solved, so wrong answers can be retried.
+                disabled={solved}
                 className={`predict__choice ${verdict ? `predict__choice--${verdict}` : ''} ${
                   isChosen ? 'is-chosen' : ''
                 }`}
                 onClick={() => onChoose(c.id)}
               >
                 <span className="predict__label">{c.label}</span>
-                {committed && (c.correct || isChosen) && (
+                {showMark && (
                   <span className="predict__mark" aria-hidden="true">
                     {c.correct ? '✓' : '✗'}
                   </span>
                 )}
               </button>
-              {committed && isChosen && (
-                <p className="predict__why">{renderRich(c.feedback)}</p>
-              )}
+              {/* Explain whichever option is currently chosen, right or wrong. */}
+              {isChosen && <p className="predict__why">{renderRich(c.feedback)}</p>}
             </li>
           )
         })}
       </ul>
 
-      {committed && (
+      {chosen && (
         <div
-          className={`feedback feedback--${wasRight ? 'correct' : 'incorrect'}`}
+          className={`feedback feedback--${chosen.correct ? 'correct' : 'incorrect'}`}
           role="status"
         >
-          <strong>{wasRight ? 'Correct.' : 'Not quite.'}</strong> {renderRich(step.reveal)}
+          {chosen.correct ? (
+            <>
+              <strong>Correct.</strong> {renderRich(step.reveal)}
+            </>
+          ) : (
+            <>
+              <strong>Not quite — try again.</strong> Read the note above and pick
+              another answer.
+            </>
+          )}
         </div>
       )}
 
+      {canExplore && (
+        <p className="predict__explore" role="status">
+          ✋ Now <strong>drag the candle</strong> to see how the image responds.
+        </p>
+      )}
+
       <div className="runner__actions">
-        {committed && (
+        {solved && (
           <button type="button" className="btn btn--primary" onClick={onNext}>
             {isLast ? 'Finish' : 'Next'}
           </button>
@@ -560,7 +703,7 @@ function SliderControl({
   return (
     <label className="slider">
       <span>
-        {control.label ?? control.key}: {fmt(value)}
+        {control.label ?? control.key}: {curvatureReadout(control, value) ?? fmt(value)}
       </span>
       <div className="slider__row">
         <input

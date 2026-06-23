@@ -3,10 +3,13 @@ import type { ImageFormation } from '../engine'
 // Data-driven lesson content. A lesson is a list of steps; each step is a small
 // interactive problem described as data so new lessons need config, not code.
 
-export type ControlType = 'drag-axis' | 'slider'
+// 'curvature' is a continuous slider whose position maps logarithmically to a
+// focal length (see sliderToFocalLength): the runner derives focalLength from it
+// so the learner reshapes the lens (convex / flat / concave) instead of typing f.
+export type ControlType = 'drag-axis' | 'slider' | 'curvature'
 
 export interface Control {
-  /** State key this control writes, e.g., "objectDistance". */
+  /** State key this control writes, e.g., "objectDistance" or "curvature". */
   key: string
   type: ControlType
   min: number
@@ -72,13 +75,40 @@ export interface PredictStep extends StepBase {
   choices: Choice[]
   /** Explanation shown once the truth is revealed (regardless of choice). */
   reveal: string
+  /**
+   * Optional drag control (along the axis) that becomes active after the learner
+   * commits, so a predict step stays hands-on: they can move the object and watch
+   * the revealed rays/image respond.
+   */
+  explore?: Control
 }
 
-export type StepDefinition = InteractiveStep | PredictStep
+/**
+ * A "plot the rays" step: instead of choosing an answer, the learner drags a
+ * single marker (their predicted image point) until all three principal rays
+ * obey their rule and cross there. More active than multiple choice — they
+ * construct the ray diagram themselves. Used for real-image scenes.
+ */
+export interface PlotRaysStep extends StepBase {
+  kind: 'plot-rays'
+  /** Fixed scene the learner plots within (object distance + focal length). */
+  scene: { objectDistance: number; focalLength: number; objectHeight?: number }
+  /** Shown once the rays converge correctly. */
+  reveal: string
+  /** Optional nudge shown while the learner is still solving. */
+  hint?: string
+}
+
+export type StepDefinition = InteractiveStep | PredictStep | PlotRaysStep
 
 /** Narrowing helper: true for predict-then-reveal steps. */
 export function isPredictStep(step: StepDefinition): step is PredictStep {
   return step.kind === 'predict'
+}
+
+/** Narrowing helper: true for plot-the-rays steps. */
+export function isPlotStep(step: StepDefinition): step is PlotRaysStep {
+  return step.kind === 'plot-rays'
 }
 
 /** Short teaching screen shown before a lesson's interactive steps. */
@@ -87,7 +117,7 @@ export interface LessonIntro {
   /** A few short paragraphs (kept brief; mostly-visual lessons). */
   paragraphs: string[]
   /** Optional animated explainer to show alongside the text. */
-  animation?: 'focus' | 'source' | 'convex'
+  animation?: 'focus' | 'source' | 'convex' | 'concave'
 }
 
 export interface LessonDefinition {

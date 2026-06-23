@@ -231,6 +231,24 @@
   .measures {
     grid-template-columns: 1fr;
   }
+  .runner__prompt {
+    font-size: 1.15rem;
+  }
+  .intro__heading {
+    font-size: 1.3rem;
+  }
+  .intro__para {
+    font-size: 1rem;
+  }
+  /* Big, easy tap targets: action buttons fill the width and stack. */
+  .runner__actions .btn {
+    flex: 1 1 auto;
+  }
+  /* The live equation can be wide; let it scroll instead of overflowing. */
+  .equation {
+    max-width: 100%;
+    overflow-x: auto;
+  }
 }
 
 .glossary {
@@ -453,6 +471,16 @@
   color: var(--text-mute);
 }
 
+.predict__explore {
+  margin: 0.25rem 0 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(140, 194, 255, 0.1);
+  border: 1px dashed var(--c-do, #6fb3ff);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
 .feedback {
   border-radius: 10px;
   padding: 0.75rem 1rem;
@@ -467,9 +495,32 @@
   border: 1px solid #ffb24d;
 }
 
+.plot-panel {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.plot-panel__hint {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
 .runner__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+/* Finish screen: wrap and center the (up to three) follow-up buttons. */
+.runner__actions--done {
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
 .runner--done {

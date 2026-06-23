@@ -5,8 +5,12 @@ export function friendlyAuthError(err: unknown): string {
   switch (code) {
     case 'auth/invalid-email':
       return 'That email address looks invalid.'
+    case 'auth/missing-email':
+      return 'Please enter your email address.'
     case 'auth/missing-password':
       return 'Please enter a password.'
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a moment and try again.'
     case 'auth/weak-password':
       return 'Password should be at least 6 characters.'
     case 'auth/email-already-in-use':
