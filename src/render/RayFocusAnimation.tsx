@@ -63,7 +63,7 @@ export function RayFocusAnimation() {
       {/* pop-up callouts that label what's happening */}
       <g className="callout callout--light">
         <text x={44} y={36} textAnchor="middle">
-          ☀️ light
+          ☀️ Light
         </text>
       </g>
       <g className="callout callout--focus">
@@ -172,7 +172,7 @@ export function RaySourceAnimation() {
       {/* callouts */}
       <g className="callout callout--light">
         <text x={S.x} y={S.y - 16} textAnchor="middle">
-          ☀️ light source
+          ☀️ Light source
         </text>
       </g>
       <g className="callout callout--focus">

@@ -154,7 +154,7 @@ export function LensDiagram({
         y={center.y + lensHalf + 24}
         textAnchor="middle"
       >
-        {isConverging ? 'convex (converging) lens' : 'concave (diverging) lens'}
+        {isConverging ? 'Convex (converging) lens' : 'Concave (diverging) lens'}
       </text>
 
       {/* principal rays */}
@@ -176,7 +176,7 @@ export function LensDiagram({
       {objectInfinite ? (
         <g className="inf-source">
           <text x={objBase.x + 6} y={objTip.y - 14} textAnchor="start">
-            ☀️ object at ∞
+            ☀️ Object at ∞
           </text>
           <text
             className="inf-source__sub"
@@ -184,7 +184,7 @@ export function LensDiagram({
             y={objTip.y + 4}
             textAnchor="start"
           >
-            dₒ = ∞ · parallel rays
+            dₒ = ∞ · Parallel rays
           </text>
         </g>
       ) : (
