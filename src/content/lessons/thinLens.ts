@@ -28,10 +28,10 @@ export const thinLensLesson: LessonDefinition = {
     heading: 'One equation ties it all together',
     animation: 'source',
     paragraphs: [
-      'Light leaves each point of an object, fans out through the lens, and meets again at the image — passing through the focal point F.',
-      'This is a convex lens (it bulges outward), so it converges light and its focal length f is positive.',
-      'The thin lens equation links the three distances:  1/f = 1/dₒ + 1/dᵢ.',
-      'With f fixed, moving the candle (dₒ) changes where the image forms (dᵢ) — and the magnification m = −dᵢ/dₒ tells you if it flips and by how much. The live equation updates as you go.',
+      'Light leaves each point of an object, fans out through the lens, and meets again at the **image** — passing through the **focal point F**.',
+      'This is a **convex lens** (it bulges outward), so it converges light and its **focal length f** is positive.',
+      'The **thin lens equation** links the three distances:  \\frac{1}{f} = \\frac{1}{dₒ} + \\frac{1}{dᵢ}.',
+      'With f fixed, moving the candle (dₒ) changes where the image forms (dᵢ) — and the **magnification** m = \\frac{−dᵢ}{dₒ} tells you if it flips and by how much. The live equation updates as you go.',
     ],
   },
   steps: [
@@ -43,7 +43,7 @@ export const thinLensLesson: LessonDefinition = {
       initial: { objectDistance: 60 },
       success: (_state, image) =>
         image.isReal && Math.abs(image.magnification + 1) < 0.06,
-      correctFeedback: 'That is 2F — same size, flipped.',
+      correctFeedback: 'That is **2F** — **same size**, just flipped.',
       hint: 'Try the 2F mark (twice the focal length).',
     },
     {
@@ -53,7 +53,7 @@ export const thinLensLesson: LessonDefinition = {
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) => !image.isReal && image.orientation === 'upright',
-      correctFeedback: 'Inside F the lens magnifies: upright and enlarged.',
+      correctFeedback: 'Inside **F** the lens magnifies: **upright** and **enlarged**.',
       hint: 'Move the candle closer than F.',
     },
     {
@@ -63,7 +63,7 @@ export const thinLensLesson: LessonDefinition = {
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) => image.isReal && image.isMagnified,
-      correctFeedback: 'Between F and 2F: real, flipped, enlarged.',
+      correctFeedback: 'Between **F and 2F**: **real**, flipped, and **enlarged**.',
       hint: 'Place the candle between F and 2F.',
     },
     {
@@ -76,7 +76,7 @@ export const thinLensLesson: LessonDefinition = {
       success: (state, image) =>
         image.isReal && Math.abs(image.imageDistance - state.focalLength) < 0.5,
       correctFeedback:
-        'With dₒ → ∞ the 1/dₒ term vanishes, so 1/dᵢ = 1/f: the image shrinks to a point right at F.',
+        'With dₒ → ∞ the \\frac{1}{dₒ} term vanishes, so \\frac{1}{dᵢ} = \\frac{1}{f}: the image shrinks to a point right at **F**.',
       hint: 'Tap the ∞ button so dₒ becomes infinite.',
     },
     {
@@ -87,7 +87,7 @@ export const thinLensLesson: LessonDefinition = {
       initial: { objectDistance: 60 },
       success: (state) => state.objectDistance <= 0.5,
       correctFeedback:
-        'As dₒ → 0, dᵢ → 0 and m → 1: the image collapses onto the lens at the same size.',
+        'As dₒ → 0, dᵢ → 0 and m → 1: the image collapses onto the lens at the **same size**.',
       hint: 'Drag the candle onto the lens, or slide dₒ down to 0.',
     },
     {
@@ -118,7 +118,7 @@ export const thinLensLesson: LessonDefinition = {
         },
       ],
       reveal:
-        'Inside the focal length the outgoing rays diverge, so they only appear to come from a virtual, upright, enlarged image. That is exactly how a magnifying glass works.',
+        'Inside the focal length the outgoing rays diverge, so they only appear to come from a **virtual, upright, enlarged** image. That is exactly how a **magnifying glass** works.',
     },
   ],
 }

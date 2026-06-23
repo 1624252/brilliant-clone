@@ -28,9 +28,9 @@ export const focusLesson: LessonDefinition = {
     heading: 'Where light comes to a focus',
     animation: 'convex',
     paragraphs: [
-      'A convex lens (one that bulges outward) converges parallel rays so they all cross at one spot on the axis: the focal point, F.',
-      'The distance from the lens to F is the focal length, f — a fixed property of the lens. The stronger the lens, the shorter the f.',
-      'When you start, you can drag the candle and watch how its rays meet. F is the key to where (and how big) the image forms.',
+      'A **convex lens** (one that bulges outward) converges **parallel rays** so they all cross at one spot on the axis: the **focal point, F**.',
+      'The distance from the lens to F is the **focal length, f** — a fixed property of the lens. The stronger the lens, the shorter the f.',
+      'When you start, you can drag the candle and watch how its rays meet. F is the key to where (and how big) the **image** forms.',
     ],
   },
   steps: [
@@ -42,7 +42,7 @@ export const focusLesson: LessonDefinition = {
       initial: { objectDistance: 50 },
       success: (state) => Math.abs(state.objectDistance - state.focalLength) < 0.75,
       correctFeedback:
-        'At F the outgoing rays are parallel, so the image races off to infinity.',
+        'At **F** the outgoing rays are **parallel**, so the image races off to infinity.',
       hint: 'Drag the candle right onto the F mark (distance 20).',
     },
     {
@@ -52,7 +52,7 @@ export const focusLesson: LessonDefinition = {
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 30 },
       success: (state, image) => image.isReal && state.objectDistance >= 60,
-      correctFeedback: 'A faraway object focuses close to F — that is why F is "the focus."',
+      correctFeedback: 'A faraway object focuses close to **F** — that is why F is "the focus."',
       hint: 'Drag the candle far from the lens (past 60).',
     },
     {
@@ -82,7 +82,7 @@ export const focusLesson: LessonDefinition = {
         },
       ],
       reveal:
-        'Parallel rays converge exactly at F — that is what "focal point" means. The farther the object, the closer its image creeps toward F.',
+        'Parallel rays converge exactly at **F** — that is what **"focal point"** means. The farther the object, the closer its image creeps toward F.',
     },
   ],
 }

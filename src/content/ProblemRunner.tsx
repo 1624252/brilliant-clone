@@ -8,6 +8,7 @@ import {
   type MeasureFlags,
 } from '../render'
 import { isPredictStep } from './types'
+import { renderRich } from './richText'
 import type { Choice, Control, LessonDefinition, StepDefinition, StepState } from './types'
 import './ProblemRunner.css'
 
@@ -114,7 +115,7 @@ export function ProblemRunner({
         {lesson.intro.animation === 'convex' && <ConvexLensExplainer />}
         {lesson.intro.paragraphs.map((p, i) => (
           <p key={i} className="intro__para">
-            {p}
+            {renderRich(p)}
           </p>
         ))}
         <div className="runner__actions">
@@ -170,7 +171,7 @@ export function ProblemRunner({
         )
       })()}
 
-      <p className="runner__prompt">{step.prompt}</p>
+      <p className="runner__prompt">{renderRich(step.prompt)}</p>
 
       <LensScene
         objectDistance={objectDistance}
@@ -210,12 +211,12 @@ export function ProblemRunner({
 
           {status === 'correct' && (
             <div className="feedback feedback--correct" role="status">
-              <strong>Correct.</strong> {step.correctFeedback}
+              <strong>Correct.</strong> {renderRich(step.correctFeedback)}
             </div>
           )}
           {status === 'incorrect' && (
             <div className="feedback feedback--incorrect" role="status">
-              <strong>Not yet.</strong> {step.hint}
+              <strong>Not yet.</strong> {renderRich(step.hint)}
             </div>
           )}
 
@@ -331,7 +332,7 @@ export function ProblemRunner({
             <dt>
               <span className="swatch swatch--m" />m <span className="term">magnification</span>
             </dt>
-            <dd>Image height ÷ object height (h<sub>i</sub> / h₀).</dd>
+            <dd>{renderRich('Image height divided by object height: \\frac{hᵢ}{h₀}.')}</dd>
           </dl>
         </div>
 
@@ -421,7 +422,9 @@ function PredictPanel({
                   </span>
                 )}
               </button>
-              {committed && isChosen && <p className="predict__why">{c.feedback}</p>}
+              {committed && isChosen && (
+                <p className="predict__why">{renderRich(c.feedback)}</p>
+              )}
             </li>
           )
         })}
@@ -432,7 +435,7 @@ function PredictPanel({
           className={`feedback feedback--${wasRight ? 'correct' : 'incorrect'}`}
           role="status"
         >
-          <strong>{wasRight ? 'Correct.' : 'Not quite.'}</strong> {step.reveal}
+          <strong>{wasRight ? 'Correct.' : 'Not quite.'}</strong> {renderRich(step.reveal)}
         </div>
       )}
 
