@@ -68,7 +68,7 @@ export function RayFocusAnimation() {
       </g>
       <g className="callout callout--focus">
         <text x={F_X} y={CENTER_Y + 30} textAnchor="middle">
-          focus
+          Focus
         </text>
       </g>
 
@@ -177,7 +177,7 @@ export function RaySourceAnimation() {
       </g>
       <g className="callout callout--focus">
         <text x={FR.x} y={CENTER_Y + 28} textAnchor="middle">
-          focus
+          Focus
         </text>
       </g>
 
