@@ -5,26 +5,26 @@
   line-height: 1.55;
   color-scheme: dark;
 
-  /* Theme tokens */
-  --bg: #070b15;
-  --bg-elev: #0f1426;
-  --bg-elev-2: #131a2e;
-  --border: #1d2540;
-  --border-strong: #2c3656;
-  --text: #e8ebf3;
-  --text-dim: #aab2c5;
-  --text-mute: #7c8398;
+  /* Theme tokens — deep "space" indigo with bright, playful accents. */
+  --bg: #0b1030;
+  --bg-elev: #181f44;
+  --bg-elev-2: #212a59;
+  --border: #2e386e;
+  --border-strong: #404c92;
+  --text: #eef0fb;
+  --text-dim: #bcc2e6;
+  --text-mute: #8e95c2;
 
-  --brand: #6fb3ff;
+  --brand: #7aa8ff;
   --brand-ink: #06223f;
-  --accent: #2ee6a6;
-  --accent-ink: #06281c;
+  --accent: #35e0a8;
+  --accent-ink: #043022;
 
   /* Per-quantity colors, shared across equation, chips, diagram, glossary. */
-  --c-f: #ffb84d;
-  --c-do: #6fb3ff;
-  --c-di: #c08bff;
-  --c-m: #54d6a0;
+  --c-f: #ffc14d;
+  --c-do: #7aa8ff;
+  --c-di: #c79bff;
+  --c-m: #54e0a6;
 
   color: var(--text);
   background: var(--bg);
@@ -41,6 +41,13 @@
 body {
   margin: 0;
   min-height: 100vh;
+  /* Playful aurora glow so the app feels warm and alive, not flat/sad. */
+  background:
+    radial-gradient(1100px 700px at 12% -8%, rgba(122, 168, 255, 0.18), transparent 60%),
+    radial-gradient(900px 650px at 100% 0%, rgba(199, 155, 255, 0.16), transparent 55%),
+    radial-gradient(800px 600px at 50% 115%, rgba(53, 224, 168, 0.14), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
 }
 
 #root {
@@ -71,19 +78,22 @@ a {
 .btn {
   font: inherit;
   font-size: 1.05rem;
+  font-weight: 600;
   padding: 0.7rem 1.4rem;
-  border-radius: 10px;
+  border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--bg-elev-2);
   color: var(--text);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
-    transform 0.05s ease,
-    background 0.15s ease;
+    transform 0.08s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
 }
 .btn:hover {
   border-color: var(--brand);
+  transform: translateY(-1px);
 }
 .btn:active {
   transform: translateY(1px);
@@ -93,14 +103,15 @@ a {
   outline-offset: 2px;
 }
 .btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #4fd0ff);
+  border-color: transparent;
   color: var(--accent-ink);
-  font-weight: 650;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(53, 224, 168, 0.28);
 }
 .btn--primary:hover {
-  filter: brightness(1.05);
-  border-color: var(--accent);
+  filter: brightness(1.06);
+  box-shadow: 0 8px 22px rgba(53, 224, 168, 0.38);
 }
 .btn--block {
   width: 100%;

@@ -1,34 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { RayFocusAnimation } from '../render'
+import { friendlyAuthError } from '../auth/errors'
+import { RayFocusExplainer } from '../render'
 import './AuthScreen.css'
 
 type Mode = 'signin' | 'signup'
 
-/** Turn a Firebase auth error into a friendly, specific message. */
-function friendlyError(err: unknown): string {
-  const code =
-    typeof err === 'object' && err && 'code' in err ? String(err.code) : ''
-  switch (code) {
-    case 'auth/invalid-email':
-      return 'That email address looks invalid.'
-    case 'auth/missing-password':
-      return 'Please enter a password.'
-    case 'auth/weak-password':
-      return 'Password should be at least 6 characters.'
-    case 'auth/email-already-in-use':
-      return 'An account already exists for that email. Try signing in.'
-    case 'auth/invalid-credential':
-    case 'auth/wrong-password':
-    case 'auth/user-not-found':
-      return 'Email or password is incorrect.'
-    case 'auth/popup-closed-by-user':
-      return 'Google sign-in was cancelled.'
-    case 'auth/network-request-failed':
-      return 'Network error. Check your connection and try again.'
-    default:
-      return 'Something went wrong. Please try again.'
-  }
+function errorCode(err: unknown): string {
+  return typeof err === 'object' && err && 'code' in err ? String(err.code) : ''
 }
 
 export function AuthScreen() {
@@ -38,17 +17,28 @@ export function AuthScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  // When sign-up hits an existing email, offer a one-tap switch to sign-in.
+  const [suggestSignIn, setSuggestSignIn] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  function switchTo(next: Mode) {
+    setMode(next)
+    setError('')
+    setSuggestSignIn(false)
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
+    setSuggestSignIn(false)
     setBusy(true)
     try {
       if (mode === 'signup') await signUp(name, email, password)
       else await signIn(email, password)
     } catch (err) {
-      setError(friendlyError(err))
+      setError(friendlyAuthError(err))
+      const code = errorCode(err)
+      if (code === 'auth/email-already-in-use') setSuggestSignIn(true)
     } finally {
       setBusy(false)
     }
@@ -56,11 +46,12 @@ export function AuthScreen() {
 
   async function onGoogle() {
     setError('')
+    setSuggestSignIn(false)
     setBusy(true)
     try {
       await signInWithGoogle()
     } catch (err) {
-      setError(friendlyError(err))
+      setError(friendlyAuthError(err))
     } finally {
       setBusy(false)
     }
@@ -69,12 +60,17 @@ export function AuthScreen() {
   return (
     <div className="auth">
       <section className="auth__hero">
-        <h1 className="auth__brand">LensLab</h1>
+        <h1 className="auth__brand">
+          <span className="auth__sun" aria-hidden="true">
+            ☀️
+          </span>
+          LensLab
+        </h1>
         <p className="auth__tag">
-          Learn optics by doing — drag, focus, and watch the rays.
+          Play with light! Drag, focus, and watch the rays bend. 🔬
         </p>
         <div className="auth__art">
-          <RayFocusAnimation />
+          <RayFocusExplainer />
         </div>
       </section>
 
@@ -86,7 +82,7 @@ export function AuthScreen() {
               role="tab"
               aria-selected={mode === 'signup'}
               className={`auth__tab ${mode === 'signup' ? 'is-active' : ''}`}
-              onClick={() => setMode('signup')}
+              onClick={() => switchTo('signup')}
             >
               Create account
             </button>
@@ -95,7 +91,7 @@ export function AuthScreen() {
               role="tab"
               aria-selected={mode === 'signin'}
               className={`auth__tab ${mode === 'signin' ? 'is-active' : ''}`}
-              onClick={() => setMode('signin')}
+              onClick={() => switchTo('signin')}
             >
               Sign in
             </button>
@@ -141,6 +137,18 @@ export function AuthScreen() {
             {error && (
               <p className="auth__error" role="alert">
                 {error}
+                {suggestSignIn && (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      className="linklike"
+                      onClick={() => switchTo('signin')}
+                    >
+                      Sign in instead
+                    </button>
+                  </>
+                )}
               </p>
             )}
 
@@ -168,7 +176,7 @@ export function AuthScreen() {
             <button
               type="button"
               className="linklike"
-              onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
+              onClick={() => switchTo(mode === 'signup' ? 'signin' : 'signup')}
             >
               {mode === 'signup' ? 'Sign in' : 'Create one'}
             </button>

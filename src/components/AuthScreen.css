@@ -20,6 +20,23 @@
   margin: 0;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.auth__sun {
+  display: inline-block;
+  animation: sun-spin 14s linear infinite;
+}
+@keyframes sun-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth__sun {
+    animation: none;
+  }
 }
 .auth__tag {
   margin: 0;
