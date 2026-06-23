@@ -1,14 +1,46 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import './RayFocusAnimation.css'
 
-// A looping explainer: parallel rays enter a converging lens and bend so they all
-// cross at the focal point F. Purely presentational; respects reduced-motion.
+// A one-shot explainer: parallel rays draw on one by one, left to right, enter a
+// converging lens, and bend so they all cross at the focal point F. Purely
+// presentational; respects reduced-motion. Replay remounts to restart.
 
 const CENTER_Y = 110
 const LENS_X = 190
 const F_X = 270 // focal point to the right of the lens
 const LEFT_F_X = 110 // mirror focal point (shown faint for context)
-const RAY_YS = [56, 83, 137, 164] // parallel ray heights (skip the axis itself)
+const LEFT_EDGE = 6
+// Ray heights, ordered top-to-bottom so the sweep reads cleanly (axis included).
+const RAY_YS = [56, 83, CENTER_Y, 137, 164]
+const RAY_STEP = 0.5 // seconds between successive rays starting to draw
+const SEG_DRAW = 0.42 // seconds to draw one segment
+
+type RayStyle = CSSProperties & Record<'--len', number>
+
+const pathLen = (pts: [number, number][]): number => {
+  let len = 0
+  for (let i = 1; i < pts.length; i++) {
+    len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])
+  }
+  return len
+}
+
+const pathD = (pts: [number, number][]): string =>
+  'M ' + pts.map((p) => `${p[0]},${p[1]}`).join(' L ')
+
+/** A single straight segment that "draws on" over SEG_DRAW seconds after `delay`. */
+function RaySeg({
+  pts,
+  cls,
+  delay,
+}: {
+  pts: [number, number][]
+  cls: string
+  delay: number
+}) {
+  const style: RayStyle = { '--len': pathLen(pts), animationDelay: `${delay}s` }
+  return <path className={cls} d={pathD(pts)} style={style} />
+}
 
 export function RayFocusAnimation() {
   return (
@@ -27,31 +59,21 @@ export function RayFocusAnimation() {
         d={`M ${LENS_X},${CENTER_Y - 78} Q ${LENS_X + 16},${CENTER_Y} ${LENS_X},${CENTER_Y + 78} Q ${LENS_X - 16},${CENTER_Y} ${LENS_X},${CENTER_Y - 78} Z`}
       />
 
-      {/* incoming parallel rays, then refracted rays converging to F */}
-      {RAY_YS.map((y, i) => (
-        <g key={i}>
-          <line
-            className="ray-in"
-            pathLength={100}
-            x1={6}
-            y1={y}
-            x2={LENS_X}
-            y2={y}
-            style={{ animationDelay: `${i * 0.06}s` }}
-          />
-          <line
-            className="ray-out"
-            pathLength={100}
-            x1={LENS_X}
-            y1={y}
-            x2={F_X}
-            y2={CENTER_Y}
-            style={{ animationDelay: `${i * 0.06}s` }}
-          />
-        </g>
-      ))}
-      {/* the on-axis ray goes straight through */}
-      <line className="ray-in" pathLength={100} x1={6} y1={CENTER_Y} x2={F_X} y2={CENTER_Y} />
+      {/* rays draw one by one: incoming parallel segment, then refracted to F */}
+      {RAY_YS.map((y, i) => {
+        const inDelay = i * RAY_STEP
+        const outDelay = inDelay + SEG_DRAW * 0.8
+        return (
+          <g key={y}>
+            <RaySeg pts={[[LEFT_EDGE, y], [LENS_X, y]]} cls="ray-in" delay={inDelay} />
+            <RaySeg
+              pts={[[LENS_X, y], [F_X, CENTER_Y]]}
+              cls="ray-out"
+              delay={outDelay}
+            />
+          </g>
+        )
+      })}
 
       {/* focal points */}
       <circle className="fpoint fpoint--minor" cx={LEFT_F_X} cy={CENTER_Y} r={3} />
@@ -132,29 +154,21 @@ export function RaySourceAnimation() {
         d={`M ${LENS2_X},${CENTER_Y - 78} Q ${LENS2_X + 16},${CENTER_Y} ${LENS2_X},${CENTER_Y + 78} Q ${LENS2_X - 16},${CENTER_Y} ${LENS2_X},${CENTER_Y - 78} Z`}
       />
 
-      {/* rays: source -> lens (in), then lens -> image (out) */}
-      {rays.map((r, i) => (
-        <g key={i}>
-          <line
-            className="ray-in"
-            pathLength={100}
-            x1={S.x}
-            y1={S.y}
-            x2={LENS2_X}
-            y2={r.cy}
-            style={{ animationDelay: `${i * 0.06}s` }}
-          />
-          <line
-            className="ray-out"
-            pathLength={100}
-            x1={LENS2_X}
-            y1={r.cy}
-            x2={IMG.x}
-            y2={IMG.y}
-            style={{ animationDelay: `${i * 0.06}s` }}
-          />
-        </g>
-      ))}
+      {/* rays draw one by one: source -> lens (in), then lens -> image (out) */}
+      {rays.map((r, i) => {
+        const inDelay = i * RAY_STEP
+        const outDelay = inDelay + SEG_DRAW * 0.8
+        return (
+          <g key={i}>
+            <RaySeg pts={[[S.x, S.y], [LENS2_X, r.cy]]} cls="ray-in" delay={inDelay} />
+            <RaySeg
+              pts={[[LENS2_X, r.cy], [IMG.x, IMG.y]]}
+              cls="ray-out"
+              delay={outDelay}
+            />
+          </g>
+        )
+      })}
 
       {/* focal points (the parallel ray passes through FR) */}
       <circle className="fpoint fpoint--minor" cx={FL.x} cy={FL.y} r={3} />

@@ -18,59 +18,36 @@
   stroke-width: 2;
 }
 
-/* Rays are drawn on with a normalized pathLength (100), so one keyframe set
-   works for every ray regardless of its actual length. Incoming rays draw
-   first, then the refracted rays draw toward F, then the cycle repeats. */
+/* Each ray is a <path> whose exact length is passed in via --len, so the
+   stroke "draws on" reliably in every browser (unlike pathLength on <line>,
+   which WebKit ignores). Rays start hidden and draw on after their own delay,
+   one by one, left to right; the picture then stays put (Replay restarts it). */
 .focus-anim .ray-in,
 .focus-anim .ray-out {
   fill: none;
   stroke-width: 2.5;
   stroke-linecap: round;
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  animation: ray-draw 0.42s ease-out forwards;
 }
 .focus-anim .ray-in {
   stroke: var(--c-f, #ffb84d);
-  animation: focus-in 3.2s ease-in-out infinite;
 }
 .focus-anim .ray-out {
   stroke: #ff6b9d;
-  animation: focus-out 3.2s ease-in-out infinite;
 }
 
-@keyframes focus-in {
-  0% {
-    stroke-dashoffset: 100;
-  }
-  32% {
+@keyframes ray-draw {
+  to {
     stroke-dashoffset: 0;
-  }
-  92% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: 100;
-  }
-}
-@keyframes focus-out {
-  0%,
-  32% {
-    stroke-dashoffset: 100;
-  }
-  64% {
-    stroke-dashoffset: 0;
-  }
-  92% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: 100;
   }
 }
 
 .focus-anim .fpoint {
   fill: var(--c-f, #ffb84d);
-  animation: focus-pulse 3.2s ease-in-out infinite;
+  animation: focus-pulse 1.6s ease-in-out 2.4s infinite;
 }
 .focus-anim .fpoint--minor {
   fill: var(--c-f, #ffb84d);
@@ -79,14 +56,11 @@
 }
 @keyframes focus-pulse {
   0%,
-  55% {
-    opacity: 0.4;
-  }
-  66% {
-    opacity: 1;
-  }
   100% {
-    opacity: 0.4;
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
   }
 }
 
@@ -111,7 +85,10 @@
 .focus-anim .img-point {
   fill: #ff6b9d;
   opacity: 0;
-  animation: img-appear 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  /* Appears once the rays have reconverged, then stays. */
+  animation: img-appear 0.5s ease-out 1.7s forwards;
 }
 @keyframes src-pulse {
   0%,
@@ -125,16 +102,13 @@
   }
 }
 @keyframes img-appear {
-  0%,
-  60% {
+  from {
     opacity: 0;
+    transform: scale(0.4);
   }
-  70%,
-  92% {
+  to {
     opacity: 1;
-  }
-  100% {
-    opacity: 0;
+    transform: scale(1);
   }
 }
 
@@ -154,33 +128,25 @@
   transform-origin: center;
   opacity: 0;
 }
+/* Callouts pop in once and stay: "Light" up front, "Focus" as rays converge. */
 .focus-anim .callout--light {
-  animation: pop 3.2s ease-in-out infinite;
+  animation: pop 0.5s ease-out 0.2s forwards;
 }
 .focus-anim .callout--focus {
-  animation: pop 3.2s ease-in-out infinite;
-  animation-delay: 1.1s;
+  animation: pop 0.5s ease-out 2.5s forwards;
 }
 @keyframes pop {
-  0%,
-  6% {
+  0% {
     opacity: 0;
     transform: scale(0.6);
   }
-  16% {
+  70% {
     opacity: 1;
     transform: scale(1.12);
   }
-  24% {
-    transform: scale(1);
-  }
-  42% {
-    opacity: 1;
-  }
-  55%,
   100% {
-    opacity: 0;
-    transform: scale(0.9);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -245,5 +211,6 @@
   .focus-anim .img-point {
     animation: none;
     opacity: 1;
+    transform: none;
   }
 }
