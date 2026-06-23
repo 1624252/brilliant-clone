@@ -1,0 +1,16 @@
+.lens-diagram .drag-handle {
+  fill: #2ee6a6;
+  fill-opacity: 0.25;
+  stroke: #2ee6a6;
+  stroke-width: 2;
+  cursor: grab;
+}
+.lens-diagram .drag-handle:active {
+  cursor: grabbing;
+  fill-opacity: 0.4;
+}
+.lens-diagram .drag-handle:focus-visible {
+  outline: none;
+  stroke-width: 3;
+  fill-opacity: 0.4;
+}

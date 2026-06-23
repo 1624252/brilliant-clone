@@ -1,0 +1,64 @@
+.lens-diagram {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0b1020;
+  border-radius: 12px;
+  touch-action: none; /* let us handle drag gestures ourselves */
+}
+
+.lens-diagram .axis {
+  stroke: #394056;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+}
+
+.lens-diagram .lens {
+  stroke: #6fb3ff;
+  stroke-width: 3;
+}
+
+.lens-diagram .focal circle {
+  fill: #8b93a7;
+}
+.lens-diagram .focal text {
+  fill: #8b93a7;
+  font-size: 13px;
+  font-family: system-ui, sans-serif;
+}
+
+.lens-diagram .ray {
+  fill: none;
+  stroke-width: 2;
+}
+.lens-diagram .ray--parallel {
+  stroke: #ff9f43;
+}
+.lens-diagram .ray--chief {
+  stroke: #54d6a0;
+}
+.lens-diagram .ray--focal {
+  stroke: #ff6b9d;
+}
+.lens-diagram .ray--virtual {
+  stroke: #ffffff;
+  stroke-opacity: 0.35;
+  stroke-dasharray: 5 5;
+  stroke-width: 1.5;
+}
+
+.lens-diagram .object {
+  stroke: #2ee6a6;
+  stroke-width: 3.5;
+}
+
+.lens-diagram .image--real {
+  stroke: #c08bff;
+  stroke-width: 3.5;
+}
+.lens-diagram .image--virtual {
+  stroke: #c08bff;
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+  stroke-opacity: 0.85;
+}

@@ -15,6 +15,13 @@ export type Orientation = 'upright' | 'inverted'
 
 export type LensType = 'converging' | 'diverging'
 
+/** A point in optical coordinates: origin at the lens center, +x to the right
+ * (direction light travels), +y up. Distances are in the same unit as do/f. */
+export interface Point {
+  x: number
+  y: number
+}
+
 /** Full description of the image a thin lens forms for a given object. */
 export interface ImageFormation {
   objectDistance: number
