@@ -3,7 +3,9 @@
 An interactive, Brilliant-style learning app for **geometric optics (lenses)**.
 Learners manipulate visual simulations (drag an object, move a screen, reshape a
 lens), get instant specific feedback, and build real intuition for image
-formation. See [`PRD.md`](./PRD.md) for the full product spec.
+formation. See the [`docs/`](./docs) folder for the full product spec
+([`PRD.md`](./docs/PRD.md)), [architecture](./docs/ARCHITECTURE.md), and
+[testing guide](./docs/TESTING.md).
 
 - **Stack:** React + TypeScript (Vite) on the front end; Firebase (Auth,
   Firestore, Hosting) for accounts and persistence.
@@ -122,5 +124,9 @@ src/
   App.tsx        Routing: auth → home → lesson.
 firestore.rules  Per-user security rules.
 firebase.json    Firestore rules + Hosting config.
-PRD.md           Product requirements and data schema.
+docs/            Product spec (PRD), architecture, and testing guide.
 ```
+
+For a deeper dive into how the layers fit together, see
+[`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md); for testing details and what's
+covered, see [`docs/TESTING.md`](./docs/TESTING.md).

@@ -24,20 +24,6 @@
   align-items: center;
   gap: 0.5rem;
 }
-.auth__sun {
-  display: inline-block;
-  animation: sun-spin 14s linear infinite;
-}
-@keyframes sun-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth__sun {
-    animation: none;
-  }
-}
 .auth__tag {
   margin: 0;
   font-size: clamp(1rem, 2.2vw, 1.3rem);
