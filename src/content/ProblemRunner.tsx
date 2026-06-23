@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
 import { LensScene } from '../interactive'
 import type { Control, LessonDefinition, StepState } from './types'
@@ -88,24 +88,34 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
         }
       />
 
+      <EquationPanel
+        f={merged.focalLength}
+        dObj={merged.objectDistance}
+        dImg={image.imageDistance}
+        m={image.magnification}
+      />
+
       <div className="runner__chips">
-        <span className="chip" title="Object distance: how far the candle is from the lens">
+        <span
+          className="chip chip--do"
+          title="Object distance: how far the candle is from the lens"
+        >
           d<sub>o</sub> {fmt(merged.objectDistance)}
         </span>
         <span
-          className="chip"
+          className="chip chip--di"
           title="Image distance: how far the image is from the lens (negative = same side as the candle)"
         >
           d<sub>i</sub> {fmt(image.imageDistance)}
         </span>
         <span
-          className="chip"
+          className="chip chip--m"
           title="Magnification: image height ÷ object height (negative = flipped)"
         >
           m {fmt(image.magnification)}
         </span>
         <span
-          className="chip"
+          className="chip chip--f"
           title="Focal length: how strongly the lens bends light"
         >
           f {fmt(merged.focalLength)}
@@ -176,6 +186,85 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
             Check answer
           </button>
         )}
+      </div>
+    </div>
+  )
+}
+
+/** A stacked fraction: numerator over a rule over denominator. */
+function Frac({ top, bottom }: { top: ReactNode; bottom: ReactNode }) {
+  return (
+    <span className="frac">
+      <span className="frac__num">{top}</span>
+      <span className="frac__den">{bottom}</span>
+    </span>
+  )
+}
+
+/**
+ * The thin lens equation shown two ways at once: symbolic (color-coded) and with
+ * the learner's current numbers plugged in, so the symbols stay tied to values.
+ */
+function EquationPanel({
+  f,
+  dObj,
+  dImg,
+  m,
+}: {
+  f: number
+  dObj: number
+  dImg: number
+  m: number
+}) {
+  const one = <span className="one">1</span>
+  return (
+    <div className="equation" aria-hidden="true">
+      <div className="equation__row">
+        <Frac top={one} bottom={<span className="sym sym--f">f</span>} />
+        <span className="op">=</span>
+        <Frac
+          top={one}
+          bottom={
+            <span className="sym sym--do">
+              d<sub>o</sub>
+            </span>
+          }
+        />
+        <span className="op">+</span>
+        <Frac
+          top={one}
+          bottom={
+            <span className="sym sym--di">
+              d<sub>i</sub>
+            </span>
+          }
+        />
+        <span className="equation__sep" />
+        <span className="sym sym--m">m</span>
+        <span className="op">=</span>
+        <Frac
+          top={
+            <span className="sym sym--di">
+              −d<sub>i</sub>
+            </span>
+          }
+          bottom={
+            <span className="sym sym--do">
+              d<sub>o</sub>
+            </span>
+          }
+        />
+      </div>
+      <div className="equation__row equation__row--values">
+        <Frac top={one} bottom={<span className="sym--f">{fmt(f)}</span>} />
+        <span className="op">=</span>
+        <Frac top={one} bottom={<span className="sym--do">{fmt(dObj)}</span>} />
+        <span className="op">+</span>
+        <Frac top={one} bottom={<span className="sym--di">{fmt(dImg)}</span>} />
+        <span className="equation__sep" />
+        <span className="sym--m">m</span>
+        <span className="op">=</span>
+        <span className="sym--m">{fmt(m)}</span>
       </div>
     </div>
   )

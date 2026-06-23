@@ -164,6 +164,17 @@ A build is "MVP-complete" when all of these are true:
 - **Maintainability:** physics engine has zero React/DOM dependencies and is unit-testable; new lessons require only new content config.
 - **Security:** Firestore rules restrict each user to reading/writing only their own progress documents.
 
+### 7.1 Interactive-problem design principles
+
+Every interactive lesson should follow these (grounded in learning science):
+
+- **Visual-first, minimal text.** Carry meaning with the diagram, color, and motion; keep prompts and feedback to a sentence or two.
+- **Dual coding.** Tie each symbol to its picture and its live value (e.g. `f`/`dₒ`/`dᵢ`/`m` use one consistent color across the equation, the readout chips, and the diagram).
+- **Show the actual concept.** If a lesson is about the thin lens equation, the equation is on screen and updates live; don't just describe it.
+- **Explain terms before using them.** Introduce vocabulary (real/virtual, inverted, focal length, …) visually or via lightweight, on-demand glossary/tooltips before relying on it. (Planned to deepen in a later phase.)
+- **Active recall + immediate, specific feedback.** The learner manipulates something to answer; feedback says *why*, not just right/wrong.
+- **Color and imagery.** Use a coherent palette and real-looking imagery (e.g. a candle as the object) to make scenes appealing and memorable.
+
 ---
 
 ## 8. Architecture overview

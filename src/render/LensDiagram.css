@@ -20,11 +20,12 @@
 }
 
 .lens-diagram .focal circle {
-  fill: #8b93a7;
+  fill: var(--c-f, #ffb84d);
 }
 .lens-diagram .focal text {
-  fill: #8b93a7;
+  fill: var(--c-f, #ffb84d);
   font-size: 13px;
+  font-weight: 600;
   font-family: system-ui, sans-serif;
 }
 

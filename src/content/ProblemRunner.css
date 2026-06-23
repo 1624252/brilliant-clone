@@ -2,6 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  /* One color per quantity, reused across the equation, chips, and diagram. */
+  --c-f: #ffb84d;
+  --c-do: #6fb3ff;
+  --c-di: #c08bff;
+  --c-m: #54d6a0;
 }
 
 .runner__progress {
@@ -38,6 +43,84 @@
 .chip--virtual {
   border-color: #6fb3ff;
   color: #bfe0ff;
+}
+.chip--f {
+  border-color: var(--c-f);
+}
+.chip--do {
+  border-color: var(--c-do);
+}
+.chip--di {
+  border-color: var(--c-di);
+}
+.chip--m {
+  border-color: var(--c-m);
+}
+
+/* Live thin lens equation: symbolic on top, current numbers below. */
+.equation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+  background: #0d1322;
+  border: 1px solid #1d2540;
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  overflow-x: auto;
+}
+.equation__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.equation__row--values {
+  font-size: 0.95rem;
+  color: #aab2c5;
+}
+.equation .op {
+  color: #8b93a7;
+}
+.equation__sep {
+  width: 1px;
+  align-self: stretch;
+  background: #1d2540;
+  margin: 0 0.4rem;
+}
+.equation .one {
+  color: #e6e9f0;
+}
+.equation .sym--f {
+  color: var(--c-f);
+}
+.equation .sym--do {
+  color: var(--c-do);
+}
+.equation .sym--di {
+  color: var(--c-di);
+}
+.equation .sym--m {
+  color: var(--c-m);
+}
+.equation .sym {
+  font-style: italic;
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.frac__num {
+  padding: 0 0.3rem;
+}
+.frac__den {
+  padding: 0.05rem 0.3rem 0;
+  border-top: 1.5px solid currentColor;
 }
 
 .glossary {
