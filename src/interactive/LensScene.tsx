@@ -17,6 +17,8 @@ interface LensSceneProps {
   /** Drag clamp range for the object distance (optical units). */
   minObjectDistance?: number
   maxObjectDistance?: number
+  /** When true, dragging the object to the far edge snaps it to infinity. */
+  infinityAtEdge?: boolean
   /** Values the drag gently snaps to (e.g., 0, f, 2f). */
   snaps?: number[]
   onObjectDistanceChange?: (value: number) => void
@@ -52,6 +54,7 @@ export function LensScene({
   objectHeight = 18,
   minObjectDistance = 5,
   maxObjectDistance = 75,
+  infinityAtEdge = false,
   snaps,
   onObjectDistanceChange,
   scene = DEFAULT_SCENE,
@@ -72,13 +75,22 @@ export function LensScene({
   const handlePos = toSvg({ x: safeX, y: objectHeight }, scene)
   const ariaNow = Number.isFinite(objectDistance) ? objectDistance : maxObjectDistance
 
+  // Dragging the candle to (or past) the visible left edge means "infinitely
+  // far away": the object distance jumps to ∞ and the rays become a parallel beam.
+  const infinityEdge = scene.halfWidth - 2
+
   function updateFromPointer(e: PointerEvent<SVGCircleElement>) {
     const svg = e.currentTarget.ownerSVGElement
     if (!svg || !onObjectDistanceChange) return
     const opticalX = pointerToOpticalX(e, svg, scene)
     if (opticalX === null) return
     // Object sits to the left of the lens, so its distance is -x.
-    const next = clamp(-opticalX, minObjectDistance, maxObjectDistance)
+    const raw = -opticalX
+    if (infinityAtEdge && raw >= infinityEdge) {
+      onObjectDistanceChange(Infinity)
+      return
+    }
+    const next = clamp(raw, minObjectDistance, maxObjectDistance)
     onObjectDistanceChange(snapValue(Number(next.toFixed(2)), snaps))
   }
 
@@ -125,9 +137,18 @@ export function LensScene({
           onKeyDown={(e) => {
             if (!onObjectDistanceChange) return
             if (e.key === 'ArrowLeft') {
-              onObjectDistanceChange(clamp(objectDistance + 1, minObjectDistance, maxObjectDistance))
+              // Move farther away; step past the edge lands on infinity.
+              if (!Number.isFinite(objectDistance)) return
+              const next = objectDistance + 1
+              if (infinityAtEdge && next >= infinityEdge) {
+                onObjectDistanceChange(Infinity)
+              } else {
+                onObjectDistanceChange(clamp(next, minObjectDistance, maxObjectDistance))
+              }
             } else if (e.key === 'ArrowRight') {
-              onObjectDistanceChange(clamp(objectDistance - 1, minObjectDistance, maxObjectDistance))
+              // Move closer; coming back from infinity returns to the edge.
+              const from = Number.isFinite(objectDistance) ? objectDistance : infinityEdge + 1
+              onObjectDistanceChange(clamp(from - 1, minObjectDistance, maxObjectDistance))
             }
           }}
         />

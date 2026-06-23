@@ -78,6 +78,23 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     setObjectDistance(container, 55)
     expect(screen.queryByText(/not yet/i)).not.toBeInTheDocument()
   })
+
+  it('sliding the object control to its far end snaps to infinity', () => {
+    const { container } = renderStarted(thinLensLesson)
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement
+    // Slide all the way to the end (the visible scene edge = infinitely far).
+    setObjectDistance(container, Number(slider.max))
+    expect(screen.getByText(/object distance:\s*∞/i)).toBeInTheDocument()
+    // The diagram switches to the "object at infinity" parallel-beam state.
+    expect(screen.getByText(/object at ∞/i)).toBeInTheDocument()
+  })
+
+  it('the ∞ button sets the object infinitely far away', () => {
+    renderStarted(thinLensLesson)
+    fireEvent.click(screen.getByRole('button', { name: '∞' }))
+    expect(screen.getByText(/object distance:\s*∞/i)).toBeInTheDocument()
+    expect(screen.getByText(/object at ∞/i)).toBeInTheDocument()
+  })
 })
 
 describe('Thin Lens extreme steps', () => {

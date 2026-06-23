@@ -171,6 +171,7 @@ export function ProblemRunner({
         focalLength={focalLength}
         minObjectDistance={dragControl?.min}
         maxObjectDistance={dragControl?.max}
+        infinityAtEdge={!!dragControl?.allowInfinity}
         snaps={dragControl?.snaps}
         measures={measures}
         showRays={predict ? committed : true}
@@ -544,7 +545,15 @@ function SliderControl({
           step={control.step ?? 1}
           value={sliderValue}
           list={control.snaps ? `${control.key}-snaps` : undefined}
-          onChange={(e) => onChange(snapValue(Number(e.target.value), control.snaps))}
+          onChange={(e) => {
+            const raw = Number(e.target.value)
+            // Sliding to the far end means "infinitely far away".
+            if (control.allowInfinity && raw >= control.max) {
+              onChange(Infinity)
+            } else {
+              onChange(snapValue(raw, control.snaps))
+            }
+          }}
         />
         {control.snaps && (
           <datalist id={`${control.key}-snaps`}>

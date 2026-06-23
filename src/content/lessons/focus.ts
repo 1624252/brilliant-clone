@@ -9,7 +9,8 @@ const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
   min: 0,
-  max: 120,
+  // 80 is the visible left edge of the scene; sliding/dragging to it means ∞.
+  max: 80,
   step: 0.5,
   label: 'Object distance',
   allowInfinity: true,
