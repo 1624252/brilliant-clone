@@ -15,10 +15,18 @@ interface LensDiagramProps {
   objectHeight?: number
   scene?: SceneParams
   showRays?: boolean
-  /** Overlay dimension lines for f, do, di and the object/image heights. */
-  showMeasures?: boolean
+  /** Which measurement overlays to draw. Each maps a symbol onto the picture. */
+  measures?: MeasureFlags
   /** Overlay content (e.g. a drag handle) rendered on top of the diagram. */
   children?: ReactNode
+}
+
+export interface MeasureFlags {
+  f?: boolean
+  do?: boolean
+  di?: boolean
+  /** object/image height brackets (i.e. magnification). */
+  m?: boolean
 }
 
 const RAY_CLASS: Record<string, string> = {
@@ -37,7 +45,7 @@ export function LensDiagram({
   objectHeight = 18,
   scene = DEFAULT_SCENE,
   showRays = true,
-  showMeasures = false,
+  measures = {},
   children,
 }: LensDiagramProps) {
   const trace = tracePrincipalRays(
@@ -162,52 +170,50 @@ export function LensDiagram({
       )}
 
       {/* toggleable measurement overlays mapping each symbol onto the picture */}
-      {showMeasures && (
-        <g className="dims">
+      <g className="dims">
+        {measures.f && (
           <HDim
             kind="f"
             x1={center.x}
             x2={toSvg({ x: focalLength, y: 0 }, scene).x}
-            y={center.y + 30}
+            y={center.y + 34}
             axisY={center.y}
             label="f"
           />
+        )}
+        {measures.do && (
           <HDim
             kind="do"
             x1={objBase.x}
             x2={center.x}
-            y={center.y + 56}
+            y={center.y + 62}
             axisY={center.y}
             label="dₒ"
           />
-          {img && (
-            <HDim
-              kind="di"
-              x1={center.x}
-              x2={toSvg(img.base, scene).x}
-              y={center.y + 82}
-              axisY={center.y}
-              label="dᵢ"
-            />
-          )}
+        )}
+        {measures.di && img && (
+          <HDim
+            kind="di"
+            x1={center.x}
+            x2={toSvg(img.base, scene).x}
+            y={center.y + 90}
+            axisY={center.y}
+            label="dᵢ"
+          />
+        )}
+        {measures.m && (
+          <VDim kind="m" x={objBase.x} y1={center.y} y2={objTip.y} label="h₀" />
+        )}
+        {measures.m && img && (
           <VDim
             kind="m"
-            x={objBase.x}
+            x={toSvg(img.base, scene).x}
             y1={center.y}
-            y2={objTip.y}
-            label="h₀"
+            y2={toSvg(img.tip, scene).y}
+            label="hᵢ"
           />
-          {img && (
-            <VDim
-              kind="m"
-              x={toSvg(img.base, scene).x}
-              y1={center.y}
-              y2={toSvg(img.tip, scene).y}
-              label="hᵢ"
-            />
-          )}
-        </g>
-      )}
+        )}
+      </g>
 
       {children}
     </svg>
@@ -325,23 +331,14 @@ function HDim({
 }) {
   if (Math.abs(x2 - x1) < 2) return null
   const mid = (x1 + x2) / 2
-  const pillW = label.length * 11 + 16
   return (
     <g className={`dim dim--${kind}`}>
       <line className="dim__guide" x1={x1} y1={axisY} x2={x1} y2={y} />
       <line className="dim__guide" x2={x2} y1={axisY} x1={x2} y2={y} />
       <line className="dim__line" x1={x1} y1={y} x2={x2} y2={y} />
-      <line className="dim__tick" x1={x1} y1={y - 5} x2={x1} y2={y + 5} />
-      <line className="dim__tick" x1={x2} y1={y - 5} x2={x2} y2={y + 5} />
-      <rect
-        className="dim__pill"
-        x={mid - pillW / 2}
-        y={y - 12}
-        width={pillW}
-        height={24}
-        rx={12}
-      />
-      <text className="dim__label" x={mid} y={y + 6} textAnchor="middle">
+      <line className="dim__tick" x1={x1} y1={y - 6} x2={x1} y2={y + 6} />
+      <line className="dim__tick" x1={x2} y1={y - 6} x2={x2} y2={y + 6} />
+      <text className="dim__label" x={mid} y={y - 8} textAnchor="middle">
         {label}
       </text>
     </g>
@@ -364,14 +361,13 @@ function VDim({
 }) {
   if (Math.abs(y2 - y1) < 2) return null
   const mid = (y1 + y2) / 2
-  const bx = x - 20 // nudge the bracket just left of the candle body
+  const bx = x - 22 // nudge the bracket just left of the candle body
   return (
     <g className={`dim dim--${kind}`}>
       <line className="dim__line" x1={bx} y1={y1} x2={bx} y2={y2} />
-      <line className="dim__tick" x1={bx - 5} y1={y1} x2={bx + 5} y2={y1} />
-      <line className="dim__tick" x1={bx - 5} y1={y2} x2={bx + 5} y2={y2} />
-      <rect className="dim__pill" x={bx - 18} y={mid - 12} width={36} height={24} rx={12} />
-      <text className="dim__label" x={bx} y={mid + 6} textAnchor="middle">
+      <line className="dim__tick" x1={bx - 6} y1={y1} x2={bx + 6} y2={y1} />
+      <line className="dim__tick" x1={bx - 6} y1={y2} x2={bx + 6} y2={y2} />
+      <text className="dim__label" x={bx - 10} y={mid + 6} textAnchor="end">
         {label}
       </text>
     </g>

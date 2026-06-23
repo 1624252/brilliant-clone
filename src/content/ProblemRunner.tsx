@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
 import { LensScene } from '../interactive'
+import type { MeasureFlags } from '../render'
 import type { Control, LessonDefinition, StepState } from './types'
 import './ProblemRunner.css'
 
@@ -31,7 +32,11 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
   const [values, setValues] = useState<StepState>(lesson.steps[0].initial)
   const [status, setStatus] = useState<Status>('idle')
   const [done, setDone] = useState(false)
-  const [showMeasures, setShowMeasures] = useState(false)
+  const [measures, setMeasures] = useState<MeasureFlags>({})
+
+  function toggleMeasure(key: keyof MeasureFlags) {
+    setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   const step = lesson.steps[stepIndex]
   const merged: StepState = { ...step.fixed, ...values }
@@ -84,20 +89,42 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
         focalLength={merged.focalLength}
         minObjectDistance={dragControl?.min}
         maxObjectDistance={dragControl?.max}
-        showMeasures={showMeasures}
+        measures={measures}
         onObjectDistanceChange={
           dragControl ? (v) => setValue('objectDistance', v) : undefined
         }
       />
 
-      <label className="toggle">
-        <input
-          type="checkbox"
-          checked={showMeasures}
-          onChange={(e) => setShowMeasures(e.target.checked)}
-        />
-        Show measurements (f, d<sub>o</sub>, d<sub>i</sub>, heights)
-      </label>
+      <fieldset className="measures">
+        <legend>Show on diagram</legend>
+        <label className="measures__opt measures__opt--f">
+          <input type="checkbox" checked={!!measures.f} onChange={() => toggleMeasure('f')} />
+          <span className="swatch swatch--f" />
+          <b>f</b> <span className="measures__desc">focal length · lens → F</span>
+        </label>
+        <label className="measures__opt measures__opt--do">
+          <input type="checkbox" checked={!!measures.do} onChange={() => toggleMeasure('do')} />
+          <span className="swatch swatch--do" />
+          <b>
+            d<sub>o</sub>
+          </b>{' '}
+          <span className="measures__desc">object distance · candle → lens</span>
+        </label>
+        <label className="measures__opt measures__opt--di">
+          <input type="checkbox" checked={!!measures.di} onChange={() => toggleMeasure('di')} />
+          <span className="swatch swatch--di" />
+          <b>
+            d<sub>i</sub>
+          </b>{' '}
+          <span className="measures__desc">image distance · lens → image</span>
+        </label>
+        <label className="measures__opt measures__opt--m">
+          <input type="checkbox" checked={!!measures.m} onChange={() => toggleMeasure('m')} />
+          <span className="swatch swatch--m" />
+          <b>m</b>{' '}
+          <span className="measures__desc">heights · h₀ vs hᵢ</span>
+        </label>
+      </fieldset>
 
       <EquationPanel
         f={merged.focalLength}

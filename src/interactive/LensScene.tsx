@@ -5,6 +5,7 @@ import {
   toSvg,
   svgXToOpticalX,
   type SceneParams,
+  type MeasureFlags,
 } from '../render'
 import './LensScene.css'
 
@@ -18,7 +19,7 @@ interface LensSceneProps {
   onObjectDistanceChange?: (value: number) => void
   scene?: SceneParams
   showRays?: boolean
-  showMeasures?: boolean
+  measures?: MeasureFlags
 }
 
 /** Map a pointer event to an optical x using the SVG's coordinate transform. */
@@ -49,7 +50,7 @@ export function LensScene({
   onObjectDistanceChange,
   scene = DEFAULT_SCENE,
   showRays = true,
-  showMeasures = false,
+  measures,
 }: LensSceneProps) {
   const draggingRef = useRef(false)
   const draggable = Boolean(onObjectDistanceChange)
@@ -88,7 +89,7 @@ export function LensScene({
       objectHeight={objectHeight}
       scene={scene}
       showRays={showRays}
-      showMeasures={showMeasures}
+      measures={measures}
     >
       {draggable && (
         <circle

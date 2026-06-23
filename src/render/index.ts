@@ -1,4 +1,4 @@
-export { LensDiagram } from './LensDiagram'
+export { LensDiagram, type MeasureFlags } from './LensDiagram'
 export {
   DEFAULT_SCENE,
   scaleOf,

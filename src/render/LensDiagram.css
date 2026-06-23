@@ -48,7 +48,7 @@
 .lens-diagram .dim__line,
 .lens-diagram .dim__tick {
   stroke: currentColor;
-  stroke-width: 2;
+  stroke-width: 2.5;
 }
 .lens-diagram .dim__guide {
   stroke: currentColor;
@@ -56,16 +56,35 @@
   stroke-dasharray: 3 3;
   opacity: 0.45;
 }
-.lens-diagram .dim__pill {
-  fill: #0b1020;
-  stroke: currentColor;
-  stroke-width: 1;
-}
 .lens-diagram .dim__label {
   fill: currentColor;
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 700;
   font-family: system-ui, sans-serif;
+  /* dark halo so labels stay readable over rays/figures */
+  paint-order: stroke;
+  stroke: #0b1020;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+/* On small screens the whole SVG scales down, so bump the in-diagram text
+   (and strokes) up in user units to keep them legible. */
+@media (max-width: 600px) {
+  .lens-diagram .focal text {
+    font-size: 32px;
+  }
+  .lens-diagram .dim__label {
+    font-size: 28px;
+    stroke-width: 5px;
+  }
+  .lens-diagram .dim__line,
+  .lens-diagram .dim__tick {
+    stroke-width: 3.5;
+  }
+  .lens-diagram .axis {
+    stroke-width: 2.5;
+  }
 }
 
 .lens-diagram .ray {
