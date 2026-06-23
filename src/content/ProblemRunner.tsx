@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { formImage } from '../engine'
 import { LensScene } from '../interactive'
-import type { MeasureFlags } from '../render'
+import { RayFocusAnimation, type MeasureFlags } from '../render'
 import type { Control, LessonDefinition, StepState } from './types'
 import './ProblemRunner.css'
 
@@ -28,6 +28,7 @@ function describe(image: ReturnType<typeof formImage>): string {
 }
 
 export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
+  const [started, setStarted] = useState(!lesson.intro)
   const [stepIndex, setStepIndex] = useState(0)
   const [values, setValues] = useState<StepState>(lesson.steps[0].initial)
   const [status, setStatus] = useState<Status>('idle')
@@ -65,6 +66,29 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
     setStepIndex(ni)
     setValues(lesson.steps[ni].initial)
     setStatus('idle')
+  }
+
+  if (lesson.intro && !started) {
+    return (
+      <div className="runner runner--intro">
+        <h3 className="intro__heading">{lesson.intro.heading}</h3>
+        {lesson.intro.animation === 'focus' && <RayFocusAnimation />}
+        {lesson.intro.paragraphs.map((p, i) => (
+          <p key={i} className="intro__para">
+            {p}
+          </p>
+        ))}
+        <div className="runner__actions">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => setStarted(true)}
+          >
+            Start lesson
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (done) {

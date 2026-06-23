@@ -35,10 +35,20 @@ export interface StepDefinition {
   hint: string
 }
 
+/** Short teaching screen shown before a lesson's interactive steps. */
+export interface LessonIntro {
+  heading: string
+  /** A few short paragraphs (kept brief; mostly-visual lessons). */
+  paragraphs: string[]
+  /** Optional animated explainer to show alongside the text. */
+  animation?: 'focus'
+}
+
 export interface LessonDefinition {
   id: string
   title: string
   order: number
   estMinutes: number
+  intro?: LessonIntro
   steps: StepDefinition[]
 }

@@ -19,6 +19,14 @@ export const thinLensLesson: LessonDefinition = {
   title: 'The Thin Lens Equation',
   order: 3,
   estMinutes: 4,
+  intro: {
+    heading: 'One equation ties it all together',
+    paragraphs: [
+      'The thin lens equation links the three distances:  1/f = 1/dₒ + 1/dᵢ.',
+      'With f fixed, moving the candle (dₒ) changes where the image forms (dᵢ) — and the magnification m = −dᵢ/dₒ tells you if it flips and by how much.',
+      'In each step, drag the candle to make a specific kind of image. The live equation updates as you go.',
+    ],
+  },
   steps: [
     {
       id: 'same-size-at-2f',
