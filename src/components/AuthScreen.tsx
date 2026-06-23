@@ -111,7 +111,7 @@ export function AuthScreen() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Alex"
+                  placeholder="e.g., Patrick"
                   autoComplete="name"
                   required
                 />
