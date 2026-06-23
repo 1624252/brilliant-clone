@@ -20,8 +20,12 @@ describe('magnification', () => {
     expect(magnification(10, Infinity)).toBe(Infinity)
   })
 
-  it('throws on zero object distance', () => {
-    expect(() => magnification(0, 15)).toThrow(RangeError)
+  it('object on the lens (do = 0) -> m = 1 (same size, no NaN)', () => {
+    expect(magnification(0, 0)).toBe(1)
+  })
+
+  it('object infinitely far (do = Infinity) -> m = 0 (point image)', () => {
+    expect(magnification(Infinity, 10)).toBe(0)
   })
 })
 

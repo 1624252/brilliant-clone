@@ -47,6 +47,32 @@ describe('formImage (converging lens, f = 10)', () => {
   })
 })
 
+describe('formImage boundaries (0 and infinity)', () => {
+  it('object on the lens (do = 0): finite, same-size, no NaN', () => {
+    const r = formImage(0, 10)
+    expect(r.imageDistance).toBe(0)
+    expect(r.magnification).toBe(1)
+    expect(r.atInfinity).toBe(false)
+    expect(Number.isNaN(r.magnification)).toBe(false)
+  })
+
+  it('object infinitely far (do = Infinity): real point image at the focal plane', () => {
+    const r = formImage(Infinity, 10)
+    expect(r.imageDistance).toBe(10)
+    expect(r.magnification).toBe(0)
+    expect(r.isReal).toBe(true)
+    expect(r.atInfinity).toBe(false)
+  })
+
+  it('produces only finite, non-NaN magnification across the range', () => {
+    for (const doVal of [0, 0.001, 1, 10, 1000, Infinity]) {
+      const r = formImage(doVal, 10)
+      expect(Number.isNaN(r.imageDistance)).toBe(false)
+      expect(Number.isNaN(r.magnification)).toBe(false)
+    }
+  })
+})
+
 describe('formImage (diverging lens, f = -10)', () => {
   it('always virtual, upright, reduced for a real object', () => {
     for (const objectDistance of [5, 10, 20, 50]) {

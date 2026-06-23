@@ -5,19 +5,25 @@ import type { LensType } from './types'
  *
  *   1/f = 1/do + 1/di   ->   di = 1 / (1/f - 1/do)
  *
- * Returns +Infinity when the object sits exactly at the focal point
- * (objectDistance === focalLength), where refracted rays leave parallel and
- * no finite image forms.
+ * Boundary cases are handled so the engine never throws or returns NaN:
+ *   - do at the focal point (do === f): +Infinity (rays leave parallel).
+ *   - do === 0 (object on the lens): 0 (image forms at the lens).
+ *   - do === ±Infinity (object infinitely far): f (image at the focal plane).
  *
- * @param objectDistance do, must be non-zero
+ * @param objectDistance do (0..∞ allowed)
  * @param focalLength    f, must be non-zero (use < 0 for a diverging lens)
  */
 export function imageDistance(objectDistance: number, focalLength: number): number {
-  if (objectDistance === 0) {
-    throw new RangeError('objectDistance must be non-zero')
-  }
   if (focalLength === 0) {
     throw new RangeError('focalLength must be non-zero')
+  }
+  // Object infinitely far: parallel rays focus exactly at the focal plane.
+  if (!Number.isFinite(objectDistance)) {
+    return focalLength
+  }
+  // Object on the lens: image coincides with the lens.
+  if (objectDistance === 0) {
+    return 0
   }
 
   const denominator = 1 / focalLength - 1 / objectDistance

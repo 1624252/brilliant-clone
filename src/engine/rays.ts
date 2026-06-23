@@ -41,7 +41,7 @@ function linePointAtX(a: Point, b: Point, x: number): Point {
 /**
  * Trace the three principal rays for an object in front of a thin lens.
  *
- * @param objectDistance do, > 0 (real object on the left)
+ * @param objectDistance do, 0..∞ (use Infinity for an object infinitely far away)
  * @param focalLength    f, > 0 converging / < 0 diverging
  * @param objectHeight   h, > 0 (arrow points up from the axis)
  * @param sceneRightX    x of the right scene edge; outgoing rays extend to here
@@ -56,12 +56,41 @@ export function tracePrincipalRays(
     throw new RangeError('objectHeight must be positive')
   }
 
-  const P: Point = { x: -objectDistance, y: objectHeight } // object tip
+  // Object infinitely far away: light arrives as a parallel beam that the lens
+  // brings to a focus at the far focal point. Drawn from the left scene edge.
+  if (!Number.isFinite(objectDistance)) {
+    const R = sceneRightX
+    const farFocal: Point = { x: focalLength, y: 0 }
+    const top: Point = { x: 0, y: objectHeight }
+    const bot: Point = { x: 0, y: -objectHeight }
+    return {
+      object: { base: { x: -R, y: 0 }, tip: { x: -R, y: objectHeight } },
+      image: { base: farFocal, tip: farFocal },
+      atInfinity: false,
+      rays: [
+        {
+          id: 'parallel',
+          solid: [{ x: -R, y: objectHeight }, top, linePointAtX(top, farFocal, R)],
+        },
+        { id: 'chief', solid: [{ x: -R, y: 0 }, { x: 0, y: 0 }, { x: R, y: 0 }] },
+        {
+          id: 'focal',
+          solid: [{ x: -R, y: -objectHeight }, bot, linePointAtX(bot, farFocal, R)],
+        },
+      ],
+    }
+  }
+
+  // Guard the degenerate object-at-the-lens case (do -> 0), where the object,
+  // its image, and all lens crossings collapse onto x = 0 and slopes blow up.
+  const doDraw = Math.max(objectDistance, 0.5)
+
+  const P: Point = { x: -doDraw, y: objectHeight } // object tip
   const A: Point = { x: 0, y: objectHeight } // lens crossing of the parallel ray
   const O: Point = { x: 0, y: 0 } // lens center
 
   const { imageDistance: di, magnification: m, atInfinity } = formImage(
-    objectDistance,
+    doDraw,
     focalLength,
   )
 
@@ -70,7 +99,7 @@ export function tracePrincipalRays(
   if (atInfinity) {
     const farFocal: Point = { x: focalLength, y: 0 }
     return {
-      object: { base: { x: -objectDistance, y: 0 }, tip: P },
+      object: { base: { x: -doDraw, y: 0 }, tip: P },
       image: null,
       atInfinity: true,
       rays: [
@@ -100,7 +129,7 @@ export function tracePrincipalRays(
   })
 
   return {
-    object: { base: { x: -objectDistance, y: 0 }, tip: P },
+    object: { base: { x: -doDraw, y: 0 }, tip: P },
     image: { base: { x: di, y: 0 }, tip: I },
     rays,
     atInfinity: false,

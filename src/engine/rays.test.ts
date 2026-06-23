@@ -96,6 +96,35 @@ describe('tracePrincipalRays edge cases', () => {
     expect(trace.rays.map((r) => r.id)).toEqual(['parallel', 'chief'])
   })
 
+  it('object infinitely far: parallel beam converges at the far focal point', () => {
+    const trace = tracePrincipalRays(Infinity, 10, 12, SCENE_RIGHT)
+    expect(trace.image).not.toBeNull()
+    expect(trace.image!.base).toEqual({ x: 10, y: 0 })
+    // Incoming top/bottom rays arrive parallel to the axis (flat before the lens)...
+    const top = ray(trace.rays, 'parallel')
+    expect(top.solid[0].y).toBeCloseTo(12, 6)
+    expect(top.solid[1].y).toBeCloseTo(12, 6)
+    // ...then bend through F = (10, 0).
+    expect(yAtX(top.solid[1], top.solid[2], 10)).toBeCloseTo(0, 6)
+    // No NaNs anywhere in the geometry.
+    for (const r of trace.rays) {
+      for (const p of r.solid) {
+        expect(Number.isNaN(p.x)).toBe(false)
+        expect(Number.isNaN(p.y)).toBe(false)
+      }
+    }
+  })
+
+  it('object on the lens (do = 0) produces a finite, NaN-free trace', () => {
+    const trace = tracePrincipalRays(0, 10, 12, SCENE_RIGHT)
+    for (const r of trace.rays) {
+      for (const p of r.solid) {
+        expect(Number.isFinite(p.x)).toBe(true)
+        expect(Number.isFinite(p.y)).toBe(true)
+      }
+    }
+  })
+
   it('throws on non-positive object height', () => {
     expect(() => tracePrincipalRays(30, 10, 0, SCENE_RIGHT)).toThrow(RangeError)
   })

@@ -34,9 +34,20 @@ describe('imageDistance (diverging lens, f = -10)', () => {
   })
 })
 
-describe('imageDistance guards', () => {
-  it('throws on zero object distance', () => {
-    expect(() => imageDistance(0, 10)).toThrow(RangeError)
+describe('imageDistance boundaries (engine must not die)', () => {
+  it('object on the lens (do = 0) -> image at the lens (0)', () => {
+    expect(imageDistance(0, 10)).toBe(0)
+  })
+
+  it('object infinitely far (do = Infinity) -> image at the focal plane (f)', () => {
+    expect(imageDistance(Infinity, 10)).toBe(10)
+    expect(imageDistance(Infinity, -10)).toBe(-10)
+  })
+
+  it('never returns NaN across the full range', () => {
+    for (const doVal of [0, 0.0001, 5, 10, 20, 1000, Infinity]) {
+      expect(Number.isNaN(imageDistance(doVal, 10))).toBe(false)
+    }
   })
 
   it('throws on zero focal length', () => {
