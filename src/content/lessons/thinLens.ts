@@ -22,40 +22,34 @@ export const thinLensLesson: LessonDefinition = {
   steps: [
     {
       id: 'same-size-at-2f',
-      prompt:
-        'Drag the green object until the image is exactly the same size as the object (just flipped over).',
+      prompt: 'Drag the candle so its image is the same size (just flipped).',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) =>
         image.isReal && Math.abs(image.magnification + 1) < 0.06,
-      correctFeedback:
-        'That is the 2F point. At do = 2f the image is the same size, inverted, and also sits at 2f on the far side.',
-      hint: 'Same-size happens at one special spot: try twice the focal length (the 2F mark).',
+      correctFeedback: 'That is 2F — same size, flipped.',
+      hint: 'Try the 2F mark (twice the focal length).',
     },
     {
       id: 'virtual-magnifier',
-      prompt:
-        'Now move the object closer than the focal point to make a virtual, upright, magnified image — like a magnifying glass.',
+      prompt: 'Make an upright, magnified image (a magnifying glass).',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) => !image.isReal && image.orientation === 'upright',
-      correctFeedback:
-        'Inside the focal length the lens works as a magnifier: the image is virtual, upright, and enlarged.',
-      hint: 'Bring the object nearer than F — less than one focal length from the lens.',
+      correctFeedback: 'Inside F the lens magnifies: upright and enlarged.',
+      hint: 'Move the candle closer than F.',
     },
     {
       id: 'projector-real-magnified',
-      prompt:
-        'Position the object to project a magnified, inverted image on a screen (a real image larger than the object).',
+      prompt: 'Project a magnified, flipped image (a projector).',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) => image.isReal && image.isMagnified,
-      correctFeedback:
-        'Between F and 2F the lens forms a real, inverted, magnified image — exactly how a projector works.',
-      hint: 'Place the object between F and 2F (between one and two focal lengths).',
+      correctFeedback: 'Between F and 2F: real, flipped, enlarged.',
+      hint: 'Place the candle between F and 2F.',
     },
   ],
 }

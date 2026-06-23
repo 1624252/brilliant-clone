@@ -14,8 +14,9 @@
 }
 
 .lens-diagram .lens {
-  stroke: #6fb3ff;
-  stroke-width: 3;
+  fill: url(#glass);
+  stroke: #8cc2ff;
+  stroke-width: 2;
 }
 
 .lens-diagram .focal circle {
@@ -47,18 +48,38 @@
   stroke-width: 1.5;
 }
 
-.lens-diagram .object {
-  stroke: #2ee6a6;
-  stroke-width: 3.5;
+/* Candle figures for object and image */
+.lens-diagram .figure__body {
+  stroke-width: 1.5;
+}
+.lens-diagram .figure__flame {
+  stroke-width: 1.5;
 }
 
-.lens-diagram .image--real {
-  stroke: #c08bff;
-  stroke-width: 3.5;
+.lens-diagram .figure--object .figure__body {
+  fill: #f2e7c9;
+  stroke: #d8c089;
 }
-.lens-diagram .image--virtual {
+.lens-diagram .figure--object .figure__flame {
+  fill: #ff9f43;
+  stroke: #ffb36b;
+}
+
+.lens-diagram .figure--real .figure__body {
+  fill: #c08bff;
+  fill-opacity: 0.85;
+  stroke: #d3b0ff;
+}
+.lens-diagram .figure--real .figure__flame {
+  fill: #b06bff;
+  stroke: #d3b0ff;
+}
+
+.lens-diagram .figure--virtual .figure__body,
+.lens-diagram .figure--virtual .figure__flame {
+  fill: #c08bff;
+  fill-opacity: 0.12;
   stroke: #c08bff;
-  stroke-width: 3;
-  stroke-dasharray: 6 5;
-  stroke-opacity: 0.85;
+  stroke-opacity: 0.7;
+  stroke-dasharray: 5 4;
 }

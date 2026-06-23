@@ -17,25 +17,27 @@
   margin: 0;
 }
 
-.runner__readouts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.5rem 1rem;
-  margin: 0;
+.runner__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
-.runner__readouts div {
+.chip {
   background: #131a2e;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-}
-.runner__readouts dt {
-  font-size: 0.75rem;
-  color: #8b93a7;
-}
-.runner__readouts dd {
-  margin: 0.15rem 0 0;
-  font-size: 1.1rem;
+  border: 1px solid #1d2540;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
+  color: #c7cdda;
+}
+.chip--real {
+  border-color: #c08bff;
+  color: #d9c2ff;
+}
+.chip--virtual {
+  border-color: #6fb3ff;
+  color: #bfe0ff;
 }
 
 .runner__controls {

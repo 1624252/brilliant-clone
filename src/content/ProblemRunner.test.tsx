@@ -12,7 +12,7 @@ function setObjectDistance(container: HTMLElement, value: number) {
 describe('ProblemRunner (Thin Lens lesson)', () => {
   it('shows the first prompt and step counter', () => {
     render(<ProblemRunner lesson={thinLensLesson} />)
-    expect(screen.getByText(/same size as the object/i)).toBeInTheDocument()
+    expect(screen.getByText(/same size/i)).toBeInTheDocument()
     expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument()
   })
 
@@ -29,7 +29,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     setObjectDistance(container, 40) // 2f for f = 20 -> m = -1
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/correct/i)).toBeInTheDocument()
-    expect(screen.getByText(/2F point/i)).toBeInTheDocument()
+    expect(screen.getByText(/that is 2f/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
   })
 
@@ -43,7 +43,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument()
     setObjectDistance(container, 10) // inside f -> virtual, upright
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByText(/magnifier/i)).toBeInTheDocument()
+    expect(screen.getByText(/inside f the lens/i)).toBeInTheDocument()
   })
 
   it('clears feedback when the learner changes the answer', () => {

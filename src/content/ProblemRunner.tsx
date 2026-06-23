@@ -88,24 +88,18 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
         }
       />
 
-      <dl className="runner__readouts">
-        <div>
-          <dt>Object distance</dt>
-          <dd>{fmt(merged.objectDistance)}</dd>
-        </div>
-        <div>
-          <dt>Image distance</dt>
-          <dd>{fmt(image.imageDistance)}</dd>
-        </div>
-        <div>
-          <dt>Magnification</dt>
-          <dd>{fmt(image.magnification)}</dd>
-        </div>
-        <div>
-          <dt>Image</dt>
-          <dd>{describe(image)}</dd>
-        </div>
-      </dl>
+      <div className="runner__chips">
+        <span className="chip">
+          d<sub>o</sub> {fmt(merged.objectDistance)}
+        </span>
+        <span className="chip">
+          d<sub>i</sub> {fmt(image.imageDistance)}
+        </span>
+        <span className="chip">m {fmt(image.magnification)}</span>
+        <span className={`chip chip--${image.isReal ? 'real' : 'virtual'}`}>
+          {describe(image)}
+        </span>
+      </div>
 
       <div className="runner__controls">
         {step.controls.map((c) => (

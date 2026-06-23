@@ -45,18 +45,12 @@ export function LensDiagram({
   )
   const scale = scaleOf(scene)
   const polyline = (pts: Point[]) =>
-    pts
-      .map((p) => {
-        const s = toSvg(p, scene)
-        return `${s.x},${s.y}`
-      })
-      .join(' ')
+    pts.map((p) => svgStr(p, scene)).join(' ')
 
   const center = toSvg({ x: 0, y: 0 }, scene)
-  const lensHalf = scene.halfHeight * 0.85 * scale // lens body half-height (px)
+  const lensHalf = scene.halfHeight * 0.82 * scale
   const isConverging = focalLength > 0
 
-  // Focal (F) and double-focal (2F) markers on both sides.
   const markers = [
     { x: focalLength, label: 'F' },
     { x: -focalLength, label: 'F' },
@@ -67,11 +61,14 @@ export function LensDiagram({
   const objBase = toSvg(trace.object.base, scene)
   const objTip = toSvg(trace.object.tip, scene)
   const img = trace.image
-  const imgBase = img ? toSvg(img.base, scene) : null
-  const imgTip = img ? toSvg(img.tip, scene) : null
   const imageIsVirtual = img ? img.base.x < 0 : false
 
-  const label = describeImage(trace.atInfinity, img?.base.x ?? 0, trace.object.tip.y, img?.tip.y ?? 0)
+  const label = describeImage(
+    trace.atInfinity,
+    img?.base.x ?? 0,
+    trace.object.tip.y,
+    img?.tip.y ?? 0,
+  )
 
   return (
     <svg
@@ -87,22 +84,21 @@ export function LensDiagram({
           viewBox="0 0 10 10"
           refX="8"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerWidth="6"
+          markerHeight="6"
           orient="auto-start-reverse"
         >
           <path d="M0,0 L10,5 L0,10 z" fill="context-stroke" />
         </marker>
+        <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#6fb3ff" stopOpacity="0.15" />
+          <stop offset="50%" stopColor="#bcd6ff" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#6fb3ff" stopOpacity="0.15" />
+        </linearGradient>
       </defs>
 
       {/* optical axis */}
-      <line
-        className="axis"
-        x1={0}
-        y1={center.y}
-        x2={scene.viewWidth}
-        y2={center.y}
-      />
+      <line className="axis" x1={0} y1={center.y} x2={scene.viewWidth} y2={center.y} />
 
       {/* focal-point markers */}
       {markers.map((m, i) => {
@@ -110,22 +106,17 @@ export function LensDiagram({
         return (
           <g key={i} className="focal">
             <circle cx={s.x} cy={s.y} r={3} />
-            <text x={s.x} y={center.y + 18} textAnchor="middle">
+            <text x={s.x} y={center.y + 17} textAnchor="middle">
               {m.label}
             </text>
           </g>
         )
       })}
 
-      {/* lens body */}
-      <line
+      {/* lens body (real shape: convex when converging, concave when diverging) */}
+      <path
         className={`lens ${isConverging ? 'lens--converging' : 'lens--diverging'}`}
-        x1={center.x}
-        y1={center.y - lensHalf}
-        x2={center.x}
-        y2={center.y + lensHalf}
-        markerStart="url(#arrow)"
-        markerEnd="url(#arrow)"
+        d={lensPath(center.x, center.y, lensHalf, isConverging)}
       />
 
       {/* principal rays */}
@@ -143,30 +134,70 @@ export function LensDiagram({
           </g>
         ))}
 
-      {/* object arrow */}
-      <line
-        className="object"
-        x1={objBase.x}
-        y1={objBase.y}
-        x2={objTip.x}
-        y2={objTip.y}
-        markerEnd="url(#arrow)"
-      />
-
-      {/* image arrow */}
-      {imgBase && imgTip && (
-        <line
-          className={`image ${imageIsVirtual ? 'image--virtual' : 'image--real'}`}
-          x1={imgBase.x}
-          y1={imgBase.y}
-          x2={imgTip.x}
-          y2={imgTip.y}
-          markerEnd="url(#arrow)"
+      {/* object + image as candle figures (orientation + size read at a glance) */}
+      <Figure cx={objBase.x} baseY={objBase.y} tipY={objTip.y} variant="object" />
+      {img && (
+        <Figure
+          cx={toSvg(img.base, scene).x}
+          baseY={toSvg(img.base, scene).y}
+          tipY={toSvg(img.tip, scene).y}
+          variant={imageIsVirtual ? 'virtual' : 'real'}
         />
       )}
 
       {children}
     </svg>
+  )
+}
+
+function svgStr(p: Point, scene: SceneParams): string {
+  const s = toSvg(p, scene)
+  return `${s.x},${s.y}`
+}
+
+/** Biconvex (converging) or biconcave (diverging) lens outline. */
+function lensPath(cx: number, cy: number, half: number, converging: boolean): string {
+  const w = 14
+  if (converging) {
+    return `M ${cx},${cy - half} Q ${cx + w},${cy} ${cx},${cy + half} Q ${cx - w},${cy} ${cx},${cy - half} Z`
+  }
+  return `M ${cx - w},${cy - half} Q ${cx},${cy} ${cx - w},${cy + half} L ${cx + w},${cy + half} Q ${cx},${cy} ${cx + w},${cy - half} Z`
+}
+
+/** A small candle drawn between a base point and a (possibly flipped) tip. */
+function Figure({
+  cx,
+  baseY,
+  tipY,
+  variant,
+}: {
+  cx: number
+  baseY: number
+  tipY: number
+  variant: 'object' | 'real' | 'virtual'
+}) {
+  const delta = tipY - baseY // svg; negative when the figure points up
+  const len = Math.abs(delta)
+  if (len < 1) return null
+
+  const width = Math.min(34, Math.max(10, len * 0.22))
+  const bodyTopY = baseY + delta * 0.62
+  const flameWidth = width * 0.85
+  const midY = (bodyTopY + tipY) / 2
+  const flame = `M ${cx - flameWidth / 2},${bodyTopY} Q ${cx - flameWidth / 2},${midY} ${cx},${tipY} Q ${cx + flameWidth / 2},${midY} ${cx + flameWidth / 2},${bodyTopY} Z`
+
+  return (
+    <g className={`figure figure--${variant}`}>
+      <rect
+        className="figure__body"
+        x={cx - width / 2}
+        y={Math.min(baseY, bodyTopY)}
+        width={width}
+        height={Math.abs(baseY - bodyTopY)}
+        rx={3}
+      />
+      <path className="figure__flame" d={flame} />
+    </g>
   )
 }
 
