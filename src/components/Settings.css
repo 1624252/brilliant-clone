@@ -120,6 +120,23 @@
   color: var(--text-dim);
   font-size: 0.9rem;
 }
+.settings__methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elev-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 .settings__input {
   font: inherit;
   font-size: 1.02rem;
