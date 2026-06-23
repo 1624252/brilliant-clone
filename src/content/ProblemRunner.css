@@ -40,6 +40,40 @@
   color: #bfe0ff;
 }
 
+.glossary {
+  font-size: 0.9rem;
+  color: #b6bdcc;
+  background: #0d1322;
+  border: 1px solid #1d2540;
+  border-radius: 10px;
+  padding: 0.4rem 0.85rem;
+}
+.glossary summary {
+  cursor: pointer;
+  color: #8b93a7;
+  padding: 0.25rem 0;
+}
+.glossary dl {
+  margin: 0.5rem 0 0.25rem;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1rem;
+}
+.glossary dt {
+  font-weight: 600;
+  color: #e6e9f0;
+  white-space: nowrap;
+}
+.glossary dt span {
+  font-weight: 400;
+  color: #8b93a7;
+  font-size: 0.8rem;
+  margin-left: 0.3rem;
+}
+.glossary dd {
+  margin: 0;
+}
+
 .runner__controls {
   display: flex;
   flex-direction: column;

@@ -95,6 +95,19 @@ export function LensDiagram({
           <stop offset="50%" stopColor="#bcd6ff" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#6fb3ff" stopOpacity="0.15" />
         </linearGradient>
+        {/* candle wax: shaded left-to-right so the body reads as a cylinder */}
+        <linearGradient id="wax" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#cdb789" />
+          <stop offset="30%" stopColor="#f6eccd" />
+          <stop offset="70%" stopColor="#f1e4c0" />
+          <stop offset="100%" stopColor="#c4ad80" />
+        </linearGradient>
+        {/* flame: hot yellow core to orange edge */}
+        <radialGradient id="flame" cx="50%" cy="55%" r="60%">
+          <stop offset="0%" stopColor="#fff3b0" />
+          <stop offset="55%" stopColor="#ffb047" />
+          <stop offset="100%" stopColor="#ff6b3d" />
+        </radialGradient>
       </defs>
 
       {/* optical axis */}
@@ -164,7 +177,11 @@ function lensPath(cx: number, cy: number, half: number, converging: boolean): st
   return `M ${cx - w},${cy - half} Q ${cx},${cy} ${cx - w},${cy + half} L ${cx + w},${cy + half} Q ${cx},${cy} ${cx + w},${cy - half} Z`
 }
 
-/** A small candle drawn between a base point and a (possibly flipped) tip. */
+/**
+ * A candle drawn from a base point (on the axis) to a tip. The whole figure is
+ * parametrized along base->tip, so an inverted image (tip below the axis) simply
+ * draws the candle upside-down, making the flip obvious.
+ */
 function Figure({
   cx,
   baseY,
@@ -176,27 +193,44 @@ function Figure({
   tipY: number
   variant: 'object' | 'real' | 'virtual'
 }) {
-  const delta = tipY - baseY // svg; negative when the figure points up
+  const delta = tipY - baseY // svg; negative when the candle points up
   const len = Math.abs(delta)
   if (len < 1) return null
 
-  const width = Math.min(34, Math.max(10, len * 0.22))
-  const bodyTopY = baseY + delta * 0.62
-  const flameWidth = width * 0.85
-  const midY = (bodyTopY + tipY) / 2
-  const flame = `M ${cx - flameWidth / 2},${bodyTopY} Q ${cx - flameWidth / 2},${midY} ${cx},${tipY} Q ${cx + flameWidth / 2},${midY} ${cx + flameWidth / 2},${bodyTopY} Z`
+  // Point at a fraction along base(0) -> tip(1).
+  const at = (frac: number) => baseY + delta * frac
+  const bodyW = Math.min(28, Math.max(9, len * 0.18))
+  const flameW = bodyW * 0.62
+
+  // Body spans 0..0.7; wick 0.7..0.74; flame 0.74..1.
+  const bodyTop = at(0.7)
+  const bodyRectY = Math.min(baseY, bodyTop)
+  const bodyH = Math.abs(baseY - bodyTop)
+
+  const fb = at(0.74) // flame base
+  const ft = at(1) // flame tip
+  const teardrop = (w: number, base: number, tip: number) => {
+    const mid = base + (tip - base) * 0.5
+    const lip = base + (tip - base) * 0.12
+    return `M ${cx - w / 2},${base} Q ${cx},${lip} ${cx + w / 2},${base} Q ${cx + w / 2},${mid} ${cx},${tip} Q ${cx - w / 2},${mid} ${cx - w / 2},${base} Z`
+  }
 
   return (
     <g className={`figure figure--${variant}`}>
       <rect
-        className="figure__body"
-        x={cx - width / 2}
-        y={Math.min(baseY, bodyTopY)}
-        width={width}
-        height={Math.abs(baseY - bodyTopY)}
-        rx={3}
+        className="figure__wax"
+        x={cx - bodyW / 2}
+        y={bodyRectY}
+        width={bodyW}
+        height={bodyH}
+        rx={bodyW * 0.28}
       />
-      <path className="figure__flame" d={flame} />
+      <line className="figure__wick" x1={cx} y1={at(0.7)} x2={cx} y2={at(0.76)} />
+      <path className="figure__flame" d={teardrop(flameW, fb, ft)} />
+      <path
+        className="figure__flame-core"
+        d={teardrop(flameW * 0.5, at(0.78), at(0.95))}
+      />
     </g>
   )
 }

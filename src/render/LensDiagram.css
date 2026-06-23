@@ -48,38 +48,47 @@
   stroke-width: 1.5;
 }
 
-/* Candle figures for object and image */
-.lens-diagram .figure__body {
-  stroke-width: 1.5;
+/* Candle figures. All variants use real candle colors; the image is the same
+   candle rendered as a translucent projection, outlined to mark it as the image. */
+.lens-diagram .figure__wax {
+  fill: url(#wax);
+  stroke: #b59a63;
+  stroke-width: 1;
+}
+.lens-diagram .figure__wick {
+  stroke: #5b4a32;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 .lens-diagram .figure__flame {
+  fill: url(#flame);
+  stroke: none;
+}
+.lens-diagram .figure__flame-core {
+  fill: #fff3b0;
+  stroke: none;
+}
+
+/* Object: full strength. */
+.lens-diagram .figure--object {
+  opacity: 1;
+}
+
+/* Real image: a solid projected copy, slightly translucent with a violet outline. */
+.lens-diagram .figure--real {
+  opacity: 0.7;
+}
+.lens-diagram .figure--real .figure__wax {
+  stroke: #c08bff;
   stroke-width: 1.5;
 }
 
-.lens-diagram .figure--object .figure__body {
-  fill: #f2e7c9;
-  stroke: #d8c089;
+/* Virtual image: faint and dashed (the light only appears to come from here). */
+.lens-diagram .figure--virtual {
+  opacity: 0.4;
 }
-.lens-diagram .figure--object .figure__flame {
-  fill: #ff9f43;
-  stroke: #ffb36b;
-}
-
-.lens-diagram .figure--real .figure__body {
-  fill: #c08bff;
-  fill-opacity: 0.85;
-  stroke: #d3b0ff;
-}
-.lens-diagram .figure--real .figure__flame {
-  fill: #b06bff;
-  stroke: #d3b0ff;
-}
-
-.lens-diagram .figure--virtual .figure__body,
-.lens-diagram .figure--virtual .figure__flame {
-  fill: #c08bff;
-  fill-opacity: 0.12;
-  stroke: #c08bff;
-  stroke-opacity: 0.7;
-  stroke-dasharray: 5 4;
+.lens-diagram .figure--virtual .figure__wax {
+  stroke: #6fb3ff;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
 }
