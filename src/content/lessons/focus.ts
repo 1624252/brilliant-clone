@@ -19,6 +19,7 @@ export const focusLesson: LessonDefinition = {
   title: 'Focusing Light',
   order: 1,
   estMinutes: 3,
+  summary: 'See where parallel rays meet — the focal point F.',
   intro: {
     heading: 'Where light comes to a focus',
     animation: 'focus',

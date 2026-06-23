@@ -1,91 +1,16 @@
-.app {
+.splash {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 1.25rem 4rem;
-  box-sizing: border-box;
+  justify-content: center;
+  gap: 0.5rem;
 }
-
-.app__header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-.app__title {
-  margin: 0;
-  font-size: 2.8rem;
+.splash__brand {
+  font-size: 2rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
-.app__subtitle {
-  margin: 0.4rem 0 0;
-  font-size: 1.1rem;
-  color: #8b93a7;
-}
-
-.app__main {
-  width: 100%;
-  max-width: 1100px;
-}
-
-.lesson-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-}
-.lesson-tab {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  border: 1px solid #1d2540;
-  background: #0f1426;
-  color: #c7cdda;
-  cursor: pointer;
-}
-.lesson-tab:hover {
-  border-color: #394056;
-}
-.lesson-tab--active {
-  border-color: #6fb3ff;
-  color: #eaf2ff;
-  background: #16203a;
-}
-.lesson-tab__num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 999px;
-  background: #1d2540;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-.lesson-tab--active .lesson-tab__num {
-  background: #6fb3ff;
-  color: #06223f;
-}
-
-.card {
-  background: #0f1426;
-  border: 1px solid #1d2540;
-  border-radius: 18px;
-  padding: 2.25rem;
-}
-.card__title {
-  margin: 0 0 1.25rem;
-  font-size: 1.8rem;
-}
-
-@media (max-width: 600px) {
-  .card {
-    padding: 1.25rem;
-  }
-  .app__title {
-    font-size: 2rem;
-  }
+.splash__hint {
+  color: var(--text-mute);
 }

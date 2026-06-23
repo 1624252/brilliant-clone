@@ -24,6 +24,39 @@ npm install      # install dependencies
 npm run dev      # start the dev server, then open the printed localhost URL
 ```
 
+## Firebase setup (required for accounts & saved progress)
+
+The web config lives in a git-ignored `.env.local` (see `.env.example` for the
+variable names). To make sign-in and progress-saving work end to end, configure
+the Firebase project once in the [console](https://console.firebase.google.com/):
+
+1. **Authentication → Sign-in method:** enable **Email/Password** and **Google**.
+   (For Google, pick a support email when prompted.)
+2. **Authentication → Settings → Authorized domains:** make sure `localhost` is
+   listed (it is by default) so local sign-in works; add your Hosting domain when
+   you deploy.
+3. **Firestore Database:** create a database (production mode is fine — the rules
+   below lock it down per user).
+4. **Security rules:** deploy [`firestore.rules`](./firestore.rules). Either paste
+   its contents into **Firestore → Rules** in the console, or with the
+   [Firebase CLI](https://firebase.google.com/docs/cli):
+
+   ```bash
+   npm install -g firebase-tools
+   firebase login
+   firebase deploy --only firestore:rules --project brilliantclone-4d010
+   ```
+
+Each user can read/write only their own `users/{uid}` document and
+`users/{uid}/progress/{lessonId}` docs. Lesson content is in the app, not the DB.
+
+### Data model (Firestore)
+
+```
+users/{uid}                      displayName, email, createdAt, streak{current,longest,lastActiveDate}
+users/{uid}/progress/{lessonId}  status, currentStepIndex, completedAt, updatedAt
+```
+
 ## Available scripts
 
 | Script | What it does |
@@ -60,11 +93,17 @@ Conventions:
 
 ```
 src/
-  engine/        Pure optics math (no React). Image formation, magnification.
+  engine/        Pure optics math (no React). Image formation, magnification, rays.
+  render/        Presentational SVG (LensDiagram, RayFocusAnimation) + scene mapping.
+  interactive/   Draggable wrapper around the diagram (LensScene).
+  content/       Data-driven lessons + the ProblemRunner that plays them.
+  firebase/      Firebase app/auth/firestore initialization.
+  auth/          AuthProvider + useAuth (email/password, Google, persistence).
+  data/          Firestore progress/streak read-write + useProgress hook + unlock logic.
+  components/    AuthScreen, Home (dashboard), LessonView.
   test/          Test setup and environment sanity checks.
-  App.tsx        App shell (currently the starter template; replaced soon).
+  App.tsx        Routing: auth → home → lesson.
+firestore.rules  Per-user security rules.
+firebase.json    Firestore rules + Hosting config.
 PRD.md           Product requirements and data schema.
 ```
-
-More layers (`render/`, `interactive/`, `content/`, `firebase/`) are added in
-later phases as described in the PRD.

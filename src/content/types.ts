@@ -49,6 +49,10 @@ export interface LessonDefinition {
   title: string
   order: number
   estMinutes: number
+  /** One-line description shown on the lesson card. */
+  summary?: string
+  /** True for not-yet-built lessons: shown on the home screen but locked. */
+  placeholder?: boolean
   intro?: LessonIntro
   steps: StepDefinition[]
 }

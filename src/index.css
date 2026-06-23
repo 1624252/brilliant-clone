@@ -1,10 +1,33 @@
 :root {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  font-size: 18px;
-  line-height: 1.5;
+  /* Fluid base size: ~16px on small phones up to ~19px on large screens. */
+  font-size: clamp(16px, 1rem + 0.35vw, 19px);
+  line-height: 1.55;
   color-scheme: dark;
-  color: #e6e9f0;
-  background: #080b14;
+
+  /* Theme tokens */
+  --bg: #070b15;
+  --bg-elev: #0f1426;
+  --bg-elev-2: #131a2e;
+  --border: #1d2540;
+  --border-strong: #2c3656;
+  --text: #e8ebf3;
+  --text-dim: #aab2c5;
+  --text-mute: #7c8398;
+
+  --brand: #6fb3ff;
+  --brand-ink: #06223f;
+  --accent: #2ee6a6;
+  --accent-ink: #06281c;
+
+  /* Per-quantity colors, shared across equation, chips, diagram, glossary. */
+  --c-f: #ffb84d;
+  --c-do: #6fb3ff;
+  --c-di: #c08bff;
+  --c-m: #54d6a0;
+
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,8 +50,9 @@ body {
 h1,
 h2,
 h3 {
-  font-weight: 600;
+  font-weight: 650;
   color: #f3f5fb;
+  line-height: 1.2;
 }
 
 p {
@@ -37,4 +61,51 @@ p {
 
 button {
   font-family: inherit;
+}
+
+a {
+  color: var(--brand);
+}
+
+/* Shared button system */
+.btn {
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.05s ease,
+    background 0.15s ease;
+}
+.btn:hover {
+  border-color: var(--brand);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+.btn--primary:hover {
+  filter: brightness(1.05);
+  border-color: var(--accent);
+}
+.btn--block {
+  width: 100%;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

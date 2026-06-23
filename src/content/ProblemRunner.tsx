@@ -7,6 +7,10 @@ import './ProblemRunner.css'
 
 interface ProblemRunnerProps {
   lesson: LessonDefinition
+  /** Step to resume at (from saved progress). */
+  initialStepIndex?: number
+  /** Called when the learner advances to a new step (for saving resume state). */
+  onStepChange?: (stepIndex: number) => void
   onComplete?: () => void
 }
 
@@ -27,10 +31,17 @@ function describe(image: ReturnType<typeof formImage>): string {
   return `${kind}, ${image.orientation}${size}`
 }
 
-export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
-  const [started, setStarted] = useState(!lesson.intro)
-  const [stepIndex, setStepIndex] = useState(0)
-  const [values, setValues] = useState<StepState>(lesson.steps[0].initial)
+export function ProblemRunner({
+  lesson,
+  initialStepIndex = 0,
+  onStepChange,
+  onComplete,
+}: ProblemRunnerProps) {
+  const resumeIndex = Math.min(Math.max(initialStepIndex, 0), lesson.steps.length - 1)
+  // Skip the intro when resuming partway through a lesson.
+  const [started, setStarted] = useState(!lesson.intro || resumeIndex > 0)
+  const [stepIndex, setStepIndex] = useState(resumeIndex)
+  const [values, setValues] = useState<StepState>(lesson.steps[resumeIndex].initial)
   const [status, setStatus] = useState<Status>('idle')
   const [done, setDone] = useState(false)
   const [measures, setMeasures] = useState<MeasureFlags>({})
@@ -66,6 +77,7 @@ export function ProblemRunner({ lesson, onComplete }: ProblemRunnerProps) {
     setStepIndex(ni)
     setValues(lesson.steps[ni].initial)
     setStatus('idle')
+    onStepChange?.(ni)
   }
 
   if (lesson.intro && !started) {

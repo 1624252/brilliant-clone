@@ -1,41 +1,52 @@
 import { useState } from 'react'
-import { ProblemRunner, lessons } from './content'
+import { useAuth } from './auth/AuthContext'
+import { useProgress } from './data/useProgress'
+import { AuthScreen } from './components/AuthScreen'
+import { Home } from './components/Home'
+import { LessonView } from './components/LessonView'
+import { lessons } from './content'
 import './App.css'
 
 function App() {
-  const [activeId, setActiveId] = useState(lessons[0].id)
-  const active = lessons.find((l) => l.id === activeId) ?? lessons[0]
+  const { user, loading, logout } = useAuth()
+  const progress = useProgress(user?.uid ?? null)
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null)
+
+  if (loading) {
+    return (
+      <div className="splash">
+        <span className="splash__brand">LensLab</span>
+        <span className="splash__hint">Loading…</span>
+      </div>
+    )
+  }
+
+  if (!user) return <AuthScreen />
+
+  const displayName = user.displayName || user.email?.split('@')[0] || 'there'
+  const activeLesson = lessons.find((l) => l.id === activeLessonId)
+
+  if (activeLesson && !activeLesson.placeholder) {
+    return (
+      <LessonView
+        lesson={activeLesson}
+        uid={user.uid}
+        progress={progress}
+        onBack={() => setActiveLessonId(null)}
+      />
+    )
+  }
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <h1 className="app__title">LensLab</h1>
-        <p className="app__subtitle">Interactive geometric optics</p>
-      </header>
-
-      <main className="app__main">
-        <nav className="lesson-tabs" aria-label="Lessons">
-          {lessons.map((l, i) => (
-            <button
-              key={l.id}
-              type="button"
-              className={`lesson-tab ${l.id === activeId ? 'lesson-tab--active' : ''}`}
-              aria-current={l.id === activeId}
-              onClick={() => setActiveId(l.id)}
-            >
-              <span className="lesson-tab__num">{i + 1}</span>
-              {l.title}
-            </button>
-          ))}
-        </nav>
-
-        <section className="card">
-          <h2 className="card__title">{active.title}</h2>
-          {/* key resets ProblemRunner state when switching lessons */}
-          <ProblemRunner key={active.id} lesson={active} />
-        </section>
-      </main>
-    </div>
+    <Home
+      displayName={displayName}
+      progress={progress}
+      onOpen={(id) => setActiveLessonId(id)}
+      onSignOut={() => {
+        setActiveLessonId(null)
+        void logout()
+      }}
+    />
   )
 }
 

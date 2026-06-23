@@ -19,6 +19,7 @@ export const thinLensLesson: LessonDefinition = {
   title: 'The Thin Lens Equation',
   order: 3,
   estMinutes: 4,
+  summary: 'Drag the candle to control where and how big the image forms.',
   intro: {
     heading: 'One equation ties it all together',
     paragraphs: [

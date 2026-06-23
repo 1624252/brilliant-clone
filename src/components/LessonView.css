@@ -1,0 +1,39 @@
+.lessonview {
+  min-height: 100vh;
+}
+
+.lessonview__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.lessonview__back {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.95rem;
+}
+.lessonview__title {
+  font-weight: 650;
+  font-size: 1.1rem;
+}
+.lessonview__spacer {
+  flex: 1;
+}
+
+.lessonview__main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2rem) clamp(0.75rem, 4vw, 1.5rem) 4rem;
+}
+
+.lessonview .card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: clamp(1rem, 4vw, 2rem);
+}

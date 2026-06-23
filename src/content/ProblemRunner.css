@@ -273,25 +273,6 @@
   display: flex;
   gap: 0.75rem;
 }
-.btn {
-  font: inherit;
-  font-size: 1.1rem;
-  padding: 0.75rem 1.6rem;
-  border-radius: 10px;
-  border: 1px solid #394056;
-  background: #1b2238;
-  color: inherit;
-  cursor: pointer;
-}
-.btn:hover {
-  border-color: #6fb3ff;
-}
-.btn--primary {
-  background: #2ee6a6;
-  border-color: #2ee6a6;
-  color: #06281c;
-  font-weight: 600;
-}
 
 .runner--done {
   text-align: center;
