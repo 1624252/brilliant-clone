@@ -3,12 +3,14 @@ import { LensScene } from '../interactive'
 import {
   checkPracticeChoice,
   checkPracticeAnswer,
+  getSiblingPracticeProblem,
   opticsPracticeProblems,
   type AnswerCheck,
   type CalculationProblem,
   type ChoiceAnswerCheck,
   type ChoicePracticeProblem,
   type EquationPart,
+  type PracticeCategory,
   type PracticeProblem,
 } from '../content'
 import { formImage } from '../engine'
@@ -27,6 +29,7 @@ interface PracticeViewProps {
 }
 
 type PracticeStatus = 'idle' | 'correct' | 'incorrect'
+type PracticeMode = PracticeCategory
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '∞')
 const isChoiceProblem = (problem: PracticeProblem): problem is ChoicePracticeProblem =>
@@ -34,14 +37,31 @@ const isChoiceProblem = (problem: PracticeProblem): problem is ChoicePracticePro
 const isCalculationProblem = (problem: PracticeProblem): problem is CalculationProblem =>
   problem.kind !== 'choice'
 
-function firstUnsolvedIndex(progress: ProgressState) {
-  const idx = opticsPracticeProblems.findIndex((p) => !progress.byPractice[p.id]?.solved)
+const practiceModes: { id: PracticeMode; label: string }[] = [
+  { id: 'mixed', label: 'Mixed' },
+  { id: 'predict', label: 'Predict' },
+  { id: 'calculate', label: 'Calculate' },
+  { id: 'signs', label: 'Signs' },
+]
+
+function problemsForMode(mode: PracticeMode) {
+  if (mode === 'mixed') return opticsPracticeProblems
+  return opticsPracticeProblems.filter((problem) => problem.category === mode)
+}
+
+function firstUnsolvedIndex(progress: ProgressState, problems: PracticeProblem[]) {
+  const idx = problems.findIndex((p) => !progress.byPractice[p.id]?.solved)
   return idx >= 0 ? idx : 0
 }
 
 export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
-  const [problemIndex, setProblemIndex] = useState(() => firstUnsolvedIndex(progress))
-  const problem = opticsPracticeProblems[problemIndex]
+  const [mode, setMode] = useState<PracticeMode>('mixed')
+  const sessionProblems = useMemo(() => problemsForMode(mode), [mode])
+  const [problemIndex, setProblemIndex] = useState(() =>
+    firstUnsolvedIndex(progress, opticsPracticeProblems),
+  )
+  const [questionNumber, setQuestionNumber] = useState(1)
+  const problem = sessionProblems[problemIndex] ?? sessionProblems[0]
   const [objectDistance, setObjectDistance] = useState(problem.scene.objectDistance)
   const [answer, setAnswer] = useState('')
   const [chosenId, setChosenId] = useState<string | null>(null)
@@ -74,6 +94,10 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
     () => opticsPracticeProblems.filter((p) => progress.byPractice[p.id]?.solved).length,
     [progress.byPractice],
   )
+  const modeSolvedCount = useMemo(
+    () => sessionProblems.filter((p) => progress.byPractice[p.id]?.solved).length,
+    [progress.byPractice, sessionProblems],
+  )
   const stats = progress.practiceStats
   const pct = Math.round((solvedCount / opticsPracticeProblems.length) * 100)
   const solved = status === 'correct'
@@ -105,7 +129,22 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
   }
 
   function nextProblem() {
-    setProblemIndex((i) => (i + 1) % opticsPracticeProblems.length)
+    setProblemIndex((i) => (i + 1) % sessionProblems.length)
+    setQuestionNumber((n) => n + 1)
+  }
+
+  function anotherLikeThis() {
+    const sibling = getSiblingPracticeProblem(problem)
+    const siblingIndex = sessionProblems.findIndex((candidate) => candidate.id === sibling.id)
+    setProblemIndex(siblingIndex >= 0 ? siblingIndex : (problemIndex + 1) % sessionProblems.length)
+    setQuestionNumber((n) => n + 1)
+  }
+
+  function chooseMode(nextMode: PracticeMode) {
+    const nextProblems = problemsForMode(nextMode)
+    setMode(nextMode)
+    setProblemIndex(firstUnsolvedIndex(progress, nextProblems))
+    setQuestionNumber(1)
   }
 
   function toggleMeasure(key: keyof MeasureFlags) {
@@ -142,27 +181,40 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
 
       <main className="practice__main">
         <section className="practice__hero card">
-          <p className="practice__eyebrow">Calculation practice</p>
-          <h1>Use the equation, then check it against the rays.</h1>
+          <p className="practice__eyebrow">Lens practice</p>
+          <h1>Short no-calculator practice that keeps going.</h1>
           <p>
-            Solve thin-lens practice problems with signed quantities. Correct answers
-            count toward your daily streak and your question streak.
+            Answer quick prediction, sign, and thin-lens questions from friendly numbers.
+            Fractions are welcome when a decimal would need a calculator.
           </p>
           <div className="practice__stats" aria-label="Practice progress">
-            <Stat label="Solved" value={`${solvedCount}/${opticsPracticeProblems.length}`} />
+            <Stat label="Solved in bank" value={`${solvedCount}/${opticsPracticeProblems.length}`} />
+            <Stat label={`${modeLabel(mode)} mode`} value={`${modeSolvedCount}/${sessionProblems.length}`} />
             <Stat label="Question streak" value={String(stats.questionStreak.current)} />
-            <Stat label="Best streak" value={String(stats.questionStreak.longest)} />
             <Stat label="Accuracy" value={accuracyLabel(stats.totalCorrect, stats.totalAttempts)} />
           </div>
           <div className="progressbar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
             <div className="progressbar__fill" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="practice-modes" aria-label="Practice mode">
+            {practiceModes.map((practiceMode) => (
+              <button
+                key={practiceMode.id}
+                type="button"
+                className={`practice-modes__btn ${practiceMode.id === mode ? 'is-active' : ''}`}
+                onClick={() => chooseMode(practiceMode.id)}
+                aria-pressed={practiceMode.id === mode}
+              >
+                {practiceMode.label}
+              </button>
+            ))}
           </div>
         </section>
 
         <section className="practice__problem card">
           <div className="practice__problem-head">
             <span className="practice__count">
-              Problem {problemIndex + 1} of {opticsPracticeProblems.length}
+              Question {questionNumber} · {modeLabel(mode)}
             </span>
             {progress.byPractice[problem.id]?.solved && (
               <span className="practice__solved">Solved before</span>
@@ -218,8 +270,8 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
           />
           {diagramDraggable && (
             <p className="practice__drag-note">
-              Drag the candle to test the setup visually. Your answer is still checked
-              against the givens above.
+              Drag the candle to explore nearby cases. Your submitted answer is still
+              checked against the givens above.
             </p>
           )}
 
@@ -249,6 +301,10 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
                 }}
               >
                 <label htmlFor="practice-answer">Your answer</label>
+                <p className="practice__answer-help">
+                  No calculator needed. Use a decimal or a fraction like -1/2 or{' '}
+                  {renderRich('\\frac{-1}{2}')}.
+                </p>
                 <div className="practice__answer-row">
                   <input
                     id="practice-answer"
@@ -260,8 +316,8 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
                         setLastCheck(null)
                       }
                     }}
-                    inputMode="decimal"
-                    placeholder={problem.unit ? `number in ${problem.unit}` : 'number'}
+                    inputMode="text"
+                    placeholder={problem.unit ? `number or fraction in ${problem.unit}` : 'number or fraction'}
                     disabled={solved}
                   />
                   {problem.unit && <span className="practice__unit">{problem.unit}</span>}
@@ -276,6 +332,11 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
           )}
 
           <div className="practice__actions">
+            {status === 'incorrect' && (
+              <button type="button" className="btn" onClick={anotherLikeThis}>
+                Another like this
+              </button>
+            )}
             <button type="button" className="btn" onClick={nextProblem}>
               {solved ? 'Next problem' : 'Skip for now'}
             </button>
@@ -410,6 +471,10 @@ function ChoicePractice({
   const chosen = problem.choices.find((choice) => choice.id === chosenId)
   return (
     <section className="practice-choice" aria-label="Answer choices">
+      <div className="practice-choice__head">
+        <strong>Choose the image outcome</strong>
+        <span>Use the focus marks and ray diagram before you commit.</span>
+      </div>
       <div className="practice-choice__grid">
         {problem.choices.map((choice) => {
           const picked = choice.id === chosenId
@@ -460,7 +525,7 @@ function ChoicePractice({
         <div className="practice-feedback practice-feedback--correct" role="status">
           <strong>Correct.</strong>
           <p>{renderRich(chosen?.feedback ?? problem.solution)}</p>
-          <p>{renderRich(problem.solution)}</p>
+          <SolutionSteps problem={problem} />
         </div>
       )}
 
@@ -474,6 +539,23 @@ function ChoicePractice({
           Check
         </button>
       </div>
+    </section>
+  )
+}
+
+function SolutionSteps({ problem }: { problem: PracticeProblem }) {
+  if (!problem.solutionSteps?.length) {
+    return <p>{renderRich(problem.solution)}</p>
+  }
+  return (
+    <section className="practice-solution" aria-label="Step-by-step solution">
+      <strong>Step-by-step</strong>
+      <ol>
+        {problem.solutionSteps.map((step, index) => (
+          <li key={index}>{renderRich(step)}</li>
+        ))}
+      </ol>
+      <p>{renderRich(problem.solution)}</p>
     </section>
   )
 }
@@ -633,8 +715,10 @@ function Feedback({
   if (status === 'idle') {
     return (
       <p className="practice__hint">
-        Expected tolerance: ±{problem.tolerance} {problem.unit}. Keep signs for virtual
-        images and inverted heights.
+        {renderRich(problem.hint)}{' '}
+        <span className="practice__tolerance">
+          Accepted tolerance: ±{problem.tolerance} {problem.unit || 'units'}.
+        </span>
       </p>
     )
   }
@@ -644,7 +728,7 @@ function Feedback({
         <strong>Not quite.</strong>
         <p>
           {check?.parsed === null
-            ? 'Enter a numeric value, such as -10 or 15.5.'
+            ? 'Enter a numeric value, such as -10, 1/2, or \\frac{1}{2}.'
             : `Your answer is ${fmt(check?.parsed ?? 0)}${problem.unit ? ` ${problem.unit}` : ''}.`}
         </p>
         <p>{renderRich(problem.hint)}</p>
@@ -658,7 +742,7 @@ function Feedback({
         Accepted answer: {fmt(problem.answer)}
         {problem.unit ? ` ${problem.unit}` : ''}
       </p>
-      <p>{renderRich(problem.solution)}</p>
+      <SolutionSteps problem={problem} />
     </div>
   )
 }
@@ -666,4 +750,8 @@ function Feedback({
 function accuracyLabel(correct: number, attempts: number) {
   if (attempts === 0) return '0%'
   return `${Math.round((correct / attempts) * 100)}%`
+}
+
+function modeLabel(mode: PracticeMode) {
+  return practiceModes.find((practiceMode) => practiceMode.id === mode)?.label ?? 'Mixed'
 }

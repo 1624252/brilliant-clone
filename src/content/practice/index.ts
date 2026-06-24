@@ -1,4 +1,4 @@
-export { opticsPracticeProblems } from './optics'
+export { getSiblingPracticeProblem, opticsPracticeProblems, opticsPracticeTemplateIds } from './optics'
 export { checkPracticeAnswer, checkPracticeChoice, parseNumericAnswer } from './answerCheck'
 export type {
   AnswerCheck,
@@ -9,4 +9,5 @@ export type {
   PracticeProblem,
   PracticeGiven,
   PracticeScene,
+  PracticeCategory,
 } from './types'

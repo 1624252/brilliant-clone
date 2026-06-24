@@ -1,5 +1,7 @@
 import type { Choice } from '../types'
 
+export type PracticeCategory = 'mixed' | 'predict' | 'calculate' | 'signs'
+
 export interface PracticeScene {
   objectDistance: number
   focalLength: number
@@ -35,7 +37,12 @@ export interface CalculationProblem {
   unit: string
   tolerance: number
   solution: string
+  solutionSteps?: string[]
   hint: string
+  category?: PracticeCategory
+  templateId?: string
+  variantIndex?: number
+  noCalculator?: boolean
   measures?: {
     f?: boolean
     do?: boolean
@@ -54,6 +61,11 @@ export interface ChoicePracticeProblem {
   choices: Choice[]
   hint: string
   solution: string
+  solutionSteps?: string[]
+  category?: PracticeCategory
+  templateId?: string
+  variantIndex?: number
+  noCalculator?: boolean
   measures?: {
     f?: boolean
     do?: boolean

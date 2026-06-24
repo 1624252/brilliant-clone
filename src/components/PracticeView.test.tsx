@@ -42,9 +42,11 @@ describe('PracticeView', () => {
     renderPractice()
 
     expect(screen.getByText(/optics practice problems/i)).toBeInTheDocument()
+    expect(screen.getByText(/short no-calculator practice/i)).toBeInTheDocument()
     expect(screen.getByText(opticsPracticeProblems[0].title)).toBeInTheDocument()
-    expect(screen.getByText(`0/${opticsPracticeProblems.length}`)).toBeInTheDocument()
+    expect(screen.getAllByText(`0/${opticsPracticeProblems.length}`).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/question streak/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: /predict/i })).toBeInTheDocument()
     const measures = screen.getByRole('group', { name: /show on diagram/i })
     expect(measures).toBeInTheDocument()
     expect(within(measures).getByLabelText(/image distance/i)).toBeChecked()
@@ -96,19 +98,25 @@ describe('PracticeView', () => {
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: '12' } })
     fireEvent.click(screen.getByRole('button', { name: /^check$/i }))
 
-    expect(await screen.findByText(/not quite/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/thin-lens equation/i).length).toBeGreaterThan(1)
+    const feedback = (await screen.findByText(/not quite/i)).closest('.practice-feedback')
+    expect(feedback).not.toBeNull()
+    expect(
+      within(feedback as HTMLElement).getAllByText((_content, node) =>
+        Boolean(node?.textContent?.match(/move.*to the other side/i)),
+      ).length,
+    ).toBeGreaterThan(0)
     expect(recordPracticeAttempt).toHaveBeenCalledWith(
       'userA',
       opticsPracticeProblems[0].id,
       { correct: false, answer: 12 },
     )
+    expect(screen.getByRole('button', { name: /another like this/i })).toBeInTheDocument()
   })
 
-  it('accepts a correct answer, records it, and advances to the next problem', async () => {
+  it('accepts a correct fraction answer, records it, and advances to the next problem', async () => {
     renderPractice()
 
-    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: '15 cm' } })
+    fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: '\\frac{30}{2} cm' } })
     fireEvent.click(screen.getByRole('button', { name: /^check$/i }))
 
     expect(await screen.findByText(/accepted answer/i)).toBeInTheDocument()

@@ -1,6 +1,8 @@
 export { ProblemRunner } from './ProblemRunner'
 export {
+  getSiblingPracticeProblem,
   opticsPracticeProblems,
+  opticsPracticeTemplateIds,
   checkPracticeAnswer,
   checkPracticeChoice,
   parseNumericAnswer,
@@ -31,4 +33,5 @@ export type {
   PracticeProblem,
   PracticeGiven,
   PracticeScene,
+  PracticeCategory,
 } from './practice'
