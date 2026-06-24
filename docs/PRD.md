@@ -3,15 +3,15 @@
 A learn-by-doing app, built deep for one subject: **geometric optics (lenses)**.
 
 - **Subject (per `spec.txt`):** Geometric optics — thin lenses and image formation.
-- **Status:** MVP product spec (Phase 1).
-- **Last updated:** 2026-06-23
+- **Status:** MVP product spec (Phase 1), updated to match the current implementation.
+- **Last updated:** 2026-06-24
 - **Tech stack:** React 19 + TypeScript (Vite), React Router, Firebase (Auth, Firestore, Hosting).
 
 ---
 
 ## 1. Summary
 
-LensLab teaches a single, coherent chapter — **how lenses form images** — through short, hands-on lessons. Instead of multiple-choice trivia, every step gives the learner a **visual simulation they manipulate directly** (drag the candle along the axis, reshape the lens with a curvature slider, predict-then-reveal where rays cross) and returns **instant, specific feedback** with a short explanation. Progress is **persisted per account** so a learner can leave mid-lesson and resume on any device, and a lightweight **habit loop** (daily streak, milestone badges, lesson-completion celebration, chapter progress) keeps them coming back.
+LensLab teaches a single, coherent chapter — **how lenses form images** — through short, hands-on lessons. Instead of static diagrams or exam-drill problem sets, every step gives the learner a **visual simulation they manipulate directly** (drag the candle along the axis, reshape the lens with a curvature slider, draw principal rays, and watch the thin-lens equation update) and returns **instant, specific feedback** with a short explanation. Progress is **persisted per account** so a learner can leave mid-lesson and resume on any device, and a lightweight **habit loop** (daily streak, milestone badges, lesson-completion celebration, chapter progress) keeps them coming back.
 
 Per the project's three-phase cadence, this document specifies **Phase 1 (MVP)**, which **contains no AI**: all feedback is computed deterministically from a pure physics engine and per-step rules. AI (Phase 2) and learning-science layering (Phase 3) are noted as explicit future work in §17.
 
@@ -21,7 +21,7 @@ Per the project's three-phase cadence, this document specifies **Phase 1 (MVP)**
 
 Geometric optics is usually taught with **static diagrams**. Learners memorize the thin-lens equation and the "real vs. virtual image" rules without building intuition, because they never *move the object and watch the image respond*. Misconceptions ("a diverging lens can make a real image," "a flatter lens focuses the same") survive because nothing lets students test them.
 
-LensLab fixes this with manipulable simulations and immediate, specific feedback — **active problem-solving instead of passive reading**, which is exactly what `spec.txt` asks for.
+LensLab fixes this with manipulable simulations and immediate, specific feedback — **active visual exploration instead of passive reading**. It is useful for exam study because it builds the underlying mental model, but it is not positioned as a complete exam-prep product: there is no broad drill bank, grading workflow, or coverage of every possible AP/college optics question.
 
 ---
 
@@ -43,17 +43,18 @@ The rule behind the order: *if the app does not teach without AI, no AI will sav
 
 ### Primary persona (niche, MVP focus)
 
-**The introductory physics student.**
+**The algebra-ready visual learner.**
 
-- 16–19 years old, taking **AP Physics 2 / first-year college physics** (or self-studying for it).
-- Comfortable with basic algebra; shaky on optics intuition.
-- Studies on a **laptop at home** and reviews on a **phone** between classes.
-- Motivated by grades and by "finally getting it"; responds well to streaks and visible progress.
+- Has enough algebra to follow relationships like `1/f = 1/d_o + 1/d_i` and `m = -d_i/d_o`.
+- Wants to build **intuition for concave and convex lenses** by seeing and manipulating the ray diagram, not just memorizing a rules table.
+- May be taking physics or studying for an exam, but the main job-to-be-done is "help me see why this happens."
+- Uses a **laptop or tablet/phone** to drag objects, reshape lenses, and construct ray diagrams.
 - Frustrated by static textbook diagrams and answer keys that say *what* is right but not *why*.
+- Appreciates progress, streaks, and milestones, but is primarily motivated by the moment when the diagram "clicks."
 
 ### User story (primary)
 
-> **As an** intro physics student, **I want to** manipulate lens diagrams and get instant feedback on what I tried, **so that** I build real intuition for image formation instead of memorizing rules I don't understand.
+> **As an** algebra-capable learner, **I want to** manipulate concave and convex lens diagrams and get instant feedback on what I tried, **so that** I can build visual intuition for image formation before applying equations or exam-style shortcuts.
 
 ### Domain scope (the "chapter")
 
@@ -74,7 +75,7 @@ The MVP is the **smallest product that lets a learner complete a real, multi-les
 
 A build is "MVP-complete" when all of `spec.txt`'s Phase-1 gates hold:
 
-1. A **chosen subject**, stated clearly, with the whole app built for a specific persona. ✅ (Lenses; intro-physics student.)
+1. A **chosen subject**, stated clearly, with the whole app built for a specific persona. ✅ (Lenses; algebra-ready visual learner.)
 2. **Interactive lessons on real concepts**, built around hands-on problems — not videos or walls of text. ✅ (Five lessons; see §7.)
 3. **At least one** problem the learner manipulates directly (drag, slider, predict). ✅ (Every interactive step.)
 4. A **visual element that responds** to input. ✅ (Live SVG ray diagram.)
@@ -123,11 +124,11 @@ Lessons unlock **sequentially**: lesson *n* opens once lesson *n−1* is complet
 
 | # | Lesson | id | Core interaction | Concept |
 |---|--------|-----|------------------|---------|
-| 1 | **Convex Lenses** | `focusing-light` | Drag the candle along the axis (snaps at 0/f/2f/3f, drag-to-∞) | Converging lens, focal point **F**, focal length **f** |
-| 2 | **Concave Lenses** | `concave-lenses` | Predict once, then drag to size the virtual image | Diverging lens, **f < 0**, always virtual/upright/reduced |
+| 1 | **Convex Lenses** | `focusing-light` | Drag the candle to create target image types | Converging lens, **real/virtual**, **upright/inverted**, focal point **F** |
+| 2 | **Concave Lenses** | `concave-lenses` | Drag and choose what can/cannot be made | Diverging lens, **f < 0**, always virtual/upright/reduced for real objects |
 | 3 | **Convex & Concave Lenses** | `convex-concave` | A **continuous, logarithmic curvature slider** reshapes the lens | Shape sets the **sign and strength** of f (convex / flat / concave) |
-| 4 | **Ray Tracing** | `ray-tracing` | **Plot the three rays** (drag a marker to the crossing), then drag to explore beyond/inside F | The **three principal rays** locate any image |
-| 5 | **The Thin Lens Equation** | `thin-lens-equation` | Drag to targets; explore extremes; predict | \( \tfrac{1}{f} = \tfrac{1}{d_o} + \tfrac{1}{d_i} \), \( m = -\tfrac{d_i}{d_o} \) |
+| 4 | **Ray Tracing** | `ray-tracing` | **Draw the three principal rays** by dragging ray endpoints | The **parallel**, **chief**, and **focal** rays locate any image |
+| 5 | **The Thin Lens Equation** | `thin-lens-equation` | Drag to target equation/diagram outcomes | \( \tfrac{1}{f} = \tfrac{1}{d_o} + \tfrac{1}{d_i} \), \( m = -\tfrac{d_i}{d_o} \) |
 
 Every lesson opens with a short, mostly-visual **intro** (heading + a few sentences + an optional animated explainer) and then a handful of interactive/predict steps.
 
@@ -135,28 +136,28 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 
 **Lesson 1 — Convex Lenses (`focusing-light`).**
 *Intro:* a flat slab morphs into a convex lens while parallel rays bend to meet at **F** (`ConvexLensAnimation`).
-*Steps:* (a) slide the candle onto F and see the rays leave parallel; (b) pull it far away and watch the image settle near F; (c) predict where truly parallel rays (object at ∞) cross.
-*Teaches:* the focal point is where a converging lens brings parallel light together.
+*Steps:* (a) make a **real** image; (b) make a **virtual** image; (c) make an **upright** image; (d) make an **inverted** image. The learner finds the correct candle ranges by observing whether solid outgoing rays meet on the opposite side of the lens from the object, or dotted back-traces meet on the same side as the object.
+*Teaches:* a convex lens changes behavior across **F**: outside **F** gives real/inverted images; inside **F** gives virtual/upright images.
 
 **Lesson 2 — Concave Lenses (`concave-lenses`).**
 *Intro:* a slab morphs into a concave lens while parallel rays diverge and their dashed back-extensions meet at the **virtual focus** (`ConcaveLensAnimation`).
-*Steps:* (a) **predict** the image of a diverging lens (then drag to explore); (b) drag the candle right up to the lens to confirm it **never** makes a real image; (c) drag the candle until the virtual image is exactly **half size** (object at one focal length).
-*Teaches:* a diverging lens always forms a virtual, upright, reduced image.
+*Steps:* (a) make a **virtual** image; (b) make an **upright** image; (c) try to make a **real** image and discover it cannot be made with a real object; (d) try to make an **inverted** image and discover it cannot be made with a real object.
+*Teaches:* a diverging lens always forms a virtual, upright, reduced image for a real object; real/inverted outcomes belong to convex-lens ranges, not concave-lens ranges.
 
 **Lesson 3 — Convex & Concave Lenses (`convex-concave`).**
-*Core interaction:* a **continuous, logarithmic curvature slider** reshapes one lens; the runner derives the focal length from its position (`sliderToFocalLength`), and the readout names the result ("Convex · f = …" / "Concave · f = …" / "Flat").
-*Steps:* (a) curve it outward to make it **converging** (f > 0); (b) curve it the other way to make it **diverging** (f < 0); (c) flatten it (toward the center → f → ∞, no focusing). The diagram redraws the lens — and its bulge — as convex / flat / concave to match.
+*Core interaction:* a **continuous, logarithmic curvature slider** reshapes one lens; the runner derives the focal length from its position (`sliderToFocalLength`), and the readout names the result ("Convex · f = …" / "Concave · f = …" / "Flat"). The readout says **Flat** only at the exact center position (`p = 0`).
+*Steps:* (a) curve it outward to make it **converging** (f > 0); (b) curve it the other way to make it **diverging** (f < 0); (c) flatten it exactly at the center (f → ∞, no focusing). The intro animation moves concave → flat → convex, and the diagram redraws the lens as convex / flat / concave to match.
 *Teaches:* lens shape sets the sign and strength of f; a flat lens has no focal point.
 
 **Lesson 4 — Ray Tracing (`ray-tracing`).**
 *Intro:* the three principal rays animation.
-*Steps:* (a) **plot the three rays** for an object beyond 2F — drag a marker until the parallel, chief, and focal rays each obey their rule and cross at the image; (b) drag the candle so the crossing lands **beyond 2F** (real, inverted, reduced); (c) drag the candle **inside F** to watch the rays diverge into a virtual, upright, enlarged image (a magnifier).
-*Teaches:* you only need three special rays to locate any image.
+*Steps:* four draw-the-rays scenes: convex beyond **2F**, convex between **F** and **2F**, concave near, and concave far. In each scene the learner selects a ray type and drags its endpoint until the live checklist marks that ray's rule Done. Handles are color-coded by ray: parallel, chief, and focal.
+*Teaches:* you only need three special rays to locate any image; each rule is physically different and the hint names the currently unmet ray requirement.
 
 **Lesson 5 — The Thin Lens Equation (`thin-lens-equation`).**
 *Intro:* light fanning from a source back to an image through F (`RaySourceAnimation`); the equation shown live.
-*Steps:* same-size image at 2F; magnifier inside F; projector between F and 2F; two extremes (object at ∞ → image at F; object at the lens → image at the lens); predict the inside-F case. A **live equation panel** plugs in the current numbers.
-*Teaches:* one equation ties object distance, image distance, and magnification together.
+*Steps:* make a convex **virtual magnifier**, make a convex **projector** image, use a concave lens for a less-reduced upright image close to object size (including the `d_o = 0` boundary case), and use a concave lens to make a tiny virtual image near **F**. A **live equation panel** plugs in the current numbers; `f`, `d_o`, and `d_i` are shown by default, while magnification/heights are off by default.
+*Teaches:* one equation ties object distance, image distance, and magnification together while preserving the visual interpretation from earlier lessons.
 
 ---
 
@@ -167,7 +168,7 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 - Email/password **and** Google authentication, with a display name and account management (change name/email/password, account linking).
 - A **content model** (typed lesson/step definitions) so new lessons are added as data, not new code.
 - A **shared optics engine** (pure functions) powering all simulations and success checks.
-- Interactive problem types: **drag-along-axis** (with snapping + drag-to-infinity), **slider**, **continuous/logarithmic curvature**, **predict-then-reveal** (which can stay interactive via a post-commit drag), and **plot-the-rays** (construct the ray diagram by dragging one marker).
+- Interactive problem types: **drag-along-axis** (with snapping + drag-to-infinity), **slider**, **continuous/logarithmic curvature**, **predict-then-reveal** (which can stay interactive via a post-commit drag), and **draw-the-rays** (construct the ray diagram by dragging each principal ray endpoint).
 - Deterministic, rule-based feedback (correct/incorrect + explanation + a hint).
 - Per-user progress: current lesson, current step (resume), completed lessons; daily streak.
 - **Client-side routing** with deep links and working browser back/forward (`/login`, `/`, `/topics/:topicId`, `/lessons/:lessonId`).
@@ -207,7 +208,7 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 
 ### 9.2 Lessons & interactive steps
 - FR-6: The home screen lists the five lessons with locked/unlocked/completed state and chapter progress.
-- FR-7: A lesson is an ordered sequence of steps; each renders a prompt + a live diagram + controls (or predict choices, or a draggable plot-the-rays marker).
+- FR-7: A lesson is an ordered sequence of steps; each renders a prompt + a live diagram + controls (or predict choices, or draggable ray endpoints for draw-the-rays steps).
 - FR-8: Interactive steps validate the manipulation against a `success` rule and show **instant** correct/incorrect feedback.
 - FR-9: A wrong attempt shows a **specific** hint, not just "incorrect."
 - FR-10: Predict-then-reveal steps hide the rays/image until the learner commits, then reveal both with an explanation; an optional `explore` control then lets the learner drag the object and watch the revealed result respond.
@@ -242,7 +243,7 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 
 - **Visual-first, minimal text.** Carry meaning with the diagram, color, and motion; keep prompts/feedback to a sentence or two.
 - **Dual coding.** Each symbol (`f`/`dₒ`/`dᵢ`/`m`) uses one consistent color across the equation, the readout chips, and the diagram.
-- **Show the actual concept.** The thin lens equation is on screen and updates live; the curvature lesson reshapes the real lens.
+- **Show the actual concept.** The thin lens equation is on screen and updates live; the curvature lesson reshapes the lens; ray tracing is drawn by the learner rather than merely inspected.
 - **Explain terms before using them.** Vocabulary (real/virtual, inverted, focal length) is introduced visually and via an on-demand glossary.
 - **Active recall + specific feedback.** The learner manipulates something to answer; feedback says *why*. Predict-then-reveal forces a commitment first.
 - **Color and imagery.** A coherent palette and a real-looking candle make scenes memorable.
@@ -315,7 +316,7 @@ interface Control {
 }
 
 // Three kinds of step: a hands-on interactive step, a predict-then-reveal step,
-// or a plot-the-rays step (construct the ray diagram by dragging one marker).
+// or a plot-the-rays step (construct the ray diagram by dragging ray endpoints).
 interface InteractiveStep {
   id: string
   prompt: string
@@ -354,7 +355,7 @@ type StepDefinition = InteractiveStep | PredictStep | PlotRaysStep
 interface LessonIntro {
   heading: string
   paragraphs: string[]
-  animation?: 'focus' | 'source' | 'convex' | 'concave'
+  animation?: 'focus' | 'source' | 'convex' | 'concave' | 'curvature'
 }
 
 interface LessonDefinition {
@@ -369,11 +370,11 @@ interface LessonDefinition {
 }
 ```
 
-**Curvature control.** Lesson 3's curvature slider is **continuous** (a position `p ∈ [-1, 1]`, step `0.01`); `ProblemRunner` maps it to a focal length via `sliderToFocalLength(p)` using a **logarithmic** interpolation, so equal slider movement multiplies `f` by a constant factor and the lens flattens smoothly toward an **infinite** focal length at the center (`p > 0` convex, `p < 0` concave, `p = 0` → `Infinity`). The engine keeps its `f`-based API and never divides by zero; a very large `|f|` (`> FLAT_FOCAL`) reads as "flat." The rendered lens bows in proportion to `|f|`, so a strong lens looks strongly curved and a near-flat one looks nearly flat.
+**Curvature control.** Lesson 3's curvature slider is **continuous** (a position `p ∈ [-1, 1]`, step `0.01`); `ProblemRunner` maps it to a focal length via `sliderToFocalLength(p)` using a **logarithmic** interpolation, so equal slider movement multiplies `f` by a constant factor and the lens flattens smoothly toward an **infinite** focal length at the center (`p > 0` convex, `p < 0` concave, `p = 0` → `Infinity`). The engine keeps its `f`-based API and never divides by zero. The UI readout says "Flat" only at the exact center; otherwise even weakly curved lenses are labeled convex or concave with a focal length.
 
 **Interactive predict steps.** A predict-then-reveal step may carry an optional `explore` control: once the learner commits, a drag handle activates so they can move the object and watch the now-revealed rays and image respond. This keeps the single predict step per lesson hands-on rather than a static multiple-choice.
 
-**Plot-the-rays steps.** Instead of choosing an answer, the learner drags a single marker (their predicted image point). The three principal rays are drawn from their fixed lens-crossings through the marker, and a live checklist lights up as each ray's rule is met — **parallel** bends through F, **chief** stays straight through the center, **focal** exits parallel. All three hold at exactly one place (the true image tip), so the step is solved by *constructing* the diagram, not picking from a list (`PlotRaysScene`, `src/interactive/plotRays.ts`). The geometry rules are pure and unit-tested; the marker is drag- and keyboard-operable for mobile and accessibility. Used for real-image scenes (e.g., Ray Tracing's "where do the three rays cross?").
+**Draw-the-rays steps.** Instead of choosing an answer, the learner selects the **parallel**, **chief**, or **focal** ray and drags that ray's colored endpoint until its rule is satisfied. A live checklist lights up as each rule is met — **parallel** bends through F (or back-traces to virtual F), **chief** stays straight through the center, **focal** exits parallel. Initial endpoints are deliberately off-rule, so no requirement starts complete by default. The geometry rules are pure and unit-tested (`src/interactive/plotRays.ts`), while the interaction lives in `DrawRaysScene`.
 
 **Rich text.** Feedback and intro text support lightweight `**bold**`, `__underline__`, and `\frac{num}{den}` syntax, rendered by `renderRich` (`src/content/richText.tsx`).
 
@@ -450,11 +451,11 @@ This satisfies "track mastery, recommend what's next" without adaptive modeling.
 | `/login` | Auth (sign in / sign up) | Redirects to `/` when already signed in |
 | `/` | Topics landing | Auth-gated; pick a subject (today: Geometric Optics: Lenses) |
 | `/topics/:topicId` | Course path / roadmap | The lessons + progress for a topic; unknown topics redirect to `/` |
-| `/lessons/:lessonId` | Lesson runner | Deep-linkable; resumes the saved step |
+| `/lessons/:lessonId` | Lesson runner | Deep-linkable; resumes the saved step; includes a one-step Back button |
 
 Account management (name/email/password, sign-in method, linking) opens as a **modal** from the avatar on the landing or roadmap pages, rather than a separate route.
 
-Built on React Router so deep links and the browser **back/forward** buttons work everywhere; unauthenticated access to gated routes redirects to `/login`. The view also scrolls back to the top on each route change and step change.
+Built on React Router so deep links and the browser **back/forward** buttons work everywhere; unauthenticated access to gated routes redirects to `/login`. The lesson runner also has an in-lesson **Back** button that returns to the previous step without leaving the lesson. The view scrolls back to the top on each route change and step change.
 
 ---
 
@@ -463,6 +464,7 @@ Built on React Router so deep links and the browser **back/forward** buttons wor
 These are deliberately **not** in the MVP but the door is left open:
 
 - **More lenses content:** the **Lensmaker's Equation** (reshape glass via radii/index to hit a target *f*) and **Chromatic Aberration** (dispersion; build a doublet). The `placeholder()` helper and sequential-unlock model already accommodate new lessons.
+- **Exam-prep layer:** optional drill sets, formula practice, or assessment-style questions. This would be useful for learners studying for a test, but it is intentionally separate from the MVP's visual-intuition goal.
 - **Phase 2 — AI:** generated hints tuned to the learner's wrong attempt, a free-form "explain this" tutor, or generating new lessons from the content model.
 - **Phase 3 — Learning science:** spaced repetition, retrieval-practice scheduling, per-step mastery tracking and "review this" prompts (which would reintroduce per-step attempt persistence in the schema).
 - **Platform:** instructor dashboards, social/leaderboards, offline/PWA, i18n, full WCAG audit.
