@@ -51,7 +51,7 @@ export const thinLensLesson: LessonDefinition = {
         'Inside the **focus**, the convex lens magnifies: **virtual**, **upright**, and **enlarged**.',
       hint: (_state, image) =>
         image.isReal
-          ? 'Your image is still **real and flipped**, so the rays are meeting on the far side. Move inside **F**.'
+          ? 'Your image is still **real and flipped**, so the rays are meeting on the opposite side of the lens from the object. Move inside **F**.'
           : 'You found a **virtual** image. Move closer to the **focus** from the inside to enlarge it.',
     },
     {
@@ -74,21 +74,23 @@ export const thinLensLesson: LessonDefinition = {
     },
     {
       id: 'concave-minify-close',
-      prompt: 'Use a concave lens to make an upright reduced image close to the object size.',
+      prompt:
+        'Use a concave lens to make an upright reduced image close to the object size, or place the object at d_o = 0.',
       controls: [concaveObjectControl],
       fixed: { focalLength: -FOCAL_LENGTH },
       initial: { objectDistance: 60 },
       success: (_state, image) =>
-        !image.isReal &&
-        image.orientation === 'upright' &&
-        Math.abs(image.magnification) > 0.55 &&
-        Math.abs(image.magnification) < 1,
+        image.imageDistance === 0 ||
+        (!image.isReal &&
+          image.orientation === 'upright' &&
+          Math.abs(image.magnification) > 0.55 &&
+          Math.abs(image.magnification) < 1),
       correctFeedback:
-        'Close to the concave lens, the image is still **virtual** and **upright**, but less reduced.',
+        'Close to the concave lens, the image is still **virtual** and **upright**, but less reduced. At d_o = 0, the object and image collapse onto the lens.',
       hint: (_state, image) =>
         image.magnification <= 0.55
-          ? 'The image is too small. Move the candle closer to the concave lens.'
-          : 'Keep the candle just inside **F**, but not right on the lens.',
+          ? 'The image is too small. Move the candle closer to the concave lens, all the way to d_o = 0 if needed.'
+          : 'Keep the candle very close to the lens, including the boundary case d_o = 0.',
     },
     {
       id: 'concave-minify-far',

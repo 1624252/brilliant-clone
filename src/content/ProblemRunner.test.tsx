@@ -66,7 +66,7 @@ describe('ProblemRunner landmark lessons', () => {
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByRole('status').textContent).toMatch(/inside.*F/i)
+    expect(screen.getByRole('status').textContent).toMatch(/solid outgoing rays.*opposite side/i)
 
     setObjectDistance(container, focusLesson, 30)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
@@ -77,19 +77,27 @@ describe('ProblemRunner landmark lessons', () => {
     const { container } = renderStarted(focusLesson, 1)
     setObjectDistance(container, focusLesson, 10)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByRole('status').textContent).toMatch(/inside.*F/i)
+    expect(screen.getByRole('status').textContent).toMatch(/same side of the lens as the object/i)
 
     cleanup()
-    const upright = renderStarted(focusLesson, 2)
-    setObjectDistance(upright.container, focusLesson, 10)
+    renderStarted(focusLesson, 2)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByRole('status').textContent).toMatch(/upright.*image happens/i)
+    expect(screen.getByRole('status').textContent).toMatch(/same way as the candle/i)
 
     cleanup()
-    const inverted = renderStarted(focusLesson, 3)
-    setObjectDistance(inverted.container, focusLesson, 30)
+    renderStarted(focusLesson, 3)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByRole('status').textContent).toMatch(/outside.*F/i)
+    expect(screen.getByRole('status').textContent).toMatch(/flipped below the axis/i)
+  })
+
+  it('lets learners go back one step without leaving the lesson', () => {
+    renderStarted(focusLesson, 1)
+    expect(screen.getByText(/step 2 of 4/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+
+    expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^back$/i })).not.toBeInTheDocument()
   })
 
   it('creates concave virtual and upright images immediately', () => {
@@ -105,12 +113,18 @@ describe('ProblemRunner landmark lessons', () => {
 
   it('uses choices to show concave real and inverted images cannot be made', () => {
     const { container } = renderStarted(concaveLesson, 2)
+    fireEvent.click(screen.getByRole('radio', { name: /no real image/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/solid outgoing rays.*opposite side/i)
+
     setObjectDistance(container, concaveLesson, 60)
     fireEvent.click(screen.getByRole('radio', { name: /no real image/i }))
     expect(screen.getByRole('status').textContent).toMatch(/cannot make a.*real/i)
 
     cleanup()
     const inverted = renderStarted(concaveLesson, 3)
+    fireEvent.click(screen.getByRole('radio', { name: /no inverted image/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/flips below the axis/i)
+
     setObjectDistance(inverted.container, concaveLesson, 10)
     fireEvent.click(screen.getByRole('radio', { name: /no inverted image/i }))
     expect(screen.getByRole('status').textContent).toMatch(/cannot make an.*inverted/i)
@@ -124,14 +138,44 @@ describe('ProblemRunner ray tracing', () => {
     expect(screen.getByRole('radio', { name: /parallel ray/i })).toBeInTheDocument()
     expect(screen.getByRole('slider', { name: /parallel ray end point/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /reset rays/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/Needed/i)).toHaveLength(3)
+    expect(screen.queryByText(/Done/i)).not.toBeInTheDocument()
+  })
+
+  it('shows hints for the currently selected unmet ray rule', () => {
+    renderStarted(rayTracingLesson)
+
+    expect(
+      screen.getByText(/parallel ray.*opposite side.*object/i, {
+        selector: '.plot-panel__hint',
+      }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /chief ray/i }))
+    expect(
+      screen.getByText(/chief ray.*center of the lens/i, { selector: '.plot-panel__hint' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /focal ray/i }))
+    expect(
+      screen.getByText(/focal ray.*parallel to the optical axis/i, {
+        selector: '.plot-panel__hint',
+      }),
+    ).toBeInTheDocument()
   })
 
   it('snaps ray endpoints into place and requires submit', () => {
     renderStarted(rayTracingLesson)
-    for (let i = 0; i < 4; i++) {
-      for (const name of [/parallel ray end point/i, /chief ray end point/i, /focal ray end point/i]) {
-        fireEvent.keyDown(screen.getByRole('slider', { name }), { key: 'ArrowDown' })
-      }
+    for (let i = 0; i < 20; i++) {
+      fireEvent.keyDown(screen.getByRole('slider', { name: /parallel ray end point/i }), {
+        key: 'ArrowDown',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /chief ray end point/i }), {
+        key: 'ArrowUp',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /focal ray end point/i }), {
+        key: 'ArrowDown',
+      })
     }
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
@@ -152,6 +196,21 @@ describe('ProblemRunner ray tracing', () => {
   })
 })
 
+describe('ProblemRunner step navigation', () => {
+  it('can go forward again after returning to the previous step', () => {
+    const { container } = renderStarted(focusLesson, 1)
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+    setObjectDistance(container, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    expect(screen.getByText(/step 2 of 4/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+
+    expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
+  })
+})
+
 describe('ProblemRunner thin lens applications', () => {
   it('shows f, d_o, and d_i by default on the first slide', () => {
     renderStarted(thinLensLesson)
@@ -160,6 +219,16 @@ describe('ProblemRunner thin lens applications', () => {
     expect(within(measures).getByLabelText(/focal length/i)).toBeChecked()
     expect(within(measures).getByLabelText(/object distance/i)).toBeChecked()
     expect(within(measures).getByLabelText(/image distance/i)).toBeChecked()
+    expect(within(measures).getByLabelText(/heights/i)).not.toBeChecked()
+  })
+
+  it('accepts d_o = 0 on the third thin-lens step', () => {
+    const { container } = renderStarted(thinLensLesson, 2)
+    setObjectDistance(container, thinLensLesson, 0)
+
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+
+    expect(screen.getByRole('status').textContent).toMatch(/object and image collapse onto the lens/i)
   })
 
   it('finishes without a practice-problems option', () => {

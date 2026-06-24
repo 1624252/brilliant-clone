@@ -1,5 +1,4 @@
 import type { LessonDefinition } from '../types'
-import { FLAT_FOCAL } from '../../engine'
 
 // "Convex & Concave Lenses": one lens, one continuous curvature slider. The
 // slider position (sliderToFocalLength) reshapes the lens smoothly and
@@ -17,8 +16,9 @@ const curvatureControl = {
   label: 'Curvature',
 }
 
-/** A lens is "flat enough" when its focal length is huge (or infinite). */
-const isFlat = (f: number) => !Number.isFinite(f) || Math.abs(f) > FLAT_FOCAL
+const FLAT_CURVATURE_EPSILON = 0.005
+const isExactlyFlat = (curvature: number) => Math.abs(curvature) <= FLAT_CURVATURE_EPSILON
+const hasVisibleCurve = (curvature: number) => Math.abs(curvature) > 0.08
 
 export const curvatureLesson: LessonDefinition = {
   id: 'convex-concave',
@@ -42,8 +42,8 @@ export const curvatureLesson: LessonDefinition = {
       controls: [curvatureControl],
       fixed: { objectDistance: 40 },
       initial: { curvature: 0 },
-      success: (_state, image) =>
-        image.focalLength > 0 && !isFlat(image.focalLength),
+      success: (state, image) =>
+        image.focalLength > 0 && hasVisibleCurve(state.curvature),
       correctFeedback:
         'A **convex** lens has a **positive focal length** — it bends parallel rays together at F.',
       hint: (_state, image) =>
@@ -57,7 +57,7 @@ export const curvatureLesson: LessonDefinition = {
       controls: [curvatureControl],
       fixed: { objectDistance: 40 },
       initial: { curvature: 0.4 },
-      success: (_state, image) => image.focalLength < 0 && !isFlat(image.focalLength),
+      success: (state, image) => image.focalLength < 0 && hasVisibleCurve(state.curvature),
       correctFeedback:
         'A **concave** lens has a **negative focal length** — it spreads parallel rays apart.',
       hint: (_state, image) =>
@@ -72,7 +72,7 @@ export const curvatureLesson: LessonDefinition = {
       controls: [curvatureControl],
       fixed: { objectDistance: 40 },
       initial: { curvature: 0.4 },
-      success: (_state, image) => isFlat(image.focalLength),
+      success: (state) => isExactlyFlat(state.curvature),
       choices: [
         {
           id: 'straight',

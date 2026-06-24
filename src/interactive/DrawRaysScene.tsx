@@ -75,44 +75,66 @@ function ruleEndpoint(ray: RayId, s: PlotScene): Point {
 
 function initialRays(s: PlotScene): DrawnRays {
   const pts = constructionPoints(s)
-  const offset = (p: Point): Point => ({
+  const offset = (p: Point, dy: number): Point => ({
     x: p.x,
-    y: clamp(p.y + 7, -(sc.halfHeight - 4), sc.halfHeight - 4),
+    y: clamp(p.y + dy, -(sc.halfHeight - 4), sc.halfHeight - 4),
   })
   return {
-    parallel: { start: pts.parallelStart, end: offset(ruleEndpoint('parallel', s)) },
-    chief: { start: pts.chiefStart, end: offset(ruleEndpoint('chief', s)) },
-    focal: { start: pts.focalStart, end: offset(ruleEndpoint('focal', s)) },
+    parallel: { start: pts.parallelStart, end: offset(ruleEndpoint('parallel', s), 18) },
+    chief: { start: pts.chiefStart, end: offset(ruleEndpoint('chief', s), -18) },
+    focal: { start: pts.focalStart, end: offset(ruleEndpoint('focal', s), 18) },
   }
 }
 
 function statusText(ray: RayId, ok: boolean) {
   if (ok) return `${rayLabels[ray]} correct.`
-  if (ray === 'parallel') return 'Parallel ray should head right and line up with the far-side F.'
+  if (ray === 'parallel') return 'Parallel ray should head right and line up with F on the correct side of the lens.'
   if (ray === 'chief') return 'Chief ray should head right in a straight line through the center of the lens.'
   return 'Focal ray should head right and leave parallel to the optical axis.'
 }
 
-function firstHint(checks: ReturnType<typeof drawnRayChecks>, s: PlotScene): string {
-  const farSide = s.focalLength > 0 ? 'right-side' : 'left-side virtual'
-  if (!checks.directions.parallel) {
+function unmetHintForRay(
+  ray: RayId,
+  checks: ReturnType<typeof drawnRayChecks>,
+  s: PlotScene,
+): string | null {
+  const focusSide =
+    s.focalLength > 0
+      ? 'F on the opposite side of the lens from the object'
+      : 'virtual F on the same side of the lens as the object'
+  if (checks[ray]) return null
+
+  if (ray === 'parallel' && !checks.directions.parallel) {
     return 'The parallel ray starts at the object height on the lens and should travel to the right after the lens.'
   }
-  if (!checks.parallel) {
-    return `Aim the parallel ray so its outgoing path lines up with the ${farSide} focus F. For a concave lens, use the dotted back-trace to see that alignment.`
+  if (ray === 'parallel') {
+    return `Aim the parallel ray so its outgoing path lines up with ${focusSide}. For a concave lens, use the dotted back-trace to see that alignment.`
   }
-  if (!checks.directions.chief) {
+
+  if (ray === 'chief' && !checks.directions.chief) {
     return 'The chief ray should continue to the right after passing through the center of the lens.'
   }
-  if (!checks.chief) {
+  if (ray === 'chief') {
     return 'Aim the chief ray in one straight line through the center of the lens.'
   }
+
   if (!checks.directions.focal) {
     return 'The focal ray should continue to the right after crossing the lens.'
   }
-  if (!checks.focal) {
-    return 'Aim the focal ray so it exits parallel to the optical axis, which is the horizontal center line.'
-  }
+  return 'Aim the focal ray so it exits parallel to the optical axis, which is the horizontal center line.'
+}
+
+function firstHint(
+  checks: ReturnType<typeof drawnRayChecks>,
+  s: PlotScene,
+  activeRay: RayId,
+): string {
+  const activeHint = unmetHintForRay(activeRay, checks, s)
+  if (activeHint) return activeHint
+
+  const nextUnmet = rayIds.find((ray) => !checks[ray])
+  if (nextUnmet) return unmetHintForRay(nextUnmet, checks, s) ?? statusText(nextUnmet, false)
+
   return 'Drag the ray endpoints until all three requirements are marked Done.'
 }
 
@@ -163,8 +185,9 @@ export function DrawRaysScene({
   }, [checks.all, onReadyChange])
 
   useEffect(() => {
-    onHintChange?.(firstHint(checks, s))
+    onHintChange?.(firstHint(checks, s, activeRay))
   }, [
+    activeRay,
     checks.parallel,
     checks.chief,
     checks.focal,
@@ -331,7 +354,9 @@ export function DrawRaysScene({
                 />
               )}
               <circle
-                className={`draw-handle draw-handle--end ${isActive ? 'is-active' : ''}`}
+                className={`draw-handle draw-handle--end draw-handle--${ray} ${
+                  isActive ? 'is-active' : ''
+                }`}
                 cx={endSvg.x}
                 cy={endSvg.y}
                 r={16}

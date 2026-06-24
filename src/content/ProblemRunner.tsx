@@ -1,5 +1,5 @@
 import { useEffect, useState, type PointerEvent, type ReactNode } from 'react'
-import { formImage, sliderToFocalLength, FLAT_FOCAL } from '../engine'
+import { formImage, sliderToFocalLength } from '../engine'
 import { DrawRaysScene, LensScene, snapValue } from '../interactive'
 import {
   LensDiagram,
@@ -44,7 +44,7 @@ function hintText(step: StepDefinition, state: StepState, image: ReturnType<type
 function curvatureReadout(control: Control, value: number): string | null {
   if (control.type !== 'curvature') return null
   const f = sliderToFocalLength(value)
-  if (!Number.isFinite(f) || Math.abs(f) > FLAT_FOCAL) return 'Flat'
+  if (!Number.isFinite(f)) return 'Flat'
   return f > 0 ? `Convex \u00b7 f = ${fmt(f)}` : `Concave \u00b7 f = ${fmt(Math.abs(f))}`
 }
 
@@ -53,7 +53,7 @@ const initialValues = (step: StepDefinition): StepState =>
   isPredictStep(step) || isPlotStep(step) ? {} : step.initial
 
 const initialMeasures = (lesson: LessonDefinition): MeasureFlags =>
-  lesson.id === 'thin-lens-equation' ? { f: true, do: true, di: true } : {}
+  lesson.id === 'thin-lens-equation' ? { f: true, do: true, di: true, m: false } : {}
 
 function describe(image: ReturnType<typeof formImage>): string {
   if (image.atInfinity) return 'image at infinity'
@@ -219,6 +219,20 @@ export function ProblemRunner({
     setPlotHint('')
     setPlotResetKey(0)
     onStepChange?.(ni)
+  }
+
+  function previous() {
+    if (stepIndex === 0) return
+    const pi = stepIndex - 1
+    setStepIndex(pi)
+    setValues(initialValues(lesson.steps[pi]))
+    setStatus('idle')
+    setChosenId(null)
+    setPlotReady(false)
+    setPlotHint('')
+    setPlotResetKey(0)
+    setMeasures(initialMeasures(lesson))
+    onStepChange?.(pi)
   }
 
   function resetPlot() {
@@ -406,11 +420,23 @@ export function ProblemRunner({
           )}
           <div className="runner__actions">
             {status === 'correct' ? (
-              <button type="button" className="btn btn--primary" onClick={next}>
-                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
-              </button>
+              <>
+                {stepIndex > 0 && (
+                  <button type="button" className="btn" onClick={previous}>
+                    Back
+                  </button>
+                )}
+                <button type="button" className="btn btn--primary" onClick={next}>
+                  {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+                </button>
+              </>
             ) : (
               <>
+                {stepIndex > 0 && (
+                  <button type="button" className="btn" onClick={previous}>
+                    Back
+                  </button>
+                )}
                 <button type="button" className="btn btn--primary" onClick={submitPlot}>
                   Submit
                 </button>
@@ -430,6 +456,7 @@ export function ProblemRunner({
           canExplore={committed && !!step.explore}
           onChoose={setChosenId}
           onNext={next}
+          onPrevious={stepIndex > 0 ? previous : undefined}
           isLast={stepIndex + 1 >= lesson.steps.length}
         />
       ) : (
@@ -471,6 +498,11 @@ export function ProblemRunner({
           {promptNearAction && promptBlock}
 
           <div className="runner__actions">
+            {stepIndex > 0 && (
+              <button type="button" className="btn" onClick={previous}>
+                Back
+              </button>
+            )}
             {status === 'correct' ? (
               <button type="button" className="btn btn--primary" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
@@ -626,13 +658,13 @@ function NumbersTools({
             <dt>real</dt>
             <dd>
               {renderRich(
-                'Light **actually meets**, so it can land on a **screen** (forms on the far side).',
+                'Light **actually meets**, so it can land on a **screen** on the opposite side of the lens from the object.',
               )}
             </dd>
             <dt>virtual</dt>
             <dd>
               {renderRich(
-                'Light only **appears** to come from there; it **can’t be projected** (near side).',
+                'Light only **appears** to come from there; it **can’t be projected** and appears on the same side of the lens as the object.',
               )}
             </dd>
           </dl>
@@ -742,6 +774,7 @@ function PredictPanel({
   canExplore,
   onChoose,
   onNext,
+  onPrevious,
   isLast,
 }: {
   step: { prompt: string; choices: Choice[]; reveal: string }
@@ -751,6 +784,7 @@ function PredictPanel({
   canExplore: boolean
   onChoose: (id: string) => void
   onNext: () => void
+  onPrevious?: () => void
   isLast: boolean
 }) {
   const chosen = step.choices.find((c) => c.id === chosenId)
@@ -859,6 +893,11 @@ function PredictPanel({
       )}
 
       <div className="runner__actions">
+        {onPrevious && (
+          <button type="button" className="btn" onClick={onPrevious}>
+            Back
+          </button>
+        )}
         {solved && (
           <button type="button" className="btn btn--primary" onClick={onNext}>
             {isLast ? 'Finish' : 'Next'}

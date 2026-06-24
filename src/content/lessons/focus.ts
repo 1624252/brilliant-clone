@@ -48,12 +48,12 @@ export const focusLesson: LessonDefinition = {
         'Yes. A convex lens makes a **real** image when the candle is outside **F**.',
       hint: (state, image) => {
         if (state.objectDistance < state.focalLength) {
-          return 'The image is still **virtual** because the candle is inside **F**. Move it outside **F**.'
+          return 'A **real** image is where solid outgoing rays actually meet on the opposite side of the lens from the object. Keep dragging until the dotted back-traces disappear and the image candle is opposite the object.'
         }
         if (image.atInfinity) {
-          return 'You are right on **F**, where the image goes to infinity. Move a little farther out.'
+          return 'Here the outgoing rays are parallel, so they never meet on the screen. Keep dragging until the solid rays cross at a finite point.'
         }
-        return 'Look for the rays to actually meet on the far side of the lens.'
+        return 'Look for the solid rays to actually meet on the opposite side of the lens from the object. That crossing is a real image.'
       },
     },
     {
@@ -65,15 +65,15 @@ export const focusLesson: LessonDefinition = {
       success: (state, image) =>
         state.objectDistance < state.focalLength && !image.isReal,
       correctFeedback:
-        'Correct. Inside **F**, a convex lens makes a **virtual** image on the candle side.',
+        'Correct. Inside **F**, a convex lens makes a **virtual** image on the same side of the lens as the object, where dotted back-traces meet.',
       hint: (state, image) => {
         if (state.objectDistance > state.focalLength) {
-          return 'The rays are still meeting on the far side, so the image is **real**. Move the candle inside **F**.'
+          return 'A **virtual** image is not a solid-ray crossing. It appears where dotted back-traces meet on the same side of the lens as the object. Drag until the solid rays spread apart and the dotted lines point backward to an image.'
         }
         if (image.atInfinity) {
-          return 'At **F**, rays leave parallel. Move just inside **F** to make the image virtual.'
+          return 'Parallel outgoing rays do not make a nearby virtual image yet. Keep dragging until the outgoing rays diverge and dotted back-traces appear.'
         }
-        return 'Look for dotted back-traces: those mark a virtual image.'
+        return 'Look for dotted back-traces meeting on the same side of the lens as the object. That apparent meeting point is a virtual image.'
       },
     },
     {
@@ -90,8 +90,8 @@ export const focusLesson: LessonDefinition = {
         'Yes. For a convex lens, an **upright** image happens only when the candle is inside **F**.',
       hint: (state, image) =>
         state.objectDistance >= state.focalLength || image.orientation !== 'upright'
-          ? 'The image is still inverted outside **F**. Move the candle inside **F**.'
-          : 'Use the upright virtual image on the candle side.',
+          ? 'An **upright** image points the same way as the candle. Drag until the image candle stands above the axis instead of hanging below it.'
+          : 'Use the image candle that stands above the axis, the same way up as the object.',
     },
     {
       id: 'make-inverted-image',
@@ -107,7 +107,7 @@ export const focusLesson: LessonDefinition = {
         'Correct. Outside **F**, a convex lens makes a **real**, **inverted** image.',
       hint: (state, image) =>
         state.objectDistance <= state.focalLength || image.orientation !== 'inverted'
-          ? 'The image is upright inside **F**. Move the candle outside **F** to flip it.'
+          ? 'An **inverted** image is flipped below the axis. Drag until the image candle hangs upside-down on the opposite side of the lens from the object.'
           : 'Look for the image candle below the axis: that is inverted.',
     },
   ],

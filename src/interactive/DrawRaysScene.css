@@ -71,13 +71,23 @@
   touch-action: none;
 }
 .lens-diagram .draw-handle--end {
-  fill: #ffd166;
+  fill: var(--handle-color, #ffd166);
   stroke: #0b1020;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--handle-color, #ffd166) 55%, transparent));
+}
+.lens-diagram .draw-handle--parallel {
+  --handle-color: #ff9f43;
+}
+.lens-diagram .draw-handle--chief {
+  --handle-color: #54d6a0;
+}
+.lens-diagram .draw-handle--focal {
+  --handle-color: #ff6b9d;
 }
 .lens-diagram .draw-handle.is-active,
 .lens-diagram .draw-handle:focus-visible {
   outline: none;
-  stroke: var(--accent);
+  stroke: #ffffff;
   stroke-width: 4;
 }
 

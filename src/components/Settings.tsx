@@ -6,6 +6,15 @@ import './Settings.css'
 type Note = { kind: 'ok' | 'err'; text: string } | null
 type Section = 'name' | 'email' | 'password' | null
 
+function settingsAuthError(err: unknown): string {
+  const code =
+    typeof err === 'object' && err && 'code' in err ? String(err.code) : ''
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+    return 'Password does not match this account.'
+  }
+  return friendlyAuthError(err)
+}
+
 export function Settings({ onClose }: { onClose: () => void }) {
   const {
     user,
@@ -64,7 +73,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       setNote({ kind: 'ok', text: ok })
       if (closeOnDone) setEditing(null)
     } catch (err) {
-      setNote({ kind: 'err', text: friendlyAuthError(err) })
+      setNote({ kind: 'err', text: settingsAuthError(err) })
     } finally {
       setBusy(false)
     }
