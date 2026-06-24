@@ -16,7 +16,7 @@ const curvatureControl = {
   label: 'Curvature',
 }
 
-const FLAT_CURVATURE_EPSILON = 0.005
+const FLAT_CURVATURE_EPSILON = 0.03
 const isExactlyFlat = (curvature: number) => Math.abs(curvature) <= FLAT_CURVATURE_EPSILON
 const hasVisibleCurve = (curvature: number) => Math.abs(curvature) > 0.08
 

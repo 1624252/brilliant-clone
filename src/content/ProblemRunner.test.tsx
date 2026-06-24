@@ -57,6 +57,12 @@ describe('lesson content quality', () => {
     const prompts = shippedLessons.flatMap((lesson) => lesson.steps.map((step) => step.prompt))
     expect(new Set(prompts).size).toBe(prompts.length)
   })
+
+  it('gives the flat-lens step a forgiving center range', () => {
+    const flatStep = curvatureLesson.steps.find((step) => step.id === 'make-flat')
+    expect(flatStep && 'success' in flatStep ? flatStep.success({ curvature: 0.02 }, {} as never) : false).toBe(true)
+    expect(flatStep && 'success' in flatStep ? flatStep.success({ curvature: 0.08 }, {} as never) : true).toBe(false)
+  })
 })
 
 describe('ProblemRunner landmark lessons', () => {
