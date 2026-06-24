@@ -108,6 +108,9 @@ describe('ProblemRunner landmark lessons', () => {
 
     setObjectDistance(container, focusLesson, 10)
 
+    expect(screen.getByRole('button', { name: /check answer/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/solid outgoing rays/i)
     expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument()
   })
 
@@ -231,6 +234,30 @@ describe('ProblemRunner step navigation', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
+  })
+
+  it('reopens a completed lesson without resetting local step progress', () => {
+    render(<ProblemRunner lesson={focusLesson} initialCompleted />)
+
+    expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: /lesson progress/i })).toHaveAttribute(
+      'aria-valuenow',
+      '100',
+    )
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next reached step/i })).toBeEnabled()
+  })
+
+  it('reviewing a completed lesson keeps all steps reached', () => {
+    render(<ProblemRunner lesson={focusLesson} initialStepIndex={3} />)
+    setObjectDistance(document.body, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    fireEvent.click(screen.getByRole('button', { name: /finish/i }))
+    fireEvent.click(screen.getByRole('button', { name: /review lesson/i }))
+
+    expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next reached step/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument()
   })
 })
 

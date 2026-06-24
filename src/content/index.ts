@@ -1,7 +1,15 @@
 export { ProblemRunner } from './ProblemRunner'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
-export { lessons, chapter } from './lessons'
+export {
+  lessons,
+  chapter,
+  chromaticChapter,
+  chapters,
+  lensesLessons,
+  chromaticLessons,
+  lessonsByTopic,
+} from './lessons'
 export { topics, type Topic } from './topics'
 export { isPredictStep, isPlotStep } from './types'
 export type {

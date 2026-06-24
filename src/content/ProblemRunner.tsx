@@ -8,6 +8,7 @@ import {
   ConvexLensExplainer,
   ConcaveLensExplainer,
   CurvatureExplainer,
+  ChromaticAberrationDiagram,
   type MeasureFlags,
 } from '../render'
 import { isPredictStep, isPlotStep } from './types'
@@ -20,6 +21,8 @@ interface ProblemRunnerProps {
   lesson: LessonDefinition
   /** Step to resume at (from saved progress). */
   initialStepIndex?: number
+  /** True when replaying a lesson already completed in persisted progress. */
+  initialCompleted?: boolean
   /** Called when the learner advances to a new step (for saving resume state). */
   onStepChange?: (stepIndex: number) => void
   onComplete?: () => void
@@ -71,6 +74,7 @@ function describe(image: ReturnType<typeof formImage>): string {
 export function ProblemRunner({
   lesson,
   initialStepIndex = 0,
+  initialCompleted = false,
   onStepChange,
   onComplete,
   onExit,
@@ -79,14 +83,19 @@ export function ProblemRunner({
 }: ProblemRunnerProps) {
   const resumeIndex = Math.min(Math.max(initialStepIndex, 0), lesson.steps.length - 1)
   // Skip the intro when resuming partway through a lesson.
-  const [started, setStarted] = useState(!lesson.intro || resumeIndex > 0)
+  const [started, setStarted] = useState(initialCompleted || !lesson.intro || resumeIndex > 0)
   const [stepIndex, setStepIndex] = useState(resumeIndex)
   const [values, setValues] = useState<StepState>(initialValues(lesson.steps[resumeIndex]))
   const [status, setStatus] = useState<Status>('idle')
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
-    () => new Set(Array.from({ length: resumeIndex }, (_, i) => i)),
+    () =>
+      initialCompleted
+        ? new Set(Array.from({ length: lesson.steps.length }, (_, i) => i))
+        : new Set(Array.from({ length: resumeIndex }, (_, i) => i)),
   )
-  const [furthestStepIndex, setFurthestStepIndex] = useState(resumeIndex)
+  const [furthestStepIndex, setFurthestStepIndex] = useState(
+    initialCompleted ? lesson.steps.length - 1 : resumeIndex,
+  )
   const [done, setDone] = useState(false)
   const [measures, setMeasures] = useState<MeasureFlags>(() => initialMeasures(lesson))
   // Predict-then-reveal state: the committed choice (null until submitted).
@@ -108,6 +117,7 @@ export function ProblemRunner({
   const step = lesson.steps[stepIndex]
   const predict = isPredictStep(step)
   const plot = isPlotStep(step)
+  const chromatic = !predict && !plot && step.visual === 'chromatic'
   const stepAlreadyCompleted = completedSteps.has(stepIndex)
   // A prediction is "committed" (rays/image reveal, Next appears) only once the
   // learner picks the *correct* choice. A wrong pick shows an explanation and
@@ -129,7 +139,9 @@ export function ProblemRunner({
     ? values.objectDistance ?? step.scene.objectDistance
     : plot
       ? step.scene.objectDistance
-      : merged.objectDistance
+      : chromatic
+        ? merged.objectDistance ?? 60
+        : merged.objectDistance
   // A curvature control drives the focal length (reshaping the lens); otherwise
   // focalLength is read directly from the step's fixed/initial values.
   const focalLength = predict
@@ -138,7 +150,7 @@ export function ProblemRunner({
       ? step.scene.focalLength
       : 'curvature' in merged
         ? sliderToFocalLength(merged.curvature)
-        : merged.focalLength
+        : merged.focalLength ?? 20
   const image = formImage(objectDistance, focalLength)
 
   // The draggable object handle: the lesson's drag control normally, or — on a
@@ -179,10 +191,8 @@ export function ProblemRunner({
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
-    if (!stepAlreadyCompleted) {
-      setStatus('idle') // changing the answer clears stale feedback until solved
-      if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
-    }
+    setStatus('idle') // changing the answer clears the current attempt, not saved progress
+    if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
   }
 
   function check() {
@@ -205,7 +215,7 @@ export function ProblemRunner({
   // Replay the whole lesson from the intro (used by "Review lesson" on the finish
   // screen). Purely local — completion has already been saved.
   function restart() {
-    setStarted(!lesson.intro)
+    setStarted(initialCompleted || done || !lesson.intro)
     setStepIndex(0)
     setValues(initialValues(lesson.steps[0]))
     setStatus('idle')
@@ -214,7 +224,12 @@ export function ProblemRunner({
     setPlotHint('')
     setPlotResetKey(0)
     setMeasures(initialMeasures(lesson))
-    setCompletedSteps(new Set())
+    setCompletedSteps(
+      initialCompleted || done
+        ? new Set(Array.from({ length: lesson.steps.length }, (_, i) => i))
+        : new Set(),
+    )
+    setFurthestStepIndex(initialCompleted || done ? lesson.steps.length - 1 : 0)
     setDone(false)
   }
 
@@ -343,7 +358,7 @@ export function ProblemRunner({
     <div className="runner">
       {(() => {
         const total = lesson.steps.length
-        const filled = stepIndex + (solved ? 1 : 0)
+        const filled = Math.max(completedSteps.size, stepIndex + (solved ? 1 : 0))
         const pct = Math.round((filled / total) * 100)
         const canGoBack = stepIndex > 0
         const canGoForward = stepIndex < furthestStepIndex
@@ -407,7 +422,7 @@ export function ProblemRunner({
       {plot ? (
         <DrawRaysScene
           scene={step.scene}
-          solved={solved}
+          solved={currentSolved && !stepAlreadyCompleted}
           onReadyChange={(ready) => {
             setPlotReady(ready)
           }}
@@ -417,6 +432,12 @@ export function ProblemRunner({
           onHintChange={setPlotHint}
           measures={measures}
           resetKey={plotResetKey}
+        />
+      ) : chromatic ? (
+        <ChromaticAberrationDiagram
+          dispersion={merged.dispersion}
+          screenDistance={merged.screenDistance}
+          correction={merged.correction}
         />
       ) : (
         <LensScene
@@ -443,7 +464,7 @@ export function ProblemRunner({
               <strong>Not yet.</strong> Keep working through the <strong>unmet requirements</strong> below.
             </div>
           )}
-          {solved ? (
+          {solved && status !== 'incorrect' ? (
             <div className="feedback feedback--correct" role="status">
               <strong>You found it.</strong> {renderRich(step.reveal)}
             </div>
@@ -457,13 +478,7 @@ export function ProblemRunner({
             </p>
           )}
           <div className="runner__actions">
-            {solved ? (
-              <>
-                <button type="button" className="btn btn--primary" onClick={next}>
-                  {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
-                </button>
-              </>
-            ) : (
+            {!currentSolved && (
               <>
                 <button type="button" className="btn btn--primary" onClick={submitPlot}>
                   Submit
@@ -472,6 +487,11 @@ export function ProblemRunner({
                   Reset rays
                 </button>
               </>
+            )}
+            {solved && (
+              <button type="button" className="btn btn--primary" onClick={next}>
+                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+              </button>
             )}
           </div>
         </div>
@@ -503,12 +523,12 @@ export function ProblemRunner({
             <InteractiveChoices
               choices={step.choices}
               chosenId={chosenId}
-              solved={solved}
+              solved={currentSolved && !stepAlreadyCompleted}
               onChoose={chooseInteractive}
             />
           )}
 
-          {solved && (
+          {solved && status !== 'incorrect' && (
             <div className="feedback feedback--correct" role="status">
               <strong>Correct.</strong> {renderRich(step.correctFeedback)}
             </div>
@@ -525,13 +545,14 @@ export function ProblemRunner({
           {promptNearAction && promptBlock}
 
           <div className="runner__actions">
-            {solved ? (
-              <button type="button" className="btn btn--primary" onClick={next}>
-                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
-              </button>
-            ) : step.choices ? null : (
+            {!currentSolved && !step.choices && (
               <button type="button" className="btn btn--primary" onClick={check}>
                 Check answer
+              </button>
+            )}
+            {solved && (
+              <button type="button" className="btn btn--primary" onClick={next}>
+                {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
             )}
           </div>

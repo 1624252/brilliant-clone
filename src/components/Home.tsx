@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { chapter, lessons } from '../content'
+import type { LessonDefinition } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
 import { renderRich } from '../content/richText'
@@ -18,6 +18,8 @@ interface HomeProps {
   uid: string
   displayName: string
   progress: ProgressState
+  chapter: { id: string; title: string }
+  lessons: LessonDefinition[]
   onOpen: (lessonId: string) => void
   /** Back to the topics landing page. */
   onBack: () => void
@@ -28,6 +30,8 @@ export function Home({
   uid,
   displayName,
   progress,
+  chapter,
+  lessons,
   onOpen,
   onBack,
   onSignOut,

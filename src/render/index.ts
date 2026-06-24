@@ -8,6 +8,7 @@ export {
 export { ConvexLensAnimation, ConvexLensExplainer } from './ConvexLensAnimation'
 export { ConcaveLensAnimation, ConcaveLensExplainer } from './ConcaveLensAnimation'
 export { CurvatureExplainer } from './CurvatureAnimation'
+export { ChromaticAberrationDiagram } from './ChromaticAberrationDiagram'
 export {
   DEFAULT_SCENE,
   scaleOf,

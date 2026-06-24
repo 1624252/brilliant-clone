@@ -17,7 +17,7 @@ import { Home } from './components/Home'
 import { Topics } from './components/Topics'
 import { LessonView } from './components/LessonView'
 import { Logo } from './components/Logo'
-import { lessons, chapter } from './content'
+import { chapters, lessons, lessonsByTopic } from './content'
 import './App.css'
 
 /** Scroll back to the top whenever the route changes (e.g., opening a lesson). */
@@ -70,14 +70,17 @@ function HomeRoute({ user, progress }: { user: User; progress: ProgressState }) 
   const { topicId } = useParams()
   const navigate = useNavigate()
   const { logout } = useAuth()
-  // Only the lenses topic exists today; anything else returns to the landing page.
-  if (topicId !== chapter.id) return <Navigate to="/" replace />
+  const topicLessons = topicId ? lessonsByTopic[topicId] : undefined
+  const selectedChapter = chapters.find((candidate) => candidate.id === topicId)
+  if (!topicId || !topicLessons || !selectedChapter) return <Navigate to="/" replace />
   const displayName = user.displayName || user.email?.split('@')[0] || 'there'
   return (
     <Home
       uid={user.uid}
       displayName={displayName}
       progress={progress}
+      chapter={selectedChapter}
+      lessons={topicLessons}
       onOpen={(id) => navigate(`/lessons/${id}`)}
       onBack={() => navigate('/')}
       // After sign-out the auth guard redirects to /login on its own.
@@ -90,14 +93,20 @@ function LessonRoute({ user, progress }: { user: User; progress: ProgressState }
   const { lessonId } = useParams()
   const navigate = useNavigate()
   const lesson = lessons.find((l) => l.id === lessonId)
+  const topicEntry = Object.entries(lessonsByTopic).find(([, topicLessons]) =>
+    topicLessons.some((candidate) => candidate.id === lessonId),
+  )
+  const topicId = topicEntry?.[0]
+  const topicLessons = topicEntry?.[1]
   // Unknown or not-yet-built lessons fall back to the topic roadmap.
-  if (!lesson || lesson.placeholder) return <Navigate to={`/topics/${chapter.id}`} replace />
+  if (!lesson || lesson.placeholder || !topicId || !topicLessons) return <Navigate to="/" replace />
   return (
     <LessonView
       lesson={lesson}
+      lessons={topicLessons}
       uid={user.uid}
       progress={progress}
-      onBack={() => navigate(`/topics/${chapter.id}`)}
+      onBack={() => navigate(`/topics/${topicId}`)}
       onOpenLesson={(id) => navigate(`/lessons/${id}`)}
     />
   )

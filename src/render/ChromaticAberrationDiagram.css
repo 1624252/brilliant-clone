@@ -1,0 +1,64 @@
+.chromatic-diagram {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  background: var(--diagram-bg, #0b1020);
+}
+
+.chromatic-axis {
+  stroke: var(--diagram-axis, #394056);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+}
+
+.chromatic-lens {
+  fill: rgba(140, 194, 255, 0.18);
+  stroke: var(--brand, #8cc2ff);
+  stroke-width: 2;
+}
+
+.chromatic-ray line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+}
+
+.chromatic-ray circle {
+  fill: currentColor;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.chromatic-ray text,
+.chromatic-note,
+.chromatic-screen text {
+  fill: var(--text, #eef0fb);
+  font-family: system-ui, sans-serif;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: var(--diagram-bg, #0b1020);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.chromatic-ray--blue {
+  color: #5aa7ff;
+}
+.chromatic-ray--green {
+  color: #54d6a0;
+}
+.chromatic-ray--red {
+  color: #ff6b6b;
+}
+
+.chromatic-screen line {
+  stroke: #fff3b0;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.88;
+}
+
+.chromatic-note {
+  font-size: 15px;
+}

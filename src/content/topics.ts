@@ -1,4 +1,4 @@
-import { chapter } from './lessons'
+import { chapter, chromaticChapter } from './lessons'
 
 // Top-level subjects shown on the landing page. Today there's a single available
 // topic (the lenses chapter); more can be added here as the course grows.
@@ -15,6 +15,13 @@ export const topics: Topic[] = [
     title: chapter.title,
     blurb:
       'Discover how lenses bend light to form images — focal points, ray tracing, and the thin lens equation.',
+    available: true,
+  },
+  {
+    id: chromaticChapter.id,
+    title: chromaticChapter.title,
+    blurb:
+      'Explore why colors focus at different places, how fringes appear, and how lens pairs can reduce the blur.',
     available: true,
   },
 ]

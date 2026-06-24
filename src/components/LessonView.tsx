@@ -1,4 +1,4 @@
-import { ProblemRunner, lessons } from '../content'
+import { ProblemRunner } from '../content'
 import type { LessonDefinition } from '../content'
 import { completeLesson, saveStepProgress } from '../data/progress'
 import type { ProgressState } from '../data/useProgress'
@@ -6,6 +6,7 @@ import './LessonView.css'
 
 interface LessonViewProps {
   lesson: LessonDefinition
+  lessons: LessonDefinition[]
   uid: string
   progress: ProgressState
   onBack: () => void
@@ -15,14 +16,16 @@ interface LessonViewProps {
 
 export function LessonView({
   lesson,
+  lessons,
   uid,
   progress,
   onBack,
   onOpenLesson,
 }: LessonViewProps) {
   const saved = progress.byLesson[lesson.id]
-  // Resume in-progress lessons; replay completed ones from the start (intro first).
-  const resumeIndex = saved && saved.status === 'in-progress' ? saved.currentStepIndex : 0
+  // Resume saved position for both in-progress lessons and completed replays.
+  const resumeIndex = saved ? saved.currentStepIndex : 0
+  const completedBefore = saved?.status === 'completed'
 
   // The next real (non-placeholder) lesson by order, if any.
   const ordered = [...lessons]
@@ -48,6 +51,7 @@ export function LessonView({
             key={lesson.id}
             lesson={lesson}
             initialStepIndex={resumeIndex}
+            initialCompleted={completedBefore}
             // Persistence is best-effort: a write failure shouldn't break the lesson.
             onStepChange={(i) => {
               void saveStepProgress(uid, lesson.id, i).catch(() => {})

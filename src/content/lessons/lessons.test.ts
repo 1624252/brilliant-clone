@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lessons } from './index'
+import { lessons, lessonsByTopic } from './index'
 import { isPredictStep } from '../types'
 
 describe('lesson roadmap integrity', () => {
@@ -8,10 +8,12 @@ describe('lesson roadmap integrity', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('has unique, ascending display orders', () => {
-    const orders = lessons.map((l) => l.order)
-    expect(new Set(orders).size).toBe(orders.length)
-    expect(orders).toEqual([...orders].sort((a, b) => a - b))
+  it('has unique, ascending display orders within each topic', () => {
+    for (const topicLessons of Object.values(lessonsByTopic)) {
+      const orders = topicLessons.map((l) => l.order)
+      expect(new Set(orders).size).toBe(orders.length)
+      expect(orders).toEqual([...orders].sort((a, b) => a - b))
+    }
   })
 
   it('real lessons have an intro and steps; placeholders have neither', () => {

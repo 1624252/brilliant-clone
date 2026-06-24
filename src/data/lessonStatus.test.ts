@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { lessons } from '../content'
+import { lensesLessons } from '../content'
 import { deriveChapterStatus } from './lessonStatus'
 import type { LessonProgress } from './progress'
 
@@ -25,7 +25,7 @@ const ALL_LESSON_IDS = [
 
 describe('deriveChapterStatus', () => {
   it('unlocks only the first real lesson when nothing is done', () => {
-    const s = deriveChapterStatus(lessons, {})
+    const s = deriveChapterStatus(lensesLessons, {})
     expect(find(s, 'focusing-light').unlocked).toBe(true)
     expect(find(s, 'concave-lenses').unlocked).toBe(false)
     expect(s.recommendedId).toBe('focusing-light')
@@ -34,14 +34,14 @@ describe('deriveChapterStatus', () => {
   })
 
   it('locks later lessons until earlier ones are completed', () => {
-    const s = deriveChapterStatus(lessons, {})
+    const s = deriveChapterStatus(lensesLessons, {})
     expect(find(s, 'convex-concave').unlocked).toBe(false)
     expect(find(s, 'ray-tracing').unlocked).toBe(false)
     expect(find(s, 'thin-lens-equation').unlocked).toBe(false)
   })
 
   it('unlocks the next lesson once the previous is completed', () => {
-    const s = deriveChapterStatus(lessons, {
+    const s = deriveChapterStatus(lensesLessons, {
       'focusing-light': completed('focusing-light'),
     })
     expect(find(s, 'focusing-light').completed).toBe(true)
@@ -56,7 +56,7 @@ describe('deriveChapterStatus', () => {
     const all = Object.fromEntries(
       ALL_LESSON_IDS.map((id) => [id, completed(id)]),
     )
-    const s = deriveChapterStatus(lessons, all)
+    const s = deriveChapterStatus(lensesLessons, all)
     expect(s.recommendedId).toBeNull()
     expect(s.completedCount).toBe(5)
   })

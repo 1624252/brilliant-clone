@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { lessons, topics } from '../content'
+import { lessonsByTopic, topics } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus } from '../data/lessonStatus'
 import { Settings } from './Settings'
@@ -20,9 +20,6 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
   const streak = progress.streak?.current ?? 0
-
-  // Progress for the (single) lenses topic, to show on its card.
-  const status = deriveChapterStatus(lessons, progress.byLesson)
 
   return (
     <div className="topics">
@@ -80,6 +77,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
 
         <ul className="topic-grid">
           {topics.map((t) => {
+            const status = deriveChapterStatus(lessonsByTopic[t.id] ?? [], progress.byLesson)
             const pct = status.totalCount
               ? Math.round((status.completedCount / status.totalCount) * 100)
               : 0
