@@ -405,6 +405,18 @@ a {
   filter: brightness(1.06);
   box-shadow: 0 8px 22px rgba(53, 224, 168, 0.38);
 }
+/* Forward navigation (Next/Finish): blue→violet, distinct from the green submit. */
+.btn--next {
+  background: linear-gradient(135deg, var(--brand), var(--c-di));
+  border-color: transparent;
+  color: var(--brand-ink);
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(122, 168, 255, 0.3);
+}
+.btn--next:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 8px 22px rgba(122, 168, 255, 0.42);
+}
 .btn--block {
   width: 100%;
 }

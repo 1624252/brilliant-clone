@@ -92,6 +92,44 @@
   stroke-linejoin: round;
 }
 
+/* Pinned thin-lens equation card (top-right corner). */
+.lens-diagram .eqbadge__bg {
+  fill: color-mix(in srgb, var(--diagram-bg, #0b1020) 82%, transparent);
+  stroke: var(--border, #2c3450);
+  stroke-width: 1;
+}
+/* Stacked fraction pieces. Denominator color modifiers override the row tone
+   (see specificity-boosted rules below). */
+.lens-diagram .eqbadge__bar {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.lens-diagram .eqbadge__row--num text {
+  fill: var(--text, #eef0fb);
+  font-size: 17px;
+  font-weight: 800;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.lens-diagram .eqbadge__row--num .eqbadge__bar {
+  stroke: var(--text, #eef0fb);
+}
+.lens-diagram .eqbadge__m {
+  fill: var(--c-m, #54d6a0);
+  font-size: 17px;
+  font-weight: 800;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+/* Denominator colors win over the row tone. */
+.lens-diagram .eqbadge .eqbadge--f {
+  fill: var(--c-f, #ffb84d);
+}
+.lens-diagram .eqbadge .eqbadge--do {
+  fill: var(--c-do, #6fb3ff);
+}
+.lens-diagram .eqbadge .eqbadge--di {
+  fill: var(--c-di, #c08bff);
+}
+
 /* On small screens the whole SVG scales down, so bump the in-diagram text
    (and strokes) up in user units to keep them legible. */
 @media (max-width: 600px) {
@@ -111,6 +149,13 @@
   }
   .lens-diagram .axis {
     stroke-width: 2.5;
+  }
+  /* Scale the whole card (rect + text together) from its pinned top-right corner
+     so it stays legible without overflowing its fixed width. */
+  .lens-diagram .eqbadge {
+    transform-box: fill-box;
+    transform-origin: 100% 0%;
+    transform: scale(1.25);
   }
 }
 

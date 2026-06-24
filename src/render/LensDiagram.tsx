@@ -20,6 +20,8 @@ interface LensDiagramProps {
   showImage?: boolean
   /** Which measurement overlays to draw. Each maps a symbol onto the picture. */
   measures?: MeasureFlags
+  /** When set, pins the thin-lens equation with current numbers to the top-right corner. */
+  equation?: EquationValues
   /** Overlay content (e.g., a drag handle) rendered on top of the diagram. */
   children?: ReactNode
 }
@@ -31,6 +33,16 @@ export interface MeasureFlags {
   /** object/image height brackets (i.e. magnification). */
   m?: boolean
 }
+
+/** Live values plugged into the corner equation overlay. */
+export interface EquationValues {
+  f: number
+  dObj: number
+  dImg: number
+  m: number
+}
+
+const fmtNum = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '\u221e')
 
 const RAY_CLASS: Record<string, string> = {
   parallel: 'ray ray--parallel',
@@ -51,6 +63,7 @@ export function LensDiagram({
   showRays = true,
   showImage = true,
   measures = {},
+  equation,
   children,
 }: LensDiagramProps) {
   const trace = tracePrincipalRays(
@@ -273,8 +286,123 @@ export function LensDiagram({
         )}
       </g>
 
+      {equation && <EquationBadge {...equation} scene={scene} />}
+
       {children}
     </svg>
+  )
+}
+
+/** One term in an equation row: an operator, or a 1/den stacked fraction. */
+type EqToken = { op: string } | { den: string; cls: string }
+
+const EQ_FS = 18 // fraction glyph size (SVG units)
+const EQ_GAP = 9 // horizontal gap between row tokens
+const EQ_PAD = 16 // inner card padding
+// Rough advance widths (no DOM measuring in SVG); kept generous so text never
+// overflows the auto-sized card.
+const eqTextW = (str: string, size: number) => str.length * size * 0.6
+const eqFracW = (den: string) =>
+  Math.max(eqTextW('1', EQ_FS), eqTextW(den, EQ_FS)) + 12
+const eqTokenW = (t: EqToken) => ('op' in t ? eqTextW(t.op, EQ_FS) : eqFracW(t.den))
+const eqRowW = (toks: EqToken[]) =>
+  toks.reduce((sum, t) => sum + eqTokenW(t), 0) + EQ_GAP * (toks.length - 1)
+
+/** One equation row laid out left→right starting at `startX`, centered on `cy`. */
+function EqRow({
+  toks,
+  startX,
+  cy,
+  tone,
+}: {
+  toks: EqToken[]
+  startX: number
+  cy: number
+  tone: 'sym' | 'num'
+}) {
+  const widths = toks.map(eqTokenW)
+  // Left edge of each token = startX + sum of previous widths and gaps (pure).
+  const lefts = widths.map(
+    (_, i) => startX + widths.slice(0, i).reduce((a, b) => a + b, 0) + EQ_GAP * i,
+  )
+  return (
+    <g className={`eqbadge__row eqbadge__row--${tone}`}>
+      {toks.map((t, i) => {
+        const w = widths[i]
+        const cx = lefts[i]
+        const mid = cx + w / 2
+        if ('op' in t) {
+          return (
+            <text key={i} className="eqbadge__op" x={mid} y={cy + 6} textAnchor="middle">
+              {t.op}
+            </text>
+          )
+        }
+        return (
+          <g key={i}>
+            {/* numerator 1 / bar / denominator */}
+            <text className="eqbadge__fnum" x={mid} y={cy - 7} textAnchor="middle">
+              1
+            </text>
+            <line className="eqbadge__bar" x1={cx + 2} x2={cx + w - 2} y1={cy} y2={cy} />
+            <text className={`eqbadge__fden ${t.cls}`} x={mid} y={cy + 18} textAnchor="middle">
+              {t.den}
+            </text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
+/**
+ * The thin-lens equation pinned to the diagram's top-right corner: a faint
+ * symbolic row over the same equation with the learner's current numbers
+ * plugged in (both as stacked 1/d fractions), plus the magnification. Drawn in
+ * SVG units so it scales with the diagram, and the card auto-sizes to its text.
+ */
+function EquationBadge({
+  f,
+  dObj,
+  dImg,
+  m,
+  scene,
+}: EquationValues & { scene: SceneParams }) {
+  const num: EqToken[] = [
+    { den: fmtNum(f), cls: 'eqbadge--f' },
+    { op: '=' },
+    { den: fmtNum(dObj), cls: 'eqbadge--do' },
+    { op: '+' },
+    { den: fmtNum(dImg), cls: 'eqbadge--di' },
+  ]
+  const mText = `m = ${fmtNum(m)}`
+
+  const inner = Math.max(eqRowW(num), eqTextW(mText, EQ_FS))
+  const w = Math.ceil(inner + EQ_PAD * 2)
+  const x = scene.viewWidth - w - 12
+  const y = 12
+  const right = x + w - EQ_PAD
+
+  const numCy = y + 30
+  const mY = y + 64
+  const h = mY + 10 - y
+
+  return (
+    <g
+      className="eqbadge"
+      role="img"
+      aria-label={`Thin lens equation with current values: one over f ${fmtNum(
+        f,
+      )} equals one over object distance ${fmtNum(dObj)} plus one over image distance ${fmtNum(
+        dImg,
+      )}; magnification ${fmtNum(m)}.`}
+    >
+      <rect className="eqbadge__bg" x={x} y={y} width={w} height={h} rx={12} />
+      <EqRow toks={num} startX={right - eqRowW(num)} cy={numCy} tone="num" />
+      <text className="eqbadge__m" x={right} y={mY} textAnchor="end">
+        {mText}
+      </text>
+    </g>
   )
 }
 

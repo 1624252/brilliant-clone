@@ -6,6 +6,7 @@ import {
   svgXToOpticalX,
   type SceneParams,
   type MeasureFlags,
+  type EquationValues,
 } from '../render'
 import { snapValue } from './snap'
 import './LensScene.css'
@@ -27,6 +28,8 @@ interface LensSceneProps {
   /** When false, hides the formed image (predict-then-reveal). */
   showImage?: boolean
   measures?: MeasureFlags
+  /** When set, pins the thin-lens equation with current numbers to the diagram. */
+  equation?: EquationValues
 }
 
 /** Map a pointer event to an optical x using the SVG's coordinate transform. */
@@ -61,6 +64,7 @@ export function LensScene({
   showRays = true,
   showImage = true,
   measures,
+  equation,
 }: LensSceneProps) {
   const draggingRef = useRef(false)
   const draggable = Boolean(onObjectDistanceChange)
@@ -121,6 +125,7 @@ export function LensScene({
       showRays={showRays}
       showImage={showImage}
       measures={measures}
+      equation={equation}
     >
       {draggable && (
         <circle

@@ -1,4 +1,4 @@
-export { LensDiagram, type MeasureFlags } from './LensDiagram'
+export { LensDiagram, type MeasureFlags, type EquationValues } from './LensDiagram'
 export {
   RayFocusAnimation,
   RayFocusExplainer,

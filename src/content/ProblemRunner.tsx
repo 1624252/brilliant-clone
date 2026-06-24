@@ -426,6 +426,16 @@ export function ProblemRunner({
           infinityAtEdge={!!dragControl?.allowInfinity}
           snaps={dragControl?.snaps}
           measures={measures}
+          equation={
+            featureNumbersTools
+              ? {
+                  f: focalLength,
+                  dObj: objectDistance,
+                  dImg: image.imageDistance,
+                  m: image.magnification,
+                }
+              : undefined
+          }
           showRays={predict ? committed : true}
           showImage={predict ? committed : true}
           onObjectDistanceChange={
@@ -437,12 +447,15 @@ export function ProblemRunner({
       {plot ? (
         <div className="plot-panel">
           {promptNearAction && promptBlock}
-          {status === 'incorrect' && (
+          {status === 'incorrect' ? (
             <div className="feedback feedback--incorrect feedback--pop" role="status">
-              <strong>Not yet.</strong> Keep working through the <strong>unmet requirements</strong> below.
+              <strong>Not yet.</strong>{' '}
+              {renderRich(
+                plotHint ||
+                  'A ray still breaks its rule. Adjust the endpoints until every requirement below is marked **Done**.',
+              )}
             </div>
-          )}
-          {solved && status !== 'incorrect' ? (
+          ) : currentSolved ? (
             <div className="feedback feedback--correct" role="status">
               <strong>You found it.</strong> {renderRich(step.reveal)}
             </div>
@@ -467,7 +480,7 @@ export function ProblemRunner({
               </>
             )}
             {solved && (
-              <button type="button" className="btn btn--primary" onClick={next}>
+              <button type="button" className="btn btn--next" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
             )}
@@ -506,7 +519,7 @@ export function ProblemRunner({
             />
           )}
 
-          {solved && status !== 'incorrect' && (
+          {currentSolved && status !== 'incorrect' && (
             <div className="feedback feedback--correct" role="status">
               <strong>Correct.</strong> {renderRich(step.correctFeedback)}
             </div>
@@ -529,7 +542,7 @@ export function ProblemRunner({
               </button>
             )}
             {solved && (
-              <button type="button" className="btn btn--primary" onClick={next}>
+              <button type="button" className="btn btn--next" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
             )}
@@ -924,7 +937,7 @@ function PredictPanel({
 
       <div className="runner__actions">
         {solved && (
-          <button type="button" className="btn btn--primary" onClick={onNext}>
+          <button type="button" className="btn btn--next" onClick={onNext}>
             {isLast ? 'Finish' : 'Next'}
           </button>
         )}

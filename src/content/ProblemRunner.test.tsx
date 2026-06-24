@@ -259,12 +259,11 @@ describe('ProblemRunner ray tracing', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
+    // The "Not yet" message now names the specific unmet requirement.
     expect(screen.getByRole('status').textContent).toMatch(/not yet/i)
-    expect(
-      screen.getByText(/parallel ray.*opposite side.*object/i, {
-        selector: '.plot-panel__hint',
-      }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('status').textContent).toMatch(
+      /parallel ray.*opposite side.*object/i,
+    )
 
     fireEvent.keyDown(screen.getByRole('slider', { name: /parallel ray end point/i }), {
       key: 'ArrowDown',
