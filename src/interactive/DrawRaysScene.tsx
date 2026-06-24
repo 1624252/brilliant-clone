@@ -37,7 +37,7 @@ interface DrawRaysSceneProps {
 }
 
 const TOL = 3
-const SNAP_TOL = 6
+const SNAP_TOL = TOL
 const sc = DEFAULT_SCENE
 const rayIds: RayId[] = ['parallel', 'chief', 'focal']
 const rayLabels: Record<RayId, string> = {

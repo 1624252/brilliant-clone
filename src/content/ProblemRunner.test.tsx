@@ -102,12 +102,27 @@ describe('ProblemRunner ray tracing', () => {
 
   it('snaps ray endpoints into place and requires submit', () => {
     renderStarted(rayTracingLesson)
-    for (const name of [/parallel ray end point/i, /chief ray end point/i, /focal ray end point/i]) {
-      fireEvent.keyDown(screen.getByRole('slider', { name }), { key: 'ArrowDown' })
+    for (let i = 0; i < 4; i++) {
+      for (const name of [/parallel ray end point/i, /chief ray end point/i, /focal ray end point/i]) {
+        fireEvent.keyDown(screen.getByRole('slider', { name }), { key: 'ArrowDown' })
+      }
     }
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     expect(screen.getByText(/you found it/i)).toBeInTheDocument()
+  })
+
+  it('does not snap from outside the requirement tolerance', () => {
+    renderStarted(rayTracingLesson)
+    for (let i = 0; i < 3; i++) {
+      for (const name of [/parallel ray end point/i, /chief ray end point/i, /focal ray end point/i]) {
+        fireEvent.keyDown(screen.getByRole('slider', { name }), { key: 'ArrowDown' })
+      }
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/Needed/i).length).toBeGreaterThan(0)
   })
 })
 
