@@ -168,7 +168,7 @@ describe('ProblemRunner ray tracing', () => {
         projectorStep && 'scene' in projectorStep ? projectorStep.scene.objectDistance : 0,
         projectorStep && 'scene' in projectorStep ? projectorStep.scene.focalLength : 1,
       ),
-    ).toBeLessThanOrEqual(50)
+    ).toBeLessThanOrEqual(projectorStep && 'plotHalfWidth' in projectorStep ? projectorStep.plotHalfWidth ?? 0 : 0)
   })
 
   it('opens with four plot-ray steps and exposes reset rays', () => {
@@ -177,6 +177,19 @@ describe('ProblemRunner ray tracing', () => {
     expect(screen.getByRole('radio', { name: /parallel ray/i })).toBeInTheDocument()
     expect(screen.getByRole('slider', { name: /parallel ray end point/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /reset rays/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/Needed/i)).toHaveLength(3)
+    expect(screen.queryByText(/Done/i)).not.toBeInTheDocument()
+  })
+
+  it('does not start concave ray tracing steps with completed requirements', () => {
+    renderStarted(rayTracingLesson, 2)
+    expect(screen.getByText(/step 3 of 4/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Needed/i)).toHaveLength(3)
+    expect(screen.queryByText(/Done/i)).not.toBeInTheDocument()
+
+    cleanup()
+    renderStarted(rayTracingLesson, 3)
+    expect(screen.getByText(/step 4 of 4/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Needed/i)).toHaveLength(3)
     expect(screen.queryByText(/Done/i)).not.toBeInTheDocument()
   })

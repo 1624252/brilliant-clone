@@ -34,6 +34,7 @@ interface DrawRaysSceneProps {
   onHintChange?: (hint: string) => void
   measures?: MeasureFlags
   resetKey?: number
+  plotHalfWidth?: number
 }
 
 const TOL = 3
@@ -57,12 +58,12 @@ function atX(a: Point, b: Point, x: number): Point {
   return { x, y: a.y + slope * (x - a.x) }
 }
 
-function plotSceneFor(s: PlotScene): SceneParams {
+function plotSceneFor(s: PlotScene, plotHalfWidth?: number): SceneParams {
   const leftExtent = Math.max(s.objectDistance + 6, 34)
   const rightExtent = Math.max(Math.abs(s.focalLength) * 2 + 10, 42)
   return {
     ...PLOT_SCENE,
-    halfWidth: Math.min(62, Math.max(leftExtent, rightExtent)),
+    halfWidth: plotHalfWidth ?? Math.min(62, Math.max(leftExtent, rightExtent)),
   }
 }
 
@@ -94,11 +95,23 @@ function initialRays(s: PlotScene, scene: SceneParams): DrawnRays {
     x: p.x,
     y: clamp(p.y + dy, -(scene.halfHeight - 4), scene.halfHeight - 4),
   })
-  return {
+  const rays: DrawnRays = {
     parallel: { start: pts.parallelStart, end: offset(ruleEndpoint('parallel', s, scene), 18) },
     chief: { start: pts.chiefStart, end: offset(ruleEndpoint('chief', s, scene), -18) },
     focal: { start: pts.focalStart, end: offset(ruleEndpoint('focal', s, scene), 18) },
   }
+  const checks = drawnRayChecks(rays, s, TOL)
+  for (const ray of rayIds) {
+    if (!checks[ray]) continue
+    rays[ray] = {
+      ...rays[ray],
+      end: {
+        x: clamp(rays[ray].start.x + 1, -scene.halfWidth + 2, scene.halfWidth - 2),
+        y: clamp(rays[ray].end.y + 12, -(scene.halfHeight - 4), scene.halfHeight - 4),
+      },
+    }
+  }
+  return rays
 }
 
 function statusText(ray: RayId, ok: boolean) {
@@ -162,6 +175,7 @@ export function DrawRaysScene({
   onHintChange,
   measures,
   resetKey = 0,
+  plotHalfWidth,
 }: DrawRaysSceneProps) {
   const H = scene.objectHeight ?? 18
   const s: PlotScene = useMemo(
@@ -173,7 +187,7 @@ export function DrawRaysScene({
     [H, scene.focalLength, scene.objectDistance],
   )
   const pts = constructionPoints(s)
-  const plotScene = useMemo(() => plotSceneFor(s), [s])
+  const plotScene = useMemo(() => plotSceneFor(s, plotHalfWidth), [plotHalfWidth, s])
   const sceneKey = `${s.objectDistance}:${s.focalLength}:${s.objectHeight}`
   const [rays, setRays] = useState<DrawnRays>(() => initialRays(s, plotScene))
   const [activeRay, setActiveRay] = useState<RayId>('parallel')

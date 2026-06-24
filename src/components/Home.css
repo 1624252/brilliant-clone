@@ -57,7 +57,6 @@
   font-weight: 700;
   font-size: 1rem;
   color: var(--brand-ink);
-  background: linear-gradient(135deg, var(--brand), var(--c-di));
   display: grid;
   place-items: center;
   box-shadow:
@@ -71,8 +70,8 @@
 @media (max-width: 760px) {
   .home__bar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'back brand account';
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'back account';
     align-items: center;
     justify-items: center;
     gap: 0.45rem 0.65rem;
@@ -82,9 +81,7 @@
     display: contents;
   }
   .home__brand {
-    grid-area: brand;
-    justify-self: center;
-    transform: translateX(-0.15rem);
+    display: none;
   }
   .home__user {
     grid-area: account;
@@ -107,20 +104,10 @@
 @media (max-width: 460px) {
   .home__bar {
     position: sticky;
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-      'back brand menu'
-      '. account .';
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'back account';
     row-gap: 0.35rem;
     padding-inline: 0.55rem;
-  }
-  .home__brand {
-    font-size: 1.05rem;
-    gap: 0.35rem;
-  }
-  .home__brand svg {
-    width: 24px;
-    height: 24px;
   }
   .home__back {
     font-size: 0;

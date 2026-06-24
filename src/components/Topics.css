@@ -5,7 +5,7 @@
 .topics__bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
   padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
   border-bottom: 1px solid var(--border);
@@ -13,11 +13,6 @@
   position: sticky;
   top: 0;
   z-index: 5;
-}
-.topics__brand {
-  font-size: 1.3rem;
-  font-weight: 700;
-  min-width: 0;
 }
 .topics__user {
   display: flex;
@@ -45,7 +40,6 @@
   font-weight: 700;
   font-size: 1rem;
   color: var(--brand-ink);
-  background: linear-gradient(135deg, var(--brand), var(--c-di, #c08bff));
   display: grid;
   place-items: center;
   box-shadow:
@@ -58,21 +52,12 @@
 }
 @media (max-width: 760px) {
   .topics__bar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'brand account';
-    align-items: center;
-    justify-items: center;
+    display: flex;
+    justify-content: flex-end;
     gap: 0.45rem 0.65rem;
     padding: 0.55rem 0.75rem 0.65rem;
   }
-  .topics__brand {
-    grid-area: brand;
-    justify-self: start;
-  }
   .topics__user {
-    grid-area: account;
-    justify-self: end;
     display: flex;
     align-items: center;
     gap: 0.45rem;
@@ -84,18 +69,9 @@
 
 @media (max-width: 460px) {
   .topics__bar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'brand menu'
-      'account account';
-    row-gap: 0.35rem;
     padding-inline: 0.55rem;
   }
-  .topics__brand {
-    font-size: 1.08rem;
-  }
   .topics__user {
-    justify-self: center;
     gap: 0.38rem;
   }
   .topics__streak {

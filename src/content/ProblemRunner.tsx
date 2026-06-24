@@ -428,6 +428,7 @@ export function ProblemRunner({
           onHintChange={setPlotHint}
           measures={measures}
           resetKey={plotResetKey}
+          plotHalfWidth={step.plotHalfWidth}
         />
       ) : (
         <LensScene

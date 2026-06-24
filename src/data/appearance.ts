@@ -28,10 +28,10 @@ export const defaultAppearance: AppearancePreferences = {
 
 export const avatarOptions: AvatarOption[] = [
   { id: 'initial', label: 'Initial', glyph: 'A', unlock: 'default' },
-  { id: 'candle', label: 'Candle', glyph: '🕯️', unlock: 'firstLesson' },
-  { id: 'lens', label: 'Lens', glyph: '🔍', unlock: 'firstLesson' },
-  { id: 'prism', label: 'Prism', glyph: '🔺', unlock: 'halfway' },
-  { id: 'rainbow', label: 'Rainbow', glyph: '🌈', unlock: 'courseComplete' },
+  { id: 'candle', label: 'Candle', glyph: '', unlock: 'firstLesson' },
+  { id: 'lens', label: 'Lens', glyph: '', unlock: 'firstLesson' },
+  { id: 'prism', label: 'Prism', glyph: '', unlock: 'halfway' },
+  { id: 'rainbow', label: 'Rainbow', glyph: '', unlock: 'courseComplete' },
   { id: 'star', label: 'Star', glyph: '✦', unlock: 'weekStreak' },
 ]
 

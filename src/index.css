@@ -139,30 +139,89 @@ body[data-background='prism']::after {
 }
 
 .avatar--initial {
+  position: relative;
   background: linear-gradient(135deg, var(--brand), var(--c-di));
 }
 .avatar--candle {
+  position: relative;
+  color: transparent;
   background:
     radial-gradient(circle at 50% 22%, #fff3b0 0 10%, #ff9f43 11% 27%, transparent 28%),
     radial-gradient(circle at 50% 68%, #fff7de 0 12%, #f2c470 13% 22%, transparent 23%),
     linear-gradient(160deg, #412617, #ffc14d);
 }
+.avatar--candle::before {
+  content: '';
+  width: 0.36em;
+  height: 0.95em;
+  border-radius: 0.16em;
+  background: linear-gradient(#fff7de, #e6b96a);
+  box-shadow:
+    0 -0.36em 0 -0.08em #ff9f43,
+    0 -0.5em 0 -0.18em #fff3b0;
+}
 .avatar--lens {
+  position: relative;
+  color: transparent;
   background:
     radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.86), rgba(122,168,255,0.34) 38%, transparent 41%),
     linear-gradient(135deg, #7aa8ff, #35e0a8);
 }
+.avatar--lens::before {
+  content: '';
+  width: 1em;
+  height: 1.25em;
+  border: 0.13em solid rgba(6, 34, 63, 0.72);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+  box-shadow: inset 0 0 0 0.12em rgba(255,255,255,0.42);
+}
+.avatar--lens::after {
+  content: '';
+  width: 0.52em;
+  height: 0.14em;
+  border-radius: 999px;
+  background: rgba(6, 34, 63, 0.78);
+  transform: translate(0.45em, 0.5em) rotate(45deg);
+  position: absolute;
+}
 .avatar--prism {
+  position: relative;
+  color: transparent;
   background:
     linear-gradient(135deg, rgba(255,255,255,0.74), transparent 32%),
     conic-gradient(from 220deg, #ff6b6b, #ffc14d, #54e0a6, #7aa8ff, #c79bff, #ff6b6b);
 }
+.avatar--prism::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 0.46em solid transparent;
+  border-right: 0.46em solid transparent;
+  border-bottom: 0.9em solid rgba(6, 34, 63, 0.62);
+  filter: drop-shadow(0 0 0.18em rgba(255,255,255,0.36));
+}
 .avatar--rainbow {
+  position: relative;
+  color: transparent;
   background:
     radial-gradient(circle at 50% 62%, rgba(255,255,255,0.52), transparent 28%),
     linear-gradient(135deg, #ff6b6b, #ffc14d 24%, #54e0a6 48%, #7aa8ff 72%, #c79bff);
 }
+.avatar--rainbow::before {
+  content: '';
+  width: 1.25em;
+  height: 0.68em;
+  border-radius: 1.2em 1.2em 0 0;
+  border-top: 0.16em solid #ff6b6b;
+  box-shadow:
+    0 -0.16em 0 -0.02em #ffc14d,
+    0 -0.31em 0 -0.04em #54e0a6,
+    0 -0.46em 0 -0.06em #7aa8ff;
+  transform: translateY(0.28em);
+}
 .avatar--star {
+  position: relative;
   background:
     radial-gradient(circle at 50% 45%, #fff7c2 0 10%, transparent 12%),
     radial-gradient(circle at 50% 50%, rgba(255,193,77,0.82), transparent 42%),

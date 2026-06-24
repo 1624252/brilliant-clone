@@ -106,6 +106,8 @@ export interface PlotRaysStep extends StepBase {
   kind: 'plot-rays'
   /** Fixed scene the learner plots within (object distance + focal length). */
   scene: { objectDistance: number; focalLength: number; objectHeight?: number }
+  /** Optional optical half-width override for fitting wide ray crossings. */
+  plotHalfWidth?: number
   /** Shown once the rays converge correctly. */
   reveal: string
   /** Optional nudge shown while the learner is still solving. */
