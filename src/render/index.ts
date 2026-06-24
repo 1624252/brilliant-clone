@@ -7,6 +7,7 @@ export {
 } from './RayFocusAnimation'
 export { ConvexLensAnimation, ConvexLensExplainer } from './ConvexLensAnimation'
 export { ConcaveLensAnimation, ConcaveLensExplainer } from './ConcaveLensAnimation'
+export { CurvatureExplainer } from './CurvatureAnimation'
 export {
   DEFAULT_SCENE,
   scaleOf,

@@ -35,9 +35,6 @@
 }
 
 .lens-diagram .draw-ray {
-  opacity: 0.58;
-}
-.lens-diagram .draw-ray.is-active {
   opacity: 1;
 }
 .lens-diagram .draw-ray__guide {
@@ -48,8 +45,8 @@
   opacity: 0.35;
 }
 .lens-diagram .draw-ray__incoming {
-  stroke-width: 2.4;
-  opacity: 0.62;
+  stroke-width: 3;
+  opacity: 1;
   marker-end: none;
 }
 .lens-diagram .draw-ray__line {
@@ -57,7 +54,13 @@
 }
 .lens-diagram .draw-ray__virtual {
   stroke-width: 2;
-  opacity: 0.35;
+  opacity: 0.55;
+  stroke-dasharray: 1.5 6;
+  stroke-linecap: round;
+  marker-end: none;
+}
+.lens-diagram .draw-ray:not(.is-active) .draw-handle {
+  opacity: 0.72;
 }
 
 .lens-diagram .draw-handle {
@@ -78,35 +81,6 @@
   stroke-width: 4;
 }
 
-.draw-nudges {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 0.6rem;
-  align-items: center;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-elev);
-  color: var(--text-dim);
-}
-.draw-nudges__handles,
-.draw-nudges__grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.draw-nudges button {
-  min-height: 2.25rem;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--bg-elev-2);
-  color: var(--text);
-  cursor: pointer;
-}
-.draw-nudges button.is-active {
-  border-color: var(--accent);
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -122,13 +96,6 @@
 @media (max-width: 600px) {
   .draw-toolbar__btn {
     flex-basis: 100%;
-  }
-  .draw-nudges {
-    grid-template-columns: 1fr;
-  }
-  .draw-nudges button {
-    min-height: 44px;
-    flex: 1 1 5rem;
   }
   .lens-diagram .draw-handle {
     stroke-width: 3;

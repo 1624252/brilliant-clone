@@ -78,12 +78,12 @@ describe('tracePrincipalRays (converging, virtual image: do=5, f=10, h=12)', () 
     expect(trace.image!.tip.y).toBeCloseTo(24, 6) // m = 2, h = 12
   })
 
-  it('adds dashed backward extensions to the virtual image tip', () => {
+  it('adds dashed backward extensions through the virtual image tip', () => {
     for (const r of trace.rays) {
       expect(r.dashed).toBeDefined()
       const end = r.dashed![1]
-      expect(end.x).toBeCloseTo(-10, 6)
-      expect(end.y).toBeCloseTo(24, 6)
+      expect(end.x).toBeLessThan(-10)
+      expect(yAtX(r.dashed![0], end, -10)).toBeCloseTo(24, 6)
     }
   })
 })

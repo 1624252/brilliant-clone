@@ -17,11 +17,13 @@
 .topics__brand {
   font-size: 1.3rem;
   font-weight: 700;
+  min-width: 0;
 }
 .topics__user {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 .topics__streak {
   display: inline-flex;
@@ -79,6 +81,59 @@
 .topics__settings:hover {
   border-color: transparent;
   background: transparent;
+}
+
+@media (max-width: 760px) {
+  .topics__bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem 0.75rem;
+    padding: 0.65rem 0.75rem;
+  }
+  .topics__brand {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .topics__user {
+    flex: 1 1 100%;
+    justify-content: center;
+    gap: 0.45rem;
+  }
+  .topics__streak {
+    padding: 0.28rem 0.62rem;
+  }
+  .topics__signout {
+    min-height: 44px;
+    padding: 0.45rem 0.75rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .topics__brand {
+    font-size: 1.08rem;
+  }
+  .topics__settings {
+    width: 2.35rem;
+    height: 2.35rem;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.25rem;
+  }
+  .topics__avatar {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+  .topics__signout {
+    font-size: 0;
+    width: 2.75rem;
+    min-width: 44px;
+    padding: 0;
+  }
+  .topics__signout::before {
+    content: 'Sign out';
+    font-size: 0.78rem;
+    line-height: 1.1;
+  }
 }
 
 .topics__main {
@@ -294,6 +349,18 @@
   box-shadow:
     0 0 14px color-mix(in srgb, var(--accent) 34%, transparent),
     inset 0 0 7px rgba(255, 255, 255, 0.14);
+  animation: progress-glow-breathe 3s ease-in-out infinite;
+  overflow: hidden;
+}
+.topic-card__fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(6rem, 80%);
+  background: var(--progress-shine);
+  animation: progress-beam-sweep 2.3s ease-in-out infinite;
 }
 .topic-card__fill::after {
   content: '';
@@ -309,6 +376,7 @@
     0 0 12px var(--c-f),
     0 0 22px color-mix(in srgb, var(--brand) 48%, transparent);
   transform: translateY(-50%);
+  animation: progress-focus-pop 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .topic-card__meta {
   font-size: 0.85rem;
@@ -333,5 +401,13 @@
   }
   .topics__settings {
     padding-inline: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-card__fill,
+  .topic-card__fill::before,
+  .topic-card__fill::after {
+    animation: none;
   }
 }

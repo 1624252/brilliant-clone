@@ -60,6 +60,7 @@ describe('plotRays geometry', () => {
       focal: { start: pts.focalStart, end: { x: 50, y: pts.focalStart.y } },
     }
     expect(drawnRayChecks(rays, scene).all).toBe(true)
+    expect(drawnRayChecks(rays, scene).directions.parallel).toBe(true)
     expect(
       drawnRayChecks(
         { ...rays, parallel: { ...rays.parallel, start: { x: 0, y: 5 } } },
@@ -69,6 +70,12 @@ describe('plotRays geometry', () => {
     expect(
       drawnRayChecks({ ...rays, focal: { ...rays.focal, end: { x: 50, y: 8 } } }, scene)
         .focal,
+    ).toBe(false)
+    expect(
+      drawnRayChecks(
+        { ...rays, parallel: { ...rays.parallel, end: { x: -50, y: 72 } } },
+        scene,
+      ).parallel,
     ).toBe(false)
   })
 

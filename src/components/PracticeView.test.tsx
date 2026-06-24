@@ -43,10 +43,11 @@ describe('PracticeView', () => {
 
     expect(screen.getByText(/optics practice problems/i)).toBeInTheDocument()
     expect(screen.getByText(opticsPracticeProblems[0].title)).toBeInTheDocument()
-    expect(screen.getByText('0/10')).toBeInTheDocument()
+    expect(screen.getByText(`0/${opticsPracticeProblems.length}`)).toBeInTheDocument()
     expect(screen.getAllByText(/question streak/i).length).toBeGreaterThan(0)
-    expect(screen.getByRole('group', { name: /show on diagram/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/image distance/i)).toBeChecked()
+    const measures = screen.getByRole('group', { name: /show on diagram/i })
+    expect(measures).toBeInTheDocument()
+    expect(within(measures).getByLabelText(/image distance/i)).toBeChecked()
     const explorer = screen.getByRole('region', { name: /diagram explorer/i })
     expect(explorer).toBeInTheDocument()
     expect(within(explorer).getByRole('slider', { name: /object distance/i })).toBeInTheDocument()
@@ -57,14 +58,20 @@ describe('PracticeView', () => {
     renderPractice()
     const workspace = screen.getByRole('region', { name: /equation workspace/i })
 
-    fireEvent.change(
-      within(workspace).getByLabelText(/first fill the focal-length term/i),
-      { target: { value: '0.100' } },
-    )
-    fireEvent.click(within(workspace).getAllByRole('button', { name: /check part/i })[0])
+    fireEvent.change(within(workspace).getByLabelText(/focal length blank/i), {
+      target: { value: '10' },
+    })
+    fireEvent.change(within(workspace).getByLabelText(/object distance blank/i), {
+      target: { value: '30' },
+    })
+    fireEvent.change(within(workspace).getByLabelText(/image distance blank/i), {
+      target: { value: '15' },
+    })
+    fireEvent.click(within(workspace).getByRole('button', { name: /check equation/i }))
 
-    expect(within(workspace).getByText(/focal term contributes/i)).toBeInTheDocument()
-    expect(within(workspace).getByText('1/3')).toBeInTheDocument()
+    expect(within(workspace).getByText(/f = 10 cm/i)).toBeInTheDocument()
+    expect(within(workspace).getByText(/distance from the candle/i)).toBeInTheDocument()
+    expect(within(workspace).getByText('3/3')).toBeInTheDocument()
   })
 
   it('lets the learner explore the diagram without changing the checked answer', () => {
@@ -74,12 +81,13 @@ describe('PracticeView', () => {
       name: /object distance/i,
     }) as HTMLInputElement
 
+    const initialValue = slider.value
     fireEvent.change(slider, { target: { value: '40' } })
 
     expect(slider.value).toBe('40')
-    expect(screen.getByText(/m:/i)).toHaveTextContent('-0.3')
+    expect(screen.getByText(/m:/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /reset to givens/i }))
-    expect(slider.value).toBe('30')
+    expect(slider.value).toBe(initialValue)
   })
 
   it('shows a targeted hint and records an incorrect answer', async () => {

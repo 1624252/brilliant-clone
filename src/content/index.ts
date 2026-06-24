@@ -1,5 +1,10 @@
 export { ProblemRunner } from './ProblemRunner'
-export { opticsPracticeProblems, checkPracticeAnswer, parseNumericAnswer } from './practice'
+export {
+  opticsPracticeProblems,
+  checkPracticeAnswer,
+  checkPracticeChoice,
+  parseNumericAnswer,
+} from './practice'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
 export { lessons, chapter } from './lessons'
@@ -19,8 +24,11 @@ export type {
 } from './types'
 export type {
   AnswerCheck,
+  ChoiceAnswerCheck,
+  ChoicePracticeProblem,
   CalculationProblem,
   EquationPart,
+  PracticeProblem,
   PracticeGiven,
   PracticeScene,
 } from './practice'

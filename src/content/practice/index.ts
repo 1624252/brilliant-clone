@@ -1,9 +1,12 @@
 export { opticsPracticeProblems } from './optics'
-export { checkPracticeAnswer, parseNumericAnswer } from './answerCheck'
+export { checkPracticeAnswer, checkPracticeChoice, parseNumericAnswer } from './answerCheck'
 export type {
   AnswerCheck,
+  ChoiceAnswerCheck,
+  ChoicePracticeProblem,
   CalculationProblem,
   EquationPart,
+  PracticeProblem,
   PracticeGiven,
   PracticeScene,
 } from './types'

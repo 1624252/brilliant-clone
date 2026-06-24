@@ -172,7 +172,7 @@ export function LensDiagram({
         textAnchor="middle"
       >
         {isFlat
-          ? 'Flat (no focusing)'
+          ? 'Flat lens'
           : isConverging
             ? 'Convex (converging) lens'
             : 'Concave (diverging) lens'}
@@ -188,7 +188,7 @@ export function LensDiagram({
               markerEnd="url(#arrow)"
             />
             {r.dashed && (
-              <polyline className="ray ray--virtual" points={polyline(r.dashed)} />
+              <polyline className={`${RAY_CLASS[r.id]} ray--virtual`} points={polyline(r.dashed)} />
             )}
           </g>
         ))}

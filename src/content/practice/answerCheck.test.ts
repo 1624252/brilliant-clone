@@ -34,17 +34,24 @@ describe('checkPracticeAnswer', () => {
 describe('opticsPracticeProblems', () => {
   it('has unique stable ids and positive tolerances', () => {
     const ids = opticsPracticeProblems.map((problem) => problem.id)
+    const calculations = opticsPracticeProblems.filter((problem) => problem.kind !== 'choice')
     expect(new Set(ids).size).toBe(ids.length)
     expect(opticsPracticeProblems.length).toBeGreaterThanOrEqual(8)
-    expect(opticsPracticeProblems.every((problem) => problem.tolerance > 0)).toBe(true)
+    expect(calculations.every((problem) => problem.tolerance > 0)).toBe(true)
+    expect(
+      opticsPracticeProblems
+        .filter((problem) => problem.kind === 'choice')
+        .every((problem) => problem.choices.some((choice) => choice.correct)),
+    ).toBe(true)
   })
 
   it('covers signed virtual and inverted-image answers', () => {
+    const calculations = opticsPracticeProblems.filter((problem) => problem.kind !== 'choice')
     expect(
-      opticsPracticeProblems.some((problem) => problem.id.includes('virtual') && problem.answer < 0),
+      calculations.some((problem) => problem.id.includes('virtual') && problem.answer < 0),
     ).toBe(true)
     expect(
-      opticsPracticeProblems.some((problem) => problem.id.includes('height') && problem.answer < 0),
+      calculations.some((problem) => problem.id.includes('height') && problem.answer < 0),
     ).toBe(true)
   })
 })

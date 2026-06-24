@@ -130,7 +130,7 @@ export interface LessonIntro {
   /** A few short paragraphs (kept brief; mostly-visual lessons). */
   paragraphs: string[]
   /** Optional animated explainer to show alongside the text. */
-  animation?: 'focus' | 'source' | 'convex' | 'concave'
+  animation?: 'focus' | 'source' | 'convex' | 'concave' | 'curvature'
 }
 
 export interface LessonDefinition {

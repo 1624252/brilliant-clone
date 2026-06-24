@@ -125,6 +125,43 @@ body {
   }
 }
 
+@keyframes progress-beam-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  18%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes progress-focus-pop {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1);
+    filter: brightness(1);
+  }
+  42% {
+    transform: translateY(-50%) scale(1.24);
+    filter: brightness(1.22);
+  }
+}
+
+@keyframes progress-glow-breathe {
+  0%,
+  100% {
+    filter: saturate(1);
+  }
+  50% {
+    filter: saturate(1.22) brightness(1.06);
+  }
+}
+
 @keyframes optic-pulse {
   0%,
   100% {

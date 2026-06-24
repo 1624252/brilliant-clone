@@ -1,16 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LensScene } from '../interactive'
 import {
+  checkPracticeChoice,
   checkPracticeAnswer,
   opticsPracticeProblems,
   type AnswerCheck,
   type CalculationProblem,
+  type ChoiceAnswerCheck,
+  type ChoicePracticeProblem,
   type EquationPart,
+  type PracticeProblem,
 } from '../content'
 import { formImage } from '../engine'
 import { recordPracticeAttempt } from '../data/progress'
 import type { ProgressState } from '../data/useProgress'
+import { distanceToSlider, sliderToDistance } from '../content/logDistance'
 import { renderRich } from '../content/richText'
+import type { Control } from '../content'
 import type { MeasureFlags } from '../render'
 import './PracticeView.css'
 
@@ -23,6 +29,10 @@ interface PracticeViewProps {
 type PracticeStatus = 'idle' | 'correct' | 'incorrect'
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '∞')
+const isChoiceProblem = (problem: PracticeProblem): problem is ChoicePracticeProblem =>
+  problem.kind === 'choice'
+const isCalculationProblem = (problem: PracticeProblem): problem is CalculationProblem =>
+  problem.kind !== 'choice'
 
 function firstUnsolvedIndex(progress: ProgressState) {
   const idx = opticsPracticeProblems.findIndex((p) => !progress.byPractice[p.id]?.solved)
@@ -34,8 +44,10 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
   const problem = opticsPracticeProblems[problemIndex]
   const [objectDistance, setObjectDistance] = useState(problem.scene.objectDistance)
   const [answer, setAnswer] = useState('')
+  const [chosenId, setChosenId] = useState<string | null>(null)
   const [status, setStatus] = useState<PracticeStatus>('idle')
   const [lastCheck, setLastCheck] = useState<AnswerCheck | null>(null)
+  const [lastChoiceCheck, setLastChoiceCheck] = useState<ChoiceAnswerCheck | null>(null)
   const [measures, setMeasures] = useState<MeasureFlags>(problem.measures ?? {})
   const [equationInputs, setEquationInputs] = useState<Record<string, string>>({})
   const [equationChecks, setEquationChecks] = useState<Record<string, AnswerCheck>>({})
@@ -45,8 +57,10 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
     setTrackedProblemId(problem.id)
     setObjectDistance(problem.scene.objectDistance)
     setAnswer('')
+    setChosenId(null)
     setStatus('idle')
     setLastCheck(null)
+    setLastChoiceCheck(null)
     setMeasures(problem.measures ?? {})
     setEquationInputs({})
     setEquationChecks({})
@@ -63,16 +77,30 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
   const stats = progress.practiceStats
   const pct = Math.round((solvedCount / opticsPracticeProblems.length) * 100)
   const solved = status === 'correct'
-  const diagramDraggable = Number.isFinite(problem.scene.objectDistance)
+  const diagramDraggable =
+    problem.scene.draggable ??
+    (isChoiceProblem(problem) ? !!problem.draggable : Number.isFinite(problem.scene.objectDistance))
   const image = formImage(objectDistance, problem.scene.focalLength)
 
   async function submit() {
+    if (!isCalculationProblem(problem)) return
     const check = checkPracticeAnswer(problem, answer)
     setLastCheck(check)
     setStatus(check.correct ? 'correct' : 'incorrect')
     await recordPracticeAttempt(uid, problem.id, {
       correct: check.correct,
       answer: check.parsed,
+    }).catch(() => {})
+  }
+
+  async function submitChoice() {
+    if (!isChoiceProblem(problem)) return
+    const check = checkPracticeChoice(problem, chosenId)
+    setLastChoiceCheck(check)
+    setStatus(check.correct ? 'correct' : 'incorrect')
+    await recordPracticeAttempt(uid, problem.id, {
+      correct: check.correct,
+      answer: null,
     }).catch(() => {})
   }
 
@@ -157,16 +185,7 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
 
           <PracticeMeasures measures={measures} onToggleMeasure={toggleMeasure} />
 
-          <PracticeExplore
-            problem={problem}
-            objectDistance={objectDistance}
-            image={image}
-            enabled={diagramDraggable}
-            onObjectDistanceChange={setObjectDistance}
-            onReset={resetDiagram}
-          />
-
-          {problem.equationParts && (
+          {isCalculationProblem(problem) && problem.equationParts && (
             <EquationWorkspace
               parts={problem.equationParts}
               inputs={equationInputs}
@@ -183,11 +202,20 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
               objectHeight={problem.scene.objectHeight}
               minObjectDistance={5}
               maxObjectDistance={80}
+              infinityAtEdge={diagramDraggable}
               snaps={[Math.abs(problem.scene.focalLength), 2 * Math.abs(problem.scene.focalLength), 3 * Math.abs(problem.scene.focalLength)]}
               onObjectDistanceChange={diagramDraggable ? setObjectDistance : undefined}
               measures={measures}
             />
           </div>
+          <PracticeExplore
+            problem={problem}
+            objectDistance={objectDistance}
+            image={image}
+            enabled={diagramDraggable}
+            onObjectDistanceChange={setObjectDistance}
+            onReset={resetDiagram}
+          />
           {diagramDraggable && (
             <p className="practice__drag-note">
               Drag the candle to test the setup visually. Your answer is still checked
@@ -195,37 +223,57 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
             </p>
           )}
 
-          <form
-            className="practice__answer"
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!solved) void submit()
-            }}
-          >
-            <label htmlFor="practice-answer">Your answer</label>
-            <div className="practice__answer-row">
-              <input
-                id="practice-answer"
-                value={answer}
-                onChange={(e) => {
-                  setAnswer(e.target.value)
-                  if (status !== 'correct') {
-                    setStatus('idle')
-                    setLastCheck(null)
-                  }
+          {isChoiceProblem(problem) ? (
+            <ChoicePractice
+              problem={problem}
+              chosenId={chosenId}
+              status={status}
+              solved={solved}
+              check={lastChoiceCheck}
+              onChoose={(id) => {
+                setChosenId(id)
+                if (status !== 'correct') {
+                  setStatus('idle')
+                  setLastChoiceCheck(null)
+                }
+              }}
+              onSubmit={() => void submitChoice()}
+            />
+          ) : (
+            <>
+              <form
+                className="practice__answer"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!solved) void submit()
                 }}
-                inputMode="decimal"
-                placeholder={problem.unit ? `number in ${problem.unit}` : 'number'}
-                disabled={solved}
-              />
-              {problem.unit && <span className="practice__unit">{problem.unit}</span>}
-              <button type="submit" className="btn btn--primary" disabled={solved || answer.trim() === ''}>
-                Check
-              </button>
-            </div>
-          </form>
+              >
+                <label htmlFor="practice-answer">Your answer</label>
+                <div className="practice__answer-row">
+                  <input
+                    id="practice-answer"
+                    value={answer}
+                    onChange={(e) => {
+                      setAnswer(e.target.value)
+                      if (status !== 'correct') {
+                        setStatus('idle')
+                        setLastCheck(null)
+                      }
+                    }}
+                    inputMode="decimal"
+                    placeholder={problem.unit ? `number in ${problem.unit}` : 'number'}
+                    disabled={solved}
+                  />
+                  {problem.unit && <span className="practice__unit">{problem.unit}</span>}
+                  <button type="submit" className="btn btn--primary" disabled={solved || answer.trim() === ''}>
+                    Check
+                  </button>
+                </div>
+              </form>
 
-          <Feedback problem={problem} status={status} check={lastCheck} />
+              <Feedback problem={problem} status={status} check={lastCheck} />
+            </>
+          )}
 
           <div className="practice__actions">
             <button type="button" className="btn" onClick={nextProblem}>
@@ -252,49 +300,46 @@ function EquationWorkspace({
   onCheck: (part: EquationPart) => void
 }) {
   const completed = parts.filter((part) => checks[part.id]?.correct).length
+  const canCheck = parts.every((part) => (inputs[part.id] ?? '').trim() !== '')
   return (
     <section className="equation-workspace" aria-label="Equation workspace">
       <div className="equation-workspace__head">
         <div>
-          <strong>Build the equation first</strong>
+          <strong>Fill the equation first</strong>
           <span>
-            Fill each reciprocal term, then use those pieces for the final answer.
+            Put the distances in centimeters into the denominators, then solve for the
+            final answer.
           </span>
         </div>
         <span className="equation-workspace__progress">
           {completed}/{parts.length}
         </span>
       </div>
-      <div className="equation-workspace__formula" aria-label="Thin lens equation">
-        {renderRich('\\frac{1}{f}=\\frac{1}{d_o}+\\frac{1}{d_i}')}
+
+      <div className="equation-workspace__formula" aria-label="Fill in thin lens equation">
+        <EquationBlank part={parts[0]} value={inputs[parts[0].id] ?? ''} onInput={onInput} />
+        <span className="equation-workspace__op">=</span>
+        <EquationBlank part={parts[1]} value={inputs[parts[1].id] ?? ''} onInput={onInput} />
+        <span className="equation-workspace__op">+</span>
+        <EquationBlank part={parts[2]} value={inputs[parts[2].id] ?? ''} onInput={onInput} />
       </div>
-      <ol className="equation-workspace__parts">
+
+      <div className="equation-workspace__actions">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => parts.forEach(onCheck)}
+          disabled={!canCheck}
+        >
+          Check equation
+        </button>
+      </div>
+
+      <ul className="equation-workspace__parts">
         {parts.map((part) => {
           const check = checks[part.id]
           return (
             <li key={part.id} className="equation-part">
-              <label>
-                <span className="equation-part__label">{renderRich(part.label)}</span>
-                <span className="equation-part__prompt">{part.prompt}</span>
-              </label>
-              <div className="equation-part__entry">
-                <input
-                  value={inputs[part.id] ?? ''}
-                  onChange={(e) => onInput(part.id, e.target.value)}
-                  inputMode="decimal"
-                  placeholder="value"
-                  aria-label={`${part.prompt} ${part.label}`}
-                />
-                {part.unit && <span className="equation-part__unit">{part.unit}</span>}
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => onCheck(part)}
-                  disabled={(inputs[part.id] ?? '').trim() === ''}
-                >
-                  Check part
-                </button>
-              </div>
               {check && (
                 <p
                   className={`equation-part__feedback ${
@@ -304,13 +349,131 @@ function EquationWorkspace({
                 >
                   {check.correct
                     ? renderRich(part.feedback)
-                    : 'Check the reciprocal and keep at least three decimal places.'}
+                    : `Check the ${part.prompt.toLowerCase()}; use centimeters, not a reciprocal.`}
                 </p>
               )}
             </li>
           )
         })}
-      </ol>
+      </ul>
+    </section>
+  )
+}
+
+function EquationBlank({
+  part,
+  value,
+  onInput,
+}: {
+  part: EquationPart
+  value: string
+  onInput: (id: string, value: string) => void
+}) {
+  return (
+    <label className="equation-blank">
+      <span className="sr-only">{part.prompt}</span>
+      <span className="frac frac--equation">
+        <span className="frac__num">1</span>
+        <span className="frac__den">
+          <input
+            value={value}
+            onChange={(e) => onInput(part.id, e.target.value)}
+            inputMode="decimal"
+            placeholder={part.label.replace('_', '')}
+            aria-label={part.prompt}
+          />
+          <span className="equation-blank__unit">{part.unit}</span>
+        </span>
+      </span>
+      <span className="equation-blank__symbol">{renderRich(part.label)}</span>
+    </label>
+  )
+}
+
+function ChoicePractice({
+  problem,
+  chosenId,
+  status,
+  solved,
+  check,
+  onChoose,
+  onSubmit,
+}: {
+  problem: ChoicePracticeProblem
+  chosenId: string | null
+  status: PracticeStatus
+  solved: boolean
+  check: ChoiceAnswerCheck | null
+  onChoose: (id: string) => void
+  onSubmit: () => void
+}) {
+  const chosen = problem.choices.find((choice) => choice.id === chosenId)
+  return (
+    <section className="practice-choice" aria-label="Answer choices">
+      <div className="practice-choice__grid">
+        {problem.choices.map((choice) => {
+          const picked = choice.id === chosenId
+          const showResult = solved || (status === 'incorrect' && picked)
+          return (
+            <button
+              key={choice.id}
+              type="button"
+              className={`practice-choice__btn ${
+                picked ? 'is-selected' : ''
+              } ${showResult && choice.correct ? 'is-correct' : ''} ${
+                showResult && !choice.correct ? 'is-wrong' : ''
+              }`}
+              onClick={() => onChoose(choice.id)}
+              disabled={solved}
+            >
+              <span>{renderRich(choice.label)}</span>
+              {choice.visual && (
+                <span className="practice-choice__visual" aria-hidden="true">
+                  <LensScene
+                    objectDistance={choice.visual.scene.objectDistance}
+                    focalLength={choice.visual.scene.focalLength}
+                    objectHeight={choice.visual.scene.objectHeight}
+                    showRays={choice.visual.showRays ?? true}
+                    showImage={choice.visual.showImage ?? true}
+                  />
+                  {choice.visual.caption && (
+                    <span className="practice-choice__caption">{choice.visual.caption}</span>
+                  )}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {status === 'idle' && (
+        <p className="practice__hint">{renderRich(problem.hint)}</p>
+      )}
+      {status === 'incorrect' && (
+        <div className="practice-feedback practice-feedback--incorrect" role="status">
+          <strong>Not quite.</strong>
+          <p>{chosen ? renderRich(chosen.feedback) : 'Choose an answer first.'}</p>
+          <p>{renderRich(problem.hint)}</p>
+        </div>
+      )}
+      {status === 'correct' && (
+        <div className="practice-feedback practice-feedback--correct" role="status">
+          <strong>Correct.</strong>
+          <p>{renderRich(chosen?.feedback ?? problem.solution)}</p>
+          <p>{renderRich(problem.solution)}</p>
+        </div>
+      )}
+
+      <div className="practice-choice__actions">
+        <button
+          type="button"
+          className="btn btn--primary"
+          disabled={solved || !chosenId || check?.correct}
+          onClick={onSubmit}
+        >
+          Check
+        </button>
+      </div>
     </section>
   )
 }
@@ -323,13 +486,22 @@ function PracticeExplore({
   onObjectDistanceChange,
   onReset,
 }: {
-  problem: CalculationProblem
+  problem: PracticeProblem
   objectDistance: number
   image: ReturnType<typeof formImage>
   enabled: boolean
   onObjectDistanceChange: (value: number) => void
   onReset: () => void
 }) {
+  const distanceControl: Control = {
+    key: 'objectDistance',
+    type: 'drag-axis',
+    min: 5,
+    max: 80,
+    step: 0.01,
+    allowInfinity: true,
+  }
+  const sliderValue = distanceToSlider(objectDistance, distanceControl)
   return (
     <section className="practice-explore" aria-label="Diagram explorer">
       <div className="practice-explore__head">
@@ -347,14 +519,27 @@ function PracticeExplore({
           <span>
             Object distance <b>{fmt(objectDistance)} cm</b>
           </span>
-          <input
-            type="range"
-            min={5}
-            max={80}
-            step={0.5}
-            value={Number.isFinite(objectDistance) ? objectDistance : 80}
-            onChange={(e) => onObjectDistanceChange(Number(e.target.value))}
-          />
+          <div className="practice-explore__slider-row">
+            <input
+              type="range"
+              min={distanceControl.min}
+              max={distanceControl.max}
+              step={distanceControl.step}
+              value={sliderValue}
+              onChange={(e) => onObjectDistanceChange(sliderToDistance(Number(e.target.value), distanceControl))}
+            />
+            <button
+              type="button"
+              className={`practice-explore__inf ${objectDistance === Infinity ? 'is-on' : ''}`}
+              onClick={() =>
+                onObjectDistanceChange(objectDistance === Infinity ? problem.scene.objectDistance : Infinity)
+              }
+              aria-pressed={objectDistance === Infinity}
+              title="Set object distance to infinity"
+            >
+              ∞
+            </button>
+          </div>
         </label>
       ) : (
         <p className="practice-explore__note">

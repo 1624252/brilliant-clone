@@ -28,6 +28,7 @@ export const curvatureLesson: LessonDefinition = {
   summary: 'Adjust the lens’s curvature and watch it converge or diverge.',
   intro: {
     heading: 'Shape decides everything',
+    animation: 'curvature',
     paragraphs: [
       'A lens’s **shape** sets how it bends light. Bulging outward (**convex**) pulls rays together; caving inward (**concave**) spreads them apart.',
       'The **curvature** slider reshapes one lens across the whole range: positive curvature makes it **converging** (f is positive), negative makes it **diverging** (f is negative).',
@@ -66,11 +67,33 @@ export const curvatureLesson: LessonDefinition = {
     },
     {
       id: 'make-flat',
-      prompt: 'Flatten the lens (slide toward the center). What happens to the focus?',
+      prompt:
+        'Make the lens neither concave nor convex by sliding the curvature to the center. What happens to incoming parallel rays?',
       controls: [curvatureControl],
       fixed: { objectDistance: 40 },
       initial: { curvature: 0.4 },
       success: (_state, image) => isFlat(image.focalLength),
+      choices: [
+        {
+          id: 'straight',
+          label: 'They pass almost straight through',
+          correct: true,
+          feedback:
+            'Yes. With no inward or outward curve, the lens does not steer the parallel rays together or apart.',
+        },
+        {
+          id: 'converge',
+          label: 'They bend together to a real focus',
+          feedback:
+            'That would mean the lens is still convex. Move the shape closer to the center where it is neither concave nor convex.',
+        },
+        {
+          id: 'diverge',
+          label: 'They spread apart from a virtual focus',
+          feedback:
+            'That would mean the lens is still concave. Move the shape closer to the center where it is neither concave nor convex.',
+        },
+      ],
       correctFeedback:
         'A **flat** lens has an **enormous (infinite) focal length** — almost no focal point, so light passes nearly straight through.',
       hint: (_state, image) =>

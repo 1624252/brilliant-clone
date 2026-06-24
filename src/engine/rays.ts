@@ -56,13 +56,17 @@ export function tracePrincipalRays(
     throw new RangeError('objectHeight must be positive')
   }
 
-  // Object infinitely far away: light arrives as a parallel beam that the lens
-  // brings to a focus at the far focal point. Drawn from the left scene edge.
+  // Object infinitely far away: light arrives as a parallel beam. A converging
+  // lens brings it to the far focus; a diverging lens spreads it as if it came
+  // from the near-side virtual focus.
   if (!Number.isFinite(objectDistance)) {
     const R = sceneRightX
     const farFocal: Point = { x: focalLength, y: 0 }
     const top: Point = { x: 0, y: objectHeight }
     const bot: Point = { x: 0, y: -objectHeight }
+    const diverging = focalLength < 0
+    const topSolid = [{ x: -R, y: objectHeight }, top, linePointAtX(top, farFocal, R)]
+    const botSolid = [{ x: -R, y: -objectHeight }, bot, linePointAtX(bot, farFocal, R)]
     return {
       object: { base: { x: -R, y: 0 }, tip: { x: -R, y: objectHeight } },
       image: { base: farFocal, tip: farFocal },
@@ -70,12 +74,14 @@ export function tracePrincipalRays(
       rays: [
         {
           id: 'parallel',
-          solid: [{ x: -R, y: objectHeight }, top, linePointAtX(top, farFocal, R)],
+          solid: topSolid,
+          dashed: diverging ? [top, linePointAtX(top, farFocal, -R)] : undefined,
         },
         { id: 'chief', solid: [{ x: -R, y: 0 }, { x: 0, y: 0 }, { x: R, y: 0 }] },
         {
           id: 'focal',
-          solid: [{ x: -R, y: -objectHeight }, bot, linePointAtX(bot, farFocal, R)],
+          solid: botSolid,
+          dashed: diverging ? [bot, linePointAtX(bot, farFocal, -R)] : undefined,
         },
       ],
     }
@@ -138,7 +144,7 @@ export function tracePrincipalRays(
     const far = linePointAtX(C, I, sceneRightX)
     const ray: PrincipalRay = { id, solid: [P, C, far] }
     if (isVirtual) {
-      ray.dashed = [C, I] // backward extension to the virtual image tip
+      ray.dashed = [C, linePointAtX(C, I, -sceneRightX)] // extended backward trace
     }
     return ray
   })

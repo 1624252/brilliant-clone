@@ -1,3 +1,5 @@
+import type { Choice } from '../types'
+
 export interface PracticeScene {
   objectDistance: number
   focalLength: number
@@ -22,6 +24,7 @@ export interface EquationPart {
 }
 
 export interface CalculationProblem {
+  kind?: 'calculation'
   id: string
   title: string
   prompt: string
@@ -41,8 +44,34 @@ export interface CalculationProblem {
   }
 }
 
+export interface ChoicePracticeProblem {
+  kind: 'choice'
+  id: string
+  title: string
+  prompt: string
+  givens: PracticeGiven[]
+  scene: PracticeScene
+  choices: Choice[]
+  hint: string
+  solution: string
+  measures?: {
+    f?: boolean
+    do?: boolean
+    di?: boolean
+    m?: boolean
+  }
+  draggable?: boolean
+}
+
+export type PracticeProblem = CalculationProblem | ChoicePracticeProblem
+
 export interface AnswerCheck {
   correct: boolean
   parsed: number | null
   delta: number | null
+}
+
+export interface ChoiceAnswerCheck {
+  correct: boolean
+  choiceId: string | null
 }

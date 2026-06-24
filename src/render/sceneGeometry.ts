@@ -14,9 +14,9 @@ export interface SceneParams {
 }
 
 export const DEFAULT_SCENE: SceneParams = {
-  viewWidth: 800,
+  viewWidth: 600,
   viewHeight: 400,
-  halfWidth: 80,
+  halfWidth: 60,
   halfHeight: 40,
 }
 

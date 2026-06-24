@@ -1,11 +1,11 @@
 import { imageDistance, magnification } from '../../engine'
-import type { CalculationProblem } from './types'
+import type { PracticeProblem } from './types'
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 const imageHeight = (objectDistance: number, focalLength: number, objectHeight: number) =>
   magnification(objectDistance, imageDistance(objectDistance, focalLength)) * objectHeight
 
-export const opticsPracticeProblems: CalculationProblem[] = [
+export const opticsPracticeProblems: PracticeProblem[] = [
   {
     id: 'convex-image-distance-30-10',
     title: 'Image distance from the thin-lens equation',
@@ -17,32 +17,32 @@ export const opticsPracticeProblems: CalculationProblem[] = [
     ],
     equationParts: [
       {
-        id: 'one-over-f',
-        label: '\\frac{1}{f}',
-        prompt: 'First fill the focal-length term.',
-        answer: 0.1,
-        tolerance: 0.002,
-        unit: 'cm^-1',
-        feedback: '\\frac{1}{10}=0.10, so the focal term contributes 0.10 cm^-1.',
+        id: 'f',
+        label: 'f',
+        prompt: 'Focal length blank',
+        answer: 10,
+        tolerance: 0.1,
+        unit: 'cm',
+        feedback: 'f = 10 cm, copied directly from the lens focal length.',
       },
       {
-        id: 'one-over-do',
-        label: '\\frac{1}{d_o}',
-        prompt: 'Now fill the object-distance term.',
-        answer: 1 / 30,
-        tolerance: 0.002,
-        unit: 'cm^-1',
-        feedback: '\\frac{1}{30}\\approx0.033, so this term is smaller than \\frac{1}{f}.',
+        id: 'do',
+        label: 'd_o',
+        prompt: 'Object distance blank',
+        answer: 30,
+        tolerance: 0.1,
+        unit: 'cm',
+        feedback: 'd_o = 30 cm, the distance from the candle to the lens.',
       },
       {
-        id: 'one-over-di',
-        label: '\\frac{1}{d_i}',
-        prompt: 'Use the equation to find the remaining reciprocal term.',
-        answer: 1 / 15,
-        tolerance: 0.002,
-        unit: 'cm^-1',
+        id: 'di',
+        label: 'd_i',
+        prompt: 'Image distance blank',
+        answer: 15,
+        tolerance: 0.2,
+        unit: 'cm',
         feedback:
-          '\\frac{1}{d_i}=\\frac{1}{f}-\\frac{1}{d_o}\\approx0.067 cm^-1. The final step is to invert it.',
+          'd_i = 15 cm makes \\frac{1}{10}=\\frac{1}{30}+\\frac{1}{15}.',
       },
     ],
     scene: { objectDistance: 30, focalLength: 10 },
@@ -56,22 +56,143 @@ export const opticsPracticeProblems: CalculationProblem[] = [
     measures: { f: true, do: true, di: true },
   },
   {
-    id: 'convex-magnification-30-10',
-    title: 'Magnification sign and size',
+    kind: 'choice',
+    id: 'convex-between-focus-2focus-prediction',
+    title: 'Convex lens between focus and 2 focus',
     prompt:
-      'For the same setup, f = 10 cm and d_o = 30 cm. What is the lateral magnification m?',
+      'A convex lens has f = 20 cm. The object is at d_o = 30 cm, between **focus** and **2 focus**. What happens?',
     givens: [
-      { symbol: 'f', label: 'Focal length', value: '+10 cm' },
+      { symbol: 'f', label: 'Focal length', value: '+20 cm' },
       { symbol: 'd_o', label: 'Object distance', value: '30 cm' },
     ],
-    scene: { objectDistance: 30, focalLength: 10 },
-    answer: round1(magnification(30, imageDistance(30, 10))),
+    scene: { objectDistance: 30, focalLength: 20, draggable: true },
+    draggable: true,
+    choices: [
+      {
+        id: 'projector',
+        label: 'A **real**, inverted, enlarged image forms beyond **2 focus**',
+        correct: true,
+        visual: {
+          scene: { objectDistance: 30, focalLength: 20 },
+          caption: 'Projector region',
+        },
+        feedback:
+          'Yes. Between **focus** and **2 focus**, a convex lens makes a projector-style real enlarged image.',
+      },
+      {
+        id: 'same-size',
+        label: 'A same-size image forms at **2 focus**',
+        visual: {
+          scene: { objectDistance: 40, focalLength: 20 },
+          caption: '2 focus case',
+        },
+        feedback:
+          'Same-size happens only when the object itself is at **2 focus**.',
+      },
+      {
+        id: 'virtual',
+        label: 'A **virtual**, upright, enlarged image forms',
+        visual: {
+          scene: { objectDistance: 12, focalLength: 20 },
+          caption: 'Inside focus',
+        },
+        feedback:
+          'That is the magnifying-glass pattern, but it happens inside the **focus**.',
+      },
+    ],
+    hint:
+      'Compare the object position to the landmarks: inside focus, at focus, between focus and 2 focus, or beyond 2 focus.',
+    solution:
+      'Since 30 cm is between f = 20 cm and 2f = 40 cm, the image is **real**, inverted, enlarged, and beyond **2 focus**.',
+    measures: { f: true, do: true, di: true, m: true },
+  },
+  {
+    kind: 'choice',
+    id: 'convex-infinity-focus-prediction',
+    title: 'Convex lens at infinity',
+    prompt:
+      'A very distant object sends nearly parallel light into a convex lens with f = 18 cm. Where is the image?',
+    givens: [
+      { symbol: 'f', label: 'Focal length', value: '+18 cm' },
+      { symbol: 'd_o', label: 'Object distance', value: 'Infinity' },
+    ],
+    scene: { objectDistance: Infinity, focalLength: 18 },
+    choices: [
+      {
+        id: 'focus',
+        label: 'At the **focus**, 18 cm from the lens',
+        correct: true,
+        feedback:
+          'Correct. Parallel incoming rays from infinity converge at the convex lens **focus**.',
+      },
+      {
+        id: 'two-focus',
+        label: 'At **2 focus**, 36 cm from the lens',
+        feedback: '**2 focus** is the same-size case, not the infinity case.',
+      },
+      {
+        id: 'none',
+        label: 'No image forms',
+        feedback: 'An image forms at the **focus** because the incoming rays are parallel.',
+      },
+    ],
+    hint: 'For d_o = infinity, the \\frac{1}{d_o} term disappears.',
+    solution:
+      'The thin lens equation becomes \\frac{1}{f}=\\frac{1}{d_i}, so d_i = f = 18 cm.',
+    measures: { f: true, di: true },
+  },
+  {
+    kind: 'choice',
+    id: 'concave-infinity-virtual-focus',
+    title: 'Concave lens at infinity',
+    prompt:
+      'A very distant object shines into a concave lens with f = -20 cm. What does the diagram show?',
+    givens: [
+      { symbol: 'f', label: 'Focal length', value: '-20 cm' },
+      { symbol: 'd_o', label: 'Object distance', value: 'Infinity' },
+    ],
+    scene: { objectDistance: Infinity, focalLength: -20 },
+    choices: [
+      {
+        id: 'virtual-focus',
+        label: 'A tiny **virtual** image near the **virtual focus**',
+        correct: true,
+        feedback:
+          'Yes. The outgoing rays diverge as if they came from the candle-side **focus**.',
+      },
+      {
+        id: 'real-focus',
+        label: 'A **real** image at the far-side focus',
+        feedback: 'That is convex-lens behavior. A concave lens diverges the rays.',
+      },
+      {
+        id: 'projector',
+        label: 'A projected enlarged image beyond **2 focus**',
+        feedback: 'Concave lenses do not make real projected images for real objects.',
+      },
+    ],
+    hint: 'Use the dotted back-traces: where do the diverging rays appear to come from?',
+    solution:
+      'For d_o = infinity, d_i = f = -20 cm. The negative sign means the image is **virtual** on the candle side.',
+    measures: { f: true, di: true },
+  },
+  {
+    id: 'convex-magnification-60-20',
+    title: 'Beyond 2 focus: reduced image',
+    prompt:
+      'A convex lens has f = 20 cm. The object is 60 cm from the lens, beyond 2 focus. What is the lateral magnification m?',
+    givens: [
+      { symbol: 'f', label: 'Focal length', value: '+20 cm' },
+      { symbol: 'd_o', label: 'Object distance', value: '60 cm' },
+    ],
+    scene: { objectDistance: 60, focalLength: 20 },
+    answer: round1(magnification(60, imageDistance(60, 20))),
     unit: '',
     tolerance: 0.05,
     solution:
-      'The image distance is 15 cm, so m=-\\frac{d_i}{d_o}=-\\frac{15}{30}=-0.5. The negative sign means the image is inverted.',
+      'The image distance is 30 cm, so m=-\\frac{d_i}{d_o}=-\\frac{30}{60}=-0.5. The negative sign means inverted; the magnitude less than 1 means reduced.',
     hint:
-      'Use \\frac{1}{f}=\\frac{1}{d_o}+\\frac{1}{d_i} to locate the image first. Then use the magnification definition and keep the sign convention.',
+      'Find d_i first, then use m=-\\frac{d_i}{d_o}. Objects beyond **2 focus** make reduced real images.',
     measures: { do: true, di: true, m: true },
   },
   {
@@ -95,19 +216,40 @@ export const opticsPracticeProblems: CalculationProblem[] = [
     measures: { f: true, do: true, di: true, m: true },
   },
   {
-    id: 'object-for-same-size',
-    title: 'Object placement for same size',
+    kind: 'choice',
+    id: 'concave-2focus-prediction',
+    title: 'Concave lens at 2 focus',
     prompt:
-      'A converging lens has f = 12 cm. How far from the lens should an object be placed so the real image has the same size as the object?',
-    givens: [{ symbol: 'f', label: 'Focal length', value: '+12 cm' }],
-    scene: { objectDistance: 24, focalLength: 12, draggable: true },
-    answer: 24,
-    unit: 'cm',
-    tolerance: 0.3,
-    solution:
-      'A real image has the same size when the object is at 2F. With f = 12 cm, d_o = 2f = 24 cm, and the image also lands at 24 cm.',
+      'A concave lens has f = -15 cm. The object is at 30 cm, which is 2 focus from the lens. What image forms?',
+    givens: [
+      { symbol: 'f', label: 'Focal length', value: '-15 cm' },
+      { symbol: 'd_o', label: 'Object distance', value: '30 cm' },
+    ],
+    scene: { objectDistance: 30, focalLength: -15, draggable: true },
+    draggable: true,
+    choices: [
+      {
+        id: 'virtual-reduced',
+        label: '**Virtual**, **upright**, and **reduced**, between lens and **focus**',
+        correct: true,
+        feedback:
+          'Correct. Concave lenses keep real-object images virtual, upright, and reduced.',
+      },
+      {
+        id: 'same-size',
+        label: 'Same size at **2 focus**',
+        feedback: 'That is the convex-lens 2 focus pattern, not concave behavior.',
+      },
+      {
+        id: 'projector',
+        label: '**Real**, inverted, and enlarged',
+        feedback: 'A concave lens does not make a real projector image for a real object.',
+      },
+    ],
     hint:
-      'Use \\frac{1}{f}=\\frac{1}{d_o}+\\frac{1}{d_i} together with the magnification condition for a same-size real image.',
+      'Concave lenses always spread real-object rays out; the image is found with dotted back-traces.',
+    solution:
+      'The image remains **virtual**, **upright**, and **reduced**. It lies between the lens and the virtual **focus**.',
     measures: { f: true, do: true, di: true, m: true },
   },
   {

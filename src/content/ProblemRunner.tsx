@@ -7,6 +7,7 @@ import {
   RaySourceExplainer,
   ConvexLensExplainer,
   ConcaveLensExplainer,
+  CurvatureExplainer,
   type MeasureFlags,
 } from '../render'
 import { isPredictStep, isPlotStep } from './types'
@@ -26,6 +27,8 @@ interface ProblemRunnerProps {
   onExit?: () => void
   /** Open the next lesson; omitted when this is the last one. */
   onNextLesson?: () => void
+  /** Open practice for this topic, used after the final lesson. */
+  onPractice?: () => void
   /** Title of the next lesson, to label the finish-screen button. */
   nextLessonTitle?: string
 }
@@ -43,13 +46,16 @@ function hintText(step: StepDefinition, state: StepState, image: ReturnType<type
 function curvatureReadout(control: Control, value: number): string | null {
   if (control.type !== 'curvature') return null
   const f = sliderToFocalLength(value)
-  if (!Number.isFinite(f) || Math.abs(f) > FLAT_FOCAL) return 'Flat \u2014 no focusing'
+  if (!Number.isFinite(f) || Math.abs(f) > FLAT_FOCAL) return 'Flat'
   return f > 0 ? `Convex \u00b7 f = ${fmt(f)}` : `Concave \u00b7 f = ${fmt(Math.abs(f))}`
 }
 
 /** Starting control values for a step (predict/plot steps have none to set). */
 const initialValues = (step: StepDefinition): StepState =>
   isPredictStep(step) || isPlotStep(step) ? {} : step.initial
+
+const initialMeasures = (lesson: LessonDefinition): MeasureFlags =>
+  lesson.id === 'thin-lens-equation' ? { f: true, do: true, di: true } : {}
 
 function describe(image: ReturnType<typeof formImage>): string {
   if (image.atInfinity) return 'image at infinity'
@@ -71,6 +77,7 @@ export function ProblemRunner({
   onComplete,
   onExit,
   onNextLesson,
+  onPractice,
   nextLessonTitle,
 }: ProblemRunnerProps) {
   const resumeIndex = Math.min(Math.max(initialStepIndex, 0), lesson.steps.length - 1)
@@ -80,10 +87,12 @@ export function ProblemRunner({
   const [values, setValues] = useState<StepState>(initialValues(lesson.steps[resumeIndex]))
   const [status, setStatus] = useState<Status>('idle')
   const [done, setDone] = useState(false)
-  const [measures, setMeasures] = useState<MeasureFlags>({})
+  const [measures, setMeasures] = useState<MeasureFlags>(() => initialMeasures(lesson))
   // Predict-then-reveal state: the committed choice (null until submitted).
   const [chosenId, setChosenId] = useState<string | null>(null)
   const [plotReady, setPlotReady] = useState(false)
+  const [plotHint, setPlotHint] = useState('')
+  const [plotResetKey, setPlotResetKey] = useState(0)
 
   function toggleMeasure(key: keyof MeasureFlags) {
     setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -141,11 +150,22 @@ export function ProblemRunner({
       ? undefined
       : step.controls.find((c) => c.key === 'objectDistance' && c.type === 'drag-axis')
 
+  const instantInteractiveChoice = !!interactiveChoice
   // A step is "solved" (Next becomes available) when an interactive/plot answer
   // is correct, or when a prediction has been committed (the truth is revealed).
-  const solved = predict ? committed : status === 'correct'
+  const solved = predict
+    ? committed
+    : instantInteractiveChoice
+      ? interactiveChoice.correct === true
+      : status === 'correct'
   const showNumbersTools = ((!predict && !plot) || committed || (plot && solved))
   const featureNumbersTools = lesson.id === 'thin-lens-equation'
+  const promptNearAction = lesson.id === 'thin-lens-equation'
+  const promptBlock = (
+    <p className={`runner__prompt ${promptNearAction ? 'runner__prompt--near-action' : ''}`}>
+      {renderRich(step.prompt)}
+    </p>
+  )
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -154,8 +174,14 @@ export function ProblemRunner({
 
   function check() {
     if (isPredictStep(step) || isPlotStep(step)) return
-    const choiceOk = step.choices ? interactiveChoice?.correct === true : true
-    setStatus(step.success(merged, image) && choiceOk ? 'correct' : 'incorrect')
+    setStatus(step.success(merged, image) ? 'correct' : 'incorrect')
+  }
+
+  function chooseInteractive(id: string) {
+    if (isPredictStep(step) || isPlotStep(step) || !step.choices) return
+    const choice = step.choices.find((c) => c.id === id)
+    setChosenId(id)
+    setStatus(choice?.correct ? 'correct' : 'incorrect')
   }
 
   function submitPlot() {
@@ -172,7 +198,9 @@ export function ProblemRunner({
     setStatus('idle')
     setChosenId(null)
     setPlotReady(false)
-    setMeasures({})
+    setPlotHint('')
+    setPlotResetKey(0)
+    setMeasures(initialMeasures(lesson))
     setDone(false)
   }
 
@@ -188,7 +216,16 @@ export function ProblemRunner({
     setStatus('idle')
     setChosenId(null)
     setPlotReady(false)
+    setPlotHint('')
+    setPlotResetKey(0)
     onStepChange?.(ni)
+  }
+
+  function resetPlot() {
+    setStatus('idle')
+    setPlotReady(false)
+    setPlotHint('')
+    setPlotResetKey((key) => key + 1)
   }
 
   function moveCompletionSpark(event: PointerEvent<HTMLDivElement>) {
@@ -211,6 +248,7 @@ export function ProblemRunner({
         {lesson.intro.animation === 'source' && <RaySourceExplainer />}
         {lesson.intro.animation === 'convex' && <ConvexLensExplainer />}
         {lesson.intro.animation === 'concave' && <ConcaveLensExplainer />}
+        {lesson.intro.animation === 'curvature' && <CurvatureExplainer />}
         {lesson.intro.paragraphs.map((p, i) => (
           <p key={i} className="intro__para">
             {renderRich(p)}
@@ -243,7 +281,12 @@ export function ProblemRunner({
           <span className="runner__spark runner__spark--three" />
         </div>
         <div className="runner__celebrate" aria-hidden="true">
-          LensLab
+          <span className="complete-mark__beam complete-mark__beam--top" />
+          <span className="complete-mark__beam complete-mark__beam--mid" />
+          <span className="complete-mark__beam complete-mark__beam--bottom" />
+          <span className="complete-mark__lens" />
+          <span className="complete-mark__focus" />
+          <span className="complete-mark__check">✓</span>
         </div>
         <h2>Lesson complete!</h2>
         <p>You finished “{lesson.title}”. Nice work — you're really getting this.</p>
@@ -251,6 +294,11 @@ export function ProblemRunner({
           {onNextLesson && (
             <button type="button" className="btn btn--primary" onClick={onNextLesson}>
               Next lesson{nextLessonTitle ? `: ${nextLessonTitle}` : ''}
+            </button>
+          )}
+          {onPractice && (
+            <button type="button" className="btn btn--primary" onClick={onPractice}>
+              Go to practice problems
             </button>
           )}
           <button type="button" className="btn" onClick={restart}>
@@ -294,7 +342,7 @@ export function ProblemRunner({
         )
       })()}
 
-      <p className="runner__prompt">{renderRich(step.prompt)}</p>
+      {!promptNearAction && promptBlock}
 
       {featureNumbersTools && showNumbersTools && (
         <NumbersTools
@@ -315,7 +363,9 @@ export function ProblemRunner({
             setPlotReady(ready)
             if (status === 'incorrect') setStatus('idle')
           }}
+          onHintChange={setPlotHint}
           measures={measures}
+          resetKey={plotResetKey}
         />
       ) : (
         <LensScene
@@ -336,6 +386,7 @@ export function ProblemRunner({
 
       {plot ? (
         <div className="plot-panel">
+          {promptNearAction && promptBlock}
           {status === 'correct' ? (
             <div className="feedback feedback--correct" role="status">
               <strong>You found it.</strong> {renderRich(step.reveal)}
@@ -344,15 +395,17 @@ export function ProblemRunner({
             <div className="feedback feedback--incorrect" role="status">
               <strong>Not yet.</strong>{' '}
               {renderRich(
-                step.hint ??
-                  'Keep adjusting the dot until all three ray rules are checked, then submit again.',
+                plotHint ||
+                  (step.hint ??
+                    'Keep adjusting the ray endpoints until all three requirements are marked Done, then submit again.'),
               )}
             </div>
           ) : (
             <p className="plot-panel__hint">
               {renderRich(
-                step.hint ??
-                  'Drag the dot so every ray follows its rule — they all meet at the image.',
+                plotHint ||
+                  (step.hint ??
+                    'Drag each ray endpoint so every ray follows its rule and the requirements are marked Done.'),
               )}
             </p>
           )}
@@ -362,15 +415,21 @@ export function ProblemRunner({
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
             ) : (
-              <button type="button" className="btn btn--primary" onClick={submitPlot}>
-                Submit
-              </button>
+              <>
+                <button type="button" className="btn btn--primary" onClick={submitPlot}>
+                  Submit
+                </button>
+                <button type="button" className="btn" onClick={resetPlot}>
+                  Reset rays
+                </button>
+              </>
             )}
           </div>
         </div>
       ) : predict ? (
         <PredictPanel
           step={step}
+          prompt={promptNearAction ? promptBlock : undefined}
           chosenId={chosenId}
           solved={committed}
           canExplore={committed && !!step.explore}
@@ -396,7 +455,7 @@ export function ProblemRunner({
               choices={step.choices}
               chosenId={chosenId}
               solved={status === 'correct'}
-              onChoose={setChosenId}
+              onChoose={chooseInteractive}
             />
           )}
 
@@ -414,12 +473,14 @@ export function ProblemRunner({
             </div>
           )}
 
+          {promptNearAction && promptBlock}
+
           <div className="runner__actions">
             {status === 'correct' ? (
               <button type="button" className="btn btn--primary" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
-            ) : (
+            ) : step.choices ? null : (
               <button type="button" className="btn btn--primary" onClick={check}>
                 Check answer
               </button>
@@ -680,6 +741,7 @@ function InteractiveChoices({
  */
 function PredictPanel({
   step,
+  prompt,
   chosenId,
   solved,
   canExplore,
@@ -688,6 +750,7 @@ function PredictPanel({
   isLast,
 }: {
   step: { prompt: string; choices: Choice[]; reveal: string }
+  prompt?: ReactNode
   chosenId: string | null
   solved: boolean
   canExplore: boolean
@@ -713,6 +776,7 @@ function PredictPanel({
 
   return (
     <div className="predict">
+      {prompt}
       <ul className="predict__choices" role="radiogroup" aria-label="Your prediction">
         {step.choices.map((c, index) => {
           const isChosen = c.id === chosenId

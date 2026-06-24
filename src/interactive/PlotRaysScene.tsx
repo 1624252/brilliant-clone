@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react'
 import {
   LensDiagram,
   DEFAULT_SCENE,
@@ -204,18 +204,33 @@ const RAY_COLORS = { parallel: '#ff9f43', chief: '#54d6a0', focal: '#ff6b9d' }
 /** Live checklist of the three ray rules; each lights up when satisfied. */
 function RuleBadges({ checks }: { checks: ReturnType<typeof rayChecks> }) {
   const rows: { key: keyof typeof RAY_COLORS; ok: boolean; text: string }[] = [
-    { key: 'parallel', ok: checks.parallel, text: 'Parallel ray → bends through F' },
-    { key: 'chief', ok: checks.chief, text: 'Chief ray → straight through the center' },
-    { key: 'focal', ok: checks.focal, text: 'Focal ray → exits parallel' },
+    {
+      key: 'parallel',
+      ok: checks.parallel,
+      text: 'Parallel ray lines up with the focus on the correct side',
+    },
+    {
+      key: 'chief',
+      ok: checks.chief,
+      text: 'Chief ray goes straight through the center of the lens',
+    },
+    {
+      key: 'focal',
+      ok: checks.focal,
+      text: 'Focal ray exits parallel to the optical axis',
+    },
   ]
   return (
     <ul className="plot-rules" aria-label="Ray rules">
       {rows.map((r) => (
         <li key={r.key} className={r.ok ? 'is-ok' : ''}>
-          <span className="dot" style={{ background: RAY_COLORS[r.key] }} />
+          <span
+            className="requirement-box"
+            style={{ '--rule-color': RAY_COLORS[r.key] } as CSSProperties}
+          />
           <span>{r.text}</span>
-          <span className="check" aria-hidden="true">
-            {r.ok ? '✓' : ''}
+          <span className="requirement-state" aria-hidden="true">
+            {r.ok ? 'Done' : 'Needed'}
           </span>
         </li>
       ))}

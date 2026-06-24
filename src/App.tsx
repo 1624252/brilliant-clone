@@ -114,6 +114,7 @@ function LessonRoute({ user, progress }: { user: User; progress: ProgressState }
       progress={progress}
       onBack={() => navigate(`/topics/${chapter.id}`)}
       onOpenLesson={(id) => navigate(`/lessons/${id}`)}
+      onOpenPractice={() => navigate(`/topics/${chapter.id}/practice`)}
     />
   )
 }

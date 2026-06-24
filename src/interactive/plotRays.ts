@@ -34,6 +34,7 @@ export type DrawnRays = Record<RayId, DrawnRay>
 
 export interface DrawRayChecks extends RayChecks {
   starts: Record<RayId, boolean>
+  directions: Record<RayId, boolean>
 }
 
 export interface PlotBounds {
@@ -137,10 +138,10 @@ export function rayChecks(marker: Point, s: PlotScene, tol = 3): RayChecks {
 }
 
 /**
- * Rule checks for the draw-the-rays interaction. Each drawn ray has two learner-
- * controlled points: the lens crossing (`start`) and an outgoing endpoint. The
- * start must land on the correct lens point, and the endpoint must make the ray
- * obey its physical rule.
+ * Rule checks for the draw-the-rays interaction. Each drawn ray leaves from a
+ * fixed lens crossing and the learner controls its outgoing endpoint. The
+ * endpoint must point away from the lens on the outgoing side; a correct
+ * infinite line drawn in the wrong direction should not count.
  */
 export function drawnRayChecks(rays: DrawnRays, s: PlotScene, tol = 3): DrawRayChecks {
   const pts = constructionPoints(s)
@@ -149,10 +150,22 @@ export function drawnRayChecks(rays: DrawnRays, s: PlotScene, tol = 3): DrawRayC
     chief: pointDistance(rays.chief.start, pts.chiefStart) <= tol,
     focal: pointDistance(rays.focal.start, pts.focalStart) <= tol,
   }
+  const directions = {
+    parallel: rays.parallel.end.x > rays.parallel.start.x + tol,
+    chief: rays.chief.end.x > rays.chief.start.x + tol,
+    focal: rays.focal.end.x > rays.focal.start.x + tol,
+  }
   const parallel =
-    starts.parallel && distToLine(pts.farFocus, rays.parallel.start, rays.parallel.end) <= tol
+    starts.parallel &&
+    directions.parallel &&
+    distToLine(pts.farFocus, rays.parallel.start, rays.parallel.end) <= tol
   const chief =
-    starts.chief && distToLine(rays.chief.end, pts.objectTip, pts.center) <= tol
-  const focal = starts.focal && Math.abs(rays.focal.end.y - rays.focal.start.y) <= tol
-  return { starts, chief, parallel, focal, all: parallel && chief && focal }
+    starts.chief &&
+    directions.chief &&
+    distToLine(rays.chief.end, pts.objectTip, pts.center) <= tol
+  const focal =
+    starts.focal &&
+    directions.focal &&
+    Math.abs(rays.focal.end.y - rays.focal.start.y) <= tol
+  return { starts, directions, chief, parallel, focal, all: parallel && chief && focal }
 }

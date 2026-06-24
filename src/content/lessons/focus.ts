@@ -1,8 +1,7 @@
 import type { LessonDefinition } from '../types'
 
-// "Convex Lenses": the first lesson. It introduces the focal point with an
-// animated explainer (a slab morphing into a convex lens, rays bending to meet
-// at F), then quick hands-on steps connecting dragging the candle to what F means.
+// "Convex Lenses": the first lesson. It explores the key object positions for a
+// converging lens: on the lens, at the focus, at 2 focus, and at infinity.
 
 const FOCAL_LENGTH = 20
 const objectControl = {
@@ -23,115 +22,148 @@ export const focusLesson: LessonDefinition = {
   id: 'focusing-light',
   title: 'Convex Lenses',
   order: 1,
-  estMinutes: 3,
-  summary: 'See how a convex lens bends parallel rays to a focus — the focal point F.',
+  estMinutes: 4,
+  summary: 'Explore the key convex-lens positions: 0, focus, 2 focus, and infinity.',
   intro: {
     heading: 'Where light comes to a focus',
     animation: 'convex',
     paragraphs: [
-      'A **convex lens** (one that bulges outward) converges **parallel rays** so they all cross at one spot on the axis: the **focal point, F**.',
-      'The distance from the lens to F is the **focal length, f** — a fixed property of the lens. The stronger the lens, the shorter the f.',
-      'When you start, you can drag the candle and watch how its rays meet. F is the key to where (and how big) the **image** forms.',
+      'A **convex lens** (one that bulges outward) converges **parallel rays** so they cross at the **focus**.',
+      'The distance from the lens to the focus is the **focal length, f**. The same distance on the object side is also marked as a focus point.',
+      'Drag the candle to the landmark positions: on the lens, at the **focus**, at **2 focus**, and at **infinity**.',
     ],
   },
   steps: [
     {
-      id: 'object-at-f',
-      prompt: 'Slide the candle onto the focal point F. Watch the rays leave parallel.',
+      id: 'object-at-lens',
+      prompt: 'Start at 0: slide the candle all the way onto the lens.',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 50 },
-      success: (state) => Math.abs(state.objectDistance - state.focalLength) < 0.75,
+      success: (state) => state.objectDistance <= 0.5,
       correctFeedback:
-        'At **F** the outgoing rays are **parallel**, so the image races off to infinity.',
+        'At **0**, the object and image collapse onto the lens. This is a boundary case, not a useful projection setup.',
+      hint: (state) =>
+        state.objectDistance > FOCAL_LENGTH
+          ? 'You are still outside the focus. Keep sliding the candle toward the lens.'
+          : 'Keep going until the object distance readout is nearly **0**.',
+    },
+    {
+      id: 'object-at-focus',
+      prompt: 'Now slide the candle onto the focus. What happens to the outgoing rays?',
+      controls: [objectControl],
+      fixed: { focalLength: FOCAL_LENGTH },
+      initial: { objectDistance: 50 },
+      success: (state, image) =>
+        Math.abs(state.objectDistance - state.focalLength) < 0.75 && image.atInfinity,
+      choices: [
+        {
+          id: 'parallel',
+          label: 'They leave **parallel** and the image goes to **infinity**',
+          correct: true,
+          feedback:
+            'Yes. At the **focus**, the convex lens sends the outgoing rays out parallel.',
+        },
+        {
+          id: 'real-2focus',
+          label: 'They meet at **2 focus**',
+          feedback:
+            '**2 focus** is the same-size case, but that happens when the object also starts at 2 focus.',
+        },
+        {
+          id: 'virtual',
+          label: 'They form an **upright virtual** image',
+          feedback:
+            'That happens inside the **focus**. Exactly at the focus, the rays leave parallel.',
+        },
+      ],
+      correctFeedback:
+        'At the **focus**, the outgoing rays are **parallel**, so the image is at **infinity**.',
       hint: (state, image) => {
         if (state.objectDistance > state.focalLength) {
-          return 'The rays still cross after the lens, so the candle is **outside F**. Move it closer until the crossing point runs off toward infinity.'
+          return 'The outgoing rays still meet after the lens, so the candle is **outside the focus**. Move it closer.'
         }
         if (!image.isReal) {
-          return 'The rays are already spreading apart after the lens, so the candle is **inside F**. Move it slightly farther out until the outgoing rays become parallel.'
+          return 'The outgoing rays are spreading apart, so the candle is **inside the focus**. Move it slightly farther out.'
         }
-        return 'Watch the outgoing rays: the goal is the exact spot where they stop converging or diverging and leave **parallel**.'
+        return 'Look for the exact spot where the outgoing rays stop converging or diverging and become **parallel**.'
       },
     },
     {
-      id: 'far-object-focuses-at-f',
-      prompt: 'Now pull the candle far away. Where does the image settle?',
+      id: 'object-at-2focus',
+      prompt: 'Move the candle to 2 focus. What kind of image do you get?',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 30 },
-      success: (state, image) => image.isReal && state.objectDistance >= 60,
+      success: (state, image) =>
+        image.isReal &&
+        Math.abs(state.objectDistance - 2 * FOCAL_LENGTH) < 0.75 &&
+        Math.abs(image.imageDistance - 2 * FOCAL_LENGTH) < 1,
       choices: [
         {
-          id: 'at-f',
-          label: 'It settles near F',
+          id: 'same-size',
+          label: '**Real**, inverted, and the **same size** at 2 focus',
           correct: true,
           feedback:
-            'Yes. As the candle moves far away, its rays arrive almost parallel, so the image approaches the focal point.',
+            'Yes. When the object is at **2 focus**, the image is also at **2 focus** and has the same size.',
         },
         {
-          id: 'at-2f',
-          label: 'It settles near 2F',
+          id: 'magnified',
+          label: '**Real** and enlarged beyond 2 focus',
           feedback:
-            '2F is the same-size case when the object is also at 2F. Faraway objects send nearly parallel rays, which focus closer, at F.',
+            'That is the projector pattern, which happens when the object is between **focus** and **2 focus**.',
         },
         {
-          id: 'keeps-moving-away',
-          label: 'It keeps moving farther from the lens',
+          id: 'virtual',
+          label: '**Virtual** and upright',
           feedback:
-            'The image moves toward the lens, not away from it. Parallel incoming rays meet at the focal point.',
+            'A convex lens makes a virtual upright image when the object is inside the **focus**, not at 2 focus.',
         },
       ],
-      correctFeedback: 'A faraway object focuses close to **F** — that is why F is "the focus."',
+      correctFeedback:
+        'At **2 focus**, a convex lens makes a **real**, inverted, **same-size** image at 2 focus on the other side.',
       hint: (_state, image) =>
-        image.imageDistance > FOCAL_LENGTH + 3
-          ? 'The image is still noticeably **past F**. As the candle moves farther away, incoming rays become more parallel and the image slides closer to F.'
-          : 'You are close: keep making the incoming rays more nearly **parallel** so the image settles right near F.',
+        image.isReal
+          ? 'Watch for the image distance and object distance to match at **2 focus**.'
+          : 'You are inside the **focus**. Move the candle farther away until the image becomes real.',
     },
     {
-      kind: 'predict',
-      id: 'predict-parallel-rays',
-      prompt:
-        'A star is so far away its rays reach the lens essentially parallel. Predict where they cross before you reveal it.',
-      scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+      id: 'far-object-focuses-at-focus',
+      prompt: 'Finally, pull the candle to infinity. Where does the image form?',
+      controls: [objectControl],
+      fixed: { focalLength: FOCAL_LENGTH },
+      initial: { objectDistance: 40 },
+      success: (state, image) =>
+        state.objectDistance === Infinity &&
+        image.isReal &&
+        Math.abs(image.imageDistance - FOCAL_LENGTH) < 0.75,
       choices: [
         {
-          id: 'never',
-          label: 'They stay parallel and never cross',
-          visual: {
-            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
-            showRays: false,
-            showImage: false,
-            caption: 'No crossing',
-          },
-          feedback:
-            'A converging lens bends parallel rays inward, so they must cross somewhere.',
-        },
-        {
-          id: 'focal',
-          label: 'They cross right at the focal point, F',
-          visual: {
-            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
-            caption: 'Image at F',
-          },
+          id: 'at-focus',
+          label: 'Near the **focus**',
           correct: true,
-          feedback: 'Yes — F is defined as where parallel rays converge.',
+          feedback:
+            'Yes. Light from infinity reaches the lens nearly parallel, so a convex lens forms the image at the **focus**.',
         },
         {
-          id: 'twice',
-          label: 'They cross farther out, at 2F',
-          visual: {
-            scene: { objectDistance: 2 * FOCAL_LENGTH, focalLength: FOCAL_LENGTH },
-            caption: 'Image at 2F',
-          },
+          id: 'at-2focus',
+          label: 'Near **2 focus**',
           feedback:
-            'Rays from an object at 2F meet at 2F. Truly parallel rays come from infinitely far away, so they focus closer — right at F.',
+            '**2 focus** is the same-size case. Infinity sends in parallel rays, which meet at the **focus**.',
+        },
+        {
+          id: 'no-image',
+          label: 'No image forms',
+          feedback:
+            'An image still forms. Parallel rays from far away converge at the **focus**.',
         },
       ],
-      reveal:
-        'Parallel rays converge exactly at **F** — that is what **"focal point"** means. The farther the object, the closer its image creeps toward F.',
-      // After committing, let the learner drag the object in and watch the image.
-      explore: objectControl,
+      correctFeedback:
+        'At **infinity**, incoming rays are essentially parallel, so the image lands at the **focus**.',
+      hint: (state, image) =>
+        state.objectDistance !== Infinity
+          ? 'Use the infinity end of the slider or drag the candle to the far edge.'
+          : `You are at infinity. Pick the answer that matches d_i = ${image.imageDistance.toFixed(1)} cm.`,
     },
   ],
 }

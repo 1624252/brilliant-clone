@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react'
 import type { Point, RayId } from '../engine'
 import {
   LensDiagram,
@@ -13,6 +21,7 @@ import {
   constructionPoints,
   drawnRayChecks,
   extendRayToBounds,
+  pointDistance,
   type DrawnRays,
   type PlotScene,
 } from './plotRays'
@@ -22,12 +31,13 @@ interface DrawRaysSceneProps {
   scene: { objectDistance: number; focalLength: number; objectHeight?: number }
   solved: boolean
   onReadyChange: (ready: boolean) => void
+  onHintChange?: (hint: string) => void
   measures?: MeasureFlags
+  resetKey?: number
 }
 
-type HandleKind = 'start' | 'end'
-
 const TOL = 3
+const SNAP_TOL = 6
 const sc = DEFAULT_SCENE
 const rayIds: RayId[] = ['parallel', 'chief', 'focal']
 const rayLabels: Record<RayId, string> = {
@@ -80,13 +90,43 @@ function initialRays(s: PlotScene): DrawnRays {
 
 function statusText(ray: RayId, ok: boolean) {
   if (ok) return `${rayLabels[ray]} correct.`
-  if (ray === 'parallel') return 'Parallel ray should bend through F.'
-  if (ray === 'chief') return 'Chief ray should stay straight through the lens center.'
-  return 'Focal ray should leave parallel to the optical axis.'
+  if (ray === 'parallel') return 'Parallel ray should head right and line up with the far-side F.'
+  if (ray === 'chief') return 'Chief ray should head right in a straight line through the center of the lens.'
+  return 'Focal ray should head right and leave parallel to the optical axis.'
+}
+
+function firstHint(checks: ReturnType<typeof drawnRayChecks>, s: PlotScene): string {
+  const farSide = s.focalLength > 0 ? 'right-side' : 'left-side virtual'
+  if (!checks.directions.parallel) {
+    return 'The parallel ray starts at the object height on the lens and should travel to the right after the lens.'
+  }
+  if (!checks.parallel) {
+    return `Aim the parallel ray so its outgoing path lines up with the ${farSide} focus F. For a concave lens, use the dotted back-trace to see that alignment.`
+  }
+  if (!checks.directions.chief) {
+    return 'The chief ray should continue to the right after passing through the center of the lens.'
+  }
+  if (!checks.chief) {
+    return 'Aim the chief ray in one straight line through the center of the lens.'
+  }
+  if (!checks.directions.focal) {
+    return 'The focal ray should continue to the right after crossing the lens.'
+  }
+  if (!checks.focal) {
+    return 'Aim the focal ray so it exits parallel to the optical axis, which is the horizontal center line.'
+  }
+  return 'Drag the ray endpoints until all three requirements are marked Done.'
 }
 
 /** Draw-the-rays construction scene with pointer and keyboard-accessible handles. */
-export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRaysSceneProps) {
+export function DrawRaysScene({
+  scene,
+  solved,
+  onReadyChange,
+  onHintChange,
+  measures,
+  resetKey = 0,
+}: DrawRaysSceneProps) {
   const H = scene.objectHeight ?? 18
   const s: PlotScene = useMemo(
     () => ({
@@ -100,33 +140,56 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
   const sceneKey = `${s.objectDistance}:${s.focalLength}:${s.objectHeight}`
   const [rays, setRays] = useState<DrawnRays>(() => initialRays(s))
   const [activeRay, setActiveRay] = useState<RayId>('parallel')
-  const [activeHandle, setActiveHandle] = useState<HandleKind>('end')
   const [trackedSceneKey, setTrackedSceneKey] = useState(sceneKey)
-  const draggingRef = useRef<{ ray: RayId; handle: HandleKind } | null>(null)
+  const [trackedResetKey, setTrackedResetKey] = useState(resetKey)
+  const draggingRef = useRef<RayId | null>(null)
   const checks = drawnRayChecks(rays, s, TOL)
   const isVirtual = pts.imageTip.x < 0
+  const orderedRayIds = rayIds.filter((ray) => ray !== activeRay).concat(activeRay)
 
   if (sceneKey !== trackedSceneKey) {
     setTrackedSceneKey(sceneKey)
     setRays(initialRays(s))
     setActiveRay('parallel')
-    setActiveHandle('end')
+  }
+
+  if (resetKey !== trackedResetKey) {
+    setTrackedResetKey(resetKey)
+    setRays(initialRays(s))
+    setActiveRay('parallel')
+    draggingRef.current = null
   }
 
   useEffect(() => {
     onReadyChange(checks.all)
   }, [checks.all, onReadyChange])
 
-  function updateHandle(ray: RayId, handle: HandleKind, next: Point) {
+  useEffect(() => {
+    onHintChange?.(firstHint(checks, s))
+  }, [
+    checks.parallel,
+    checks.chief,
+    checks.focal,
+    checks.directions.parallel,
+    checks.directions.chief,
+    checks.directions.focal,
+    onHintChange,
+    s,
+  ])
+
+  function updateEnd(ray: RayId, next: Point) {
     if (solved) return
+    const clamped = {
+      x: clamp(next.x, -sc.halfWidth + 2, sc.halfWidth - 2),
+      y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),
+    }
+    const target = ruleEndpoint(ray, s)
+    const end = pointDistance(clamped, target) <= SNAP_TOL ? target : clamped
     setRays((prev) => ({
       ...prev,
       [ray]: {
         ...prev[ray],
-        [handle]: {
-          x: clamp(next.x, -sc.halfWidth + 2, sc.halfWidth - 2),
-          y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),
-        },
+        end,
       },
     }))
   }
@@ -139,21 +202,20 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
     return { x: svgXToOpticalX(local.x, sc), y: svgYToOpticalY(local.y, sc) }
   }
 
-  function onPointerDown(ray: RayId, handle: HandleKind, e: PointerEvent<SVGCircleElement>) {
+  function onPointerDown(ray: RayId, e: PointerEvent<SVGCircleElement>) {
     if (solved) return
-    draggingRef.current = { ray, handle }
+    draggingRef.current = ray
     setActiveRay(ray)
-    setActiveHandle(handle)
     e.currentTarget.setPointerCapture(e.pointerId)
     const p = pointerToOptical(e)
-    if (p) updateHandle(ray, handle, p)
+    if (p) updateEnd(ray, p)
   }
 
   function onPointerMove(e: PointerEvent<SVGCircleElement>) {
-    const dragging = draggingRef.current
-    if (!dragging) return
+    const ray = draggingRef.current
+    if (!ray) return
     const p = pointerToOptical(e)
-    if (p) updateHandle(dragging.ray, dragging.handle, p)
+    if (p) updateEnd(ray, p)
   }
 
   function onPointerUp(e: PointerEvent<SVGCircleElement>) {
@@ -161,7 +223,7 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
     e.currentTarget.releasePointerCapture(e.pointerId)
   }
 
-  function onHandleKeyDown(ray: RayId, handle: HandleKind, e: KeyboardEvent) {
+  function onHandleKeyDown(ray: RayId, e: KeyboardEvent) {
     const big = e.shiftKey ? 5 : 1
     const moves: Record<string, Point> = {
       ArrowLeft: { x: -big, y: 0 },
@@ -172,13 +234,8 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
     const d = moves[e.key]
     if (!d) return
     e.preventDefault()
-    const current = rays[ray][handle]
-    updateHandle(ray, handle, { x: current.x + d.x, y: current.y + d.y })
-  }
-
-  function nudge(handle: HandleKind, delta: Point) {
-    const current = rays[activeRay][handle]
-    updateHandle(activeRay, handle, { x: current.x + delta.x, y: current.y + delta.y })
+    const current = rays[ray].end
+    updateEnd(ray, { x: current.x + d.x, y: current.y + d.y })
   }
 
   if (solved) {
@@ -237,11 +294,14 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
         showImage={false}
         measures={measures}
       >
-        {rayIds.map((ray) => {
+        {orderedRayIds.map((ray) => {
           const drawn = rays[ray]
           const isActive = activeRay === ray
           const extendedEnd = extendRayToBounds(drawn.start, drawn.end, rayBounds)
-          const startSvg = toSvg(drawn.start, sc)
+          const backEnd = extendRayToBounds(drawn.start, {
+            x: drawn.start.x - (drawn.end.x - drawn.start.x),
+            y: drawn.start.y - (drawn.end.y - drawn.start.y),
+          }, rayBounds)
           const endSvg = toSvg(drawn.end, sc)
           return (
             <g key={ray} className={`draw-ray draw-ray--${ray} ${isActive ? 'is-active' : ''}`}>
@@ -249,81 +309,43 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
               <polyline
                 className={`ray ray--${ray} draw-ray__incoming`}
                 points={line(pts.objectTip, drawn.start)}
+                onPointerDown={() => setActiveRay(ray)}
               />
               <polyline
                 className={`ray ray--${ray} draw-ray__line`}
                 points={line(drawn.start, extendedEnd)}
                 markerEnd="url(#arrow)"
+                onPointerDown={() => setActiveRay(ray)}
               />
               {isVirtual && (
-                <polyline className="ray ray--virtual draw-ray__virtual" points={line(drawn.start, pts.imageTip)} />
-              )}
-              {(['start', 'end'] as HandleKind[]).map((handle) => (
-                <circle
-                  key={handle}
-                  className={`draw-handle draw-handle--${handle} ${
-                    isActive && activeHandle === handle ? 'is-active' : ''
-                  }`}
-                  cx={handle === 'start' ? startSvg.x : endSvg.x}
-                  cy={handle === 'start' ? startSvg.y : endSvg.y}
-                  r={handle === 'start' ? 14 : 16}
-                  role="slider"
-                  tabIndex={0}
-                  aria-label={`${rayLabels[ray]} ${handle} point`}
-                  aria-valuemin={-sc.halfWidth}
-                  aria-valuemax={sc.halfWidth}
-                  aria-valuenow={Number(rays[ray][handle].x.toFixed(1))}
-                  aria-valuetext={`x ${rays[ray][handle].x.toFixed(1)}, y ${rays[ray][handle].y.toFixed(1)}`}
-                  onFocus={() => {
-                    setActiveRay(ray)
-                    setActiveHandle(handle)
-                  }}
-                  onPointerDown={(e) => onPointerDown(ray, handle, e)}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={onPointerUp}
-                  onKeyDown={(e) => onHandleKeyDown(ray, handle, e)}
+                <polyline
+                  className={`ray ray--${ray} draw-ray__virtual`}
+                  points={line(drawn.start, backEnd)}
+                  onPointerDown={() => setActiveRay(ray)}
                 />
-              ))}
+              )}
+              <circle
+                className={`draw-handle draw-handle--end ${isActive ? 'is-active' : ''}`}
+                cx={endSvg.x}
+                cy={endSvg.y}
+                r={16}
+                role="slider"
+                tabIndex={0}
+                aria-label={`${rayLabels[ray]} end point`}
+                aria-valuemin={-sc.halfWidth}
+                aria-valuemax={sc.halfWidth}
+                aria-valuenow={Number(rays[ray].end.x.toFixed(1))}
+                aria-valuetext={`x ${rays[ray].end.x.toFixed(1)}, y ${rays[ray].end.y.toFixed(1)}`}
+                onFocus={() => setActiveRay(ray)}
+                onPointerDown={(e) => onPointerDown(ray, e)}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onKeyDown={(e) => onHandleKeyDown(ray, e)}
+              />
             </g>
           )
         })}
       </LensDiagram>
-
-      <div className="draw-nudges" aria-label="Fine adjust selected ray">
-        <span>
-          Adjusting <strong>{rayLabels[activeRay]}</strong> {activeHandle} point
-        </span>
-        <div className="draw-nudges__handles">
-          <button
-            type="button"
-            className={activeHandle === 'start' ? 'is-active' : ''}
-            onClick={() => setActiveHandle('start')}
-          >
-            Start point
-          </button>
-          <button
-            type="button"
-            className={activeHandle === 'end' ? 'is-active' : ''}
-            onClick={() => setActiveHandle('end')}
-          >
-            End point
-          </button>
-        </div>
-        <div className="draw-nudges__grid">
-          <button type="button" onClick={() => nudge(activeHandle, { x: 0, y: 1 })}>
-            Up
-          </button>
-          <button type="button" onClick={() => nudge(activeHandle, { x: -1, y: 0 })}>
-            Left
-          </button>
-          <button type="button" onClick={() => nudge(activeHandle, { x: 1, y: 0 })}>
-            Right
-          </button>
-          <button type="button" onClick={() => nudge(activeHandle, { x: 0, y: -1 })}>
-            Down
-          </button>
-        </div>
-      </div>
 
       <p className="sr-only" aria-live="polite">
         {statusText(activeRay, checks[activeRay])}
@@ -337,18 +359,33 @@ const RAY_COLORS = { parallel: '#ff9f43', chief: '#54d6a0', focal: '#ff6b9d' }
 
 function RuleBadges({ checks }: { checks: ReturnType<typeof drawnRayChecks> }) {
   const rows: { key: RayId; ok: boolean; text: string }[] = [
-    { key: 'parallel', ok: checks.parallel, text: 'Parallel ray bends through F' },
-    { key: 'chief', ok: checks.chief, text: 'Chief ray stays straight through center' },
-    { key: 'focal', ok: checks.focal, text: 'Focal ray exits parallel' },
+    {
+      key: 'parallel',
+      ok: checks.parallel,
+      text: 'Parallel ray lines up with the focus on the correct side',
+    },
+    {
+      key: 'chief',
+      ok: checks.chief,
+      text: 'Chief ray goes straight through the center of the lens',
+    },
+    {
+      key: 'focal',
+      ok: checks.focal,
+      text: 'Focal ray exits parallel to the optical axis',
+    },
   ]
   return (
     <ul className="plot-rules draw-rules" aria-label="Ray rules">
       {rows.map((r) => (
         <li key={r.key} className={r.ok ? 'is-ok' : ''}>
-          <span className="dot" style={{ background: RAY_COLORS[r.key] }} />
+          <span
+            className="requirement-box"
+            style={{ '--rule-color': RAY_COLORS[r.key] } as CSSProperties}
+          />
           <span>{r.text}</span>
-          <span className="check" aria-hidden="true">
-            {r.ok ? '✓' : ''}
+          <span className="requirement-state" aria-hidden="true">
+            {r.ok ? 'Done' : 'Needed'}
           </span>
           <span className="sr-only">{r.ok ? ' correct' : ' not correct yet'}</span>
         </li>

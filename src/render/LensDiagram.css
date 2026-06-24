@@ -23,10 +23,14 @@
   fill: var(--c-f, #ffb84d);
 }
 .lens-diagram .focal text {
-  fill: var(--c-f, #ffb84d);
+  fill: var(--text, #eef0fb);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 850;
   font-family: system-ui, sans-serif;
+  paint-order: stroke;
+  stroke: var(--diagram-bg, #0b1020);
+  stroke-width: 5px;
+  stroke-linejoin: round;
 }
 
 .lens-diagram .lens-label {
@@ -124,10 +128,10 @@
   stroke: #ff6b9d;
 }
 .lens-diagram .ray--virtual {
-  stroke: var(--diagram-virtual-ray, #ffffff);
-  stroke-opacity: 0.35;
-  stroke-dasharray: 5 5;
-  stroke-width: 1.5;
+  stroke-opacity: 0.55;
+  stroke-dasharray: 1.5 6;
+  stroke-linecap: round;
+  stroke-width: 2;
 }
 
 /* Candle figures. All variants use real candle colors; the image is the same
