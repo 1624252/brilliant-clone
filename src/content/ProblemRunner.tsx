@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type PointerEvent, type ReactNode } from 'react'
 import { formImage, sliderToFocalLength, FLAT_FOCAL } from '../engine'
-import { LensScene, PlotRaysScene, snapValue } from '../interactive'
+import { DrawRaysScene, LensScene, snapValue } from '../interactive'
 import {
+  LensDiagram,
   RayFocusExplainer,
   RaySourceExplainer,
   ConvexLensExplainer,
@@ -141,6 +142,8 @@ export function ProblemRunner({
   // A step is "solved" (Next becomes available) when an interactive/plot answer
   // is correct, or when a prediction has been committed (the truth is revealed).
   const solved = predict ? committed : status === 'correct'
+  const showNumbersTools = ((!predict && !plot) || committed || (plot && solved))
+  const featureNumbersTools = lesson.id === 'thin-lens-equation'
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -185,9 +188,21 @@ export function ProblemRunner({
     onStepChange?.(ni)
   }
 
+  function moveCompletionSpark(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    event.currentTarget.style.setProperty('--spark-x', `${event.clientX - rect.left}px`)
+    event.currentTarget.style.setProperty('--spark-y', `${event.clientY - rect.top}px`)
+  }
+
+  function resetCompletionSpark(event: PointerEvent<HTMLDivElement>) {
+    event.currentTarget.style.removeProperty('--spark-x')
+    event.currentTarget.style.removeProperty('--spark-y')
+  }
+
   if (lesson.intro && !started) {
     return (
       <div className="runner runner--intro">
+        <div className="runner__intro-decor optic-decor" aria-hidden="true" />
         <h3 className="intro__heading">{lesson.intro.heading}</h3>
         {lesson.intro.animation === 'focus' && <RayFocusExplainer />}
         {lesson.intro.animation === 'source' && <RaySourceExplainer />}
@@ -213,20 +228,30 @@ export function ProblemRunner({
 
   if (done) {
     return (
-      <div className="runner runner--done" role="status">
+      <div
+        className="runner runner--done"
+        role="status"
+        onPointerMove={moveCompletionSpark}
+        onPointerLeave={resetCompletionSpark}
+      >
+        <div className="runner__finish-decor" aria-hidden="true">
+          <span className="runner__spark runner__spark--one" />
+          <span className="runner__spark runner__spark--two" />
+          <span className="runner__spark runner__spark--three" />
+        </div>
         <div className="runner__celebrate" aria-hidden="true">
-          🎉
+          LensLab
         </div>
         <h2>Lesson complete!</h2>
-        <p>You finished “{lesson.title}”. Awesome work — you're really getting this! ✨</p>
+        <p>You finished “{lesson.title}”. Nice work — you're really getting this.</p>
         <div className="runner__actions runner__actions--done">
           {onNextLesson && (
             <button type="button" className="btn btn--primary" onClick={onNextLesson}>
-              Next lesson{nextLessonTitle ? `: ${nextLessonTitle}` : ''} →
+              Next lesson{nextLessonTitle ? `: ${nextLessonTitle}` : ''}
             </button>
           )}
           <button type="button" className="btn" onClick={restart}>
-            ↻ Review lesson
+            Review lesson
           </button>
           {onExit && (
             <button type="button" className="btn" onClick={onExit}>
@@ -268,8 +293,19 @@ export function ProblemRunner({
 
       <p className="runner__prompt">{renderRich(step.prompt)}</p>
 
+      {featureNumbersTools && showNumbersTools && (
+        <NumbersTools
+          featured
+          measures={measures}
+          onToggleMeasure={toggleMeasure}
+          focalLength={focalLength}
+          objectDistance={objectDistance}
+          image={image}
+        />
+      )}
+
       {plot ? (
-        <PlotRaysScene
+        <DrawRaysScene
           scene={step.scene}
           solved={status === 'correct'}
           onReadyChange={(ready) => {
@@ -377,21 +413,45 @@ export function ProblemRunner({
         </>
       )}
 
-      {((!predict && !plot) || committed || (plot && solved)) && (
-      <section className="runner__more" aria-labelledby="numbers-tools-heading">
-        <h4 id="numbers-tools-heading" className="runner__more-title">
-          Numbers &amp; tools
-        </h4>
+      {showNumbersTools && !featureNumbersTools && (
+        <NumbersTools
+          measures={measures}
+          onToggleMeasure={toggleMeasure}
+          focalLength={focalLength}
+          objectDistance={objectDistance}
+          image={image}
+        />
+      )}
+    </div>
+  )
+}
 
+function NumbersTools({
+  featured = false,
+  measures,
+  onToggleMeasure,
+  focalLength,
+  objectDistance,
+  image,
+}: {
+  featured?: boolean
+  measures: MeasureFlags
+  onToggleMeasure: (key: keyof MeasureFlags) => void
+  focalLength: number
+  objectDistance: number
+  image: ReturnType<typeof formImage>
+}) {
+  const content = (
+    <>
       <fieldset className="measures">
         <legend>Show on diagram</legend>
         <label className="measures__opt measures__opt--f">
-          <input type="checkbox" checked={!!measures.f} onChange={() => toggleMeasure('f')} />
+          <input type="checkbox" checked={!!measures.f} onChange={() => onToggleMeasure('f')} />
           <span className="swatch swatch--f" />
           <b>f</b> <span className="measures__desc">focal length · lens → F</span>
         </label>
         <label className="measures__opt measures__opt--do">
-          <input type="checkbox" checked={!!measures.do} onChange={() => toggleMeasure('do')} />
+          <input type="checkbox" checked={!!measures.do} onChange={() => onToggleMeasure('do')} />
           <span className="swatch swatch--do" />
           <b>
             d<sub>o</sub>
@@ -399,7 +459,7 @@ export function ProblemRunner({
           <span className="measures__desc">object distance · candle → lens</span>
         </label>
         <label className="measures__opt measures__opt--di">
-          <input type="checkbox" checked={!!measures.di} onChange={() => toggleMeasure('di')} />
+          <input type="checkbox" checked={!!measures.di} onChange={() => onToggleMeasure('di')} />
           <span className="swatch swatch--di" />
           <b>
             d<sub>i</sub>
@@ -407,7 +467,7 @@ export function ProblemRunner({
           <span className="measures__desc">image distance · lens → image</span>
         </label>
         <label className="measures__opt measures__opt--m">
-          <input type="checkbox" checked={!!measures.m} onChange={() => toggleMeasure('m')} />
+          <input type="checkbox" checked={!!measures.m} onChange={() => onToggleMeasure('m')} />
           <span className="swatch swatch--m" />
           <b>m</b>{' '}
           <span className="measures__desc">heights · h₀ vs hᵢ</span>
@@ -529,9 +589,30 @@ export function ProblemRunner({
           </dl>
         </div>
       </details>
+    </>
+  )
+
+  if (featured) {
+    return (
+      <section className="runner__more runner__more--featured" aria-labelledby="formula-tools-heading">
+        <h4 id="formula-tools-heading" className="runner__more-title">
+          Thin lens formula
+        </h4>
+        <p className="runner__more-subtitle">
+          Watch the equation update first, then use the diagram to test what the numbers predict.
+        </p>
+        {content}
       </section>
-      )}
-    </div>
+    )
+  }
+
+  return (
+    <details className="runner__more">
+      <summary id="numbers-tools-heading" className="runner__more-title">
+        Numbers &amp; tools
+      </summary>
+      {content}
+    </details>
   )
 }
 
@@ -560,11 +641,25 @@ function PredictPanel({
   isLast: boolean
 }) {
   const chosen = step.choices.find((c) => c.id === chosenId)
+  function chooseByKeyboard(index: number, key: string) {
+    const last = step.choices.length - 1
+    const nextIndex =
+      key === 'ArrowDown' || key === 'ArrowRight'
+        ? Math.min(last, index + 1)
+        : key === 'ArrowUp' || key === 'ArrowLeft'
+          ? Math.max(0, index - 1)
+          : key === 'Home'
+            ? 0
+            : key === 'End'
+              ? last
+              : index
+    return step.choices[nextIndex]?.id
+  }
 
   return (
     <div className="predict">
       <ul className="predict__choices" role="radiogroup" aria-label="Your prediction">
-        {step.choices.map((c) => {
+        {step.choices.map((c, index) => {
           const isChosen = c.id === chosenId
           // Once solved: highlight the correct answer, dim the rest. While trying:
           // mark only the currently chosen option (green if right, red if wrong).
@@ -590,7 +685,27 @@ function PredictPanel({
                   isChosen ? 'is-chosen' : ''
                 }`}
                 onClick={() => onChoose(c.id)}
+                onKeyDown={(e) => {
+                  const nextId = chooseByKeyboard(index, e.key)
+                  if (nextId === c.id) return
+                  e.preventDefault()
+                  onChoose(nextId)
+                }}
               >
+                {c.visual && (
+                  <span className="predict__visual" aria-hidden="true">
+                    <LensDiagram
+                      objectDistance={c.visual.scene.objectDistance}
+                      focalLength={c.visual.scene.focalLength}
+                      objectHeight={c.visual.scene.objectHeight}
+                      showRays={c.visual.showRays ?? true}
+                      showImage={c.visual.showImage ?? true}
+                    />
+                    {c.visual.caption && (
+                      <span className="predict__caption">{c.visual.caption}</span>
+                    )}
+                  </span>
+                )}
                 <span className="predict__label">{c.label}</span>
                 {showMark && (
                   <span className="predict__mark" aria-hidden="true">
@@ -625,7 +740,7 @@ function PredictPanel({
 
       {canExplore && (
         <p className="predict__explore" role="status">
-          ✋ Now <strong>drag the candle</strong> to see how the image responds.
+          Now <strong>drag the candle</strong> to see how the image responds.
         </p>
       )}
 
@@ -667,7 +782,10 @@ function EquationPanel({
 }) {
   const one = <span className="one">1</span>
   return (
-    <div className="equation" aria-hidden="true">
+    <div
+      className="equation"
+      aria-label={`Thin lens equation: one over f equals one over object distance plus one over image distance. Current values: f ${fmt(f)}, object distance ${fmt(dObj)}, image distance ${fmt(dImg)}, magnification ${fmt(m)}.`}
+    >
       <div className="equation__row">
         <Frac top={one} bottom={<span className="sym sym--f">f</span>} />
         <span className="op">=</span>

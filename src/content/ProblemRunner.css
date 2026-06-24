@@ -2,11 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  /* One color per quantity, reused across the equation, chips, and diagram. */
-  --c-f: #ffb84d;
-  --c-do: #6fb3ff;
-  --c-di: #c08bff;
-  --c-m: #54d6a0;
 }
 
 .runner__progress {
@@ -28,17 +23,37 @@
   color: var(--accent);
 }
 .progressbar {
+  position: relative;
   height: 10px;
   border-radius: 999px;
   background: var(--bg-elev-2);
   border: 1px solid var(--border);
   overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.18);
 }
 .progressbar__fill {
+  position: relative;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent), #4fd0ff);
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.22) 0 2px, transparent 2px 11px),
+    linear-gradient(90deg, var(--accent), #4fd0ff);
   transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.progressbar__fill::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  width: 10px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand) 62%, white);
+  box-shadow:
+    0 0 16px var(--brand),
+    0 0 28px color-mix(in srgb, var(--accent) 42%, transparent);
+  transform: translateY(-50%);
 }
 @media (prefers-reduced-motion: reduce) {
   .progressbar__fill {
@@ -74,21 +89,21 @@
   gap: 0.5rem;
 }
 .chip {
-  background: #131a2e;
-  border: 1px solid #1d2540;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.4rem 0.85rem;
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
-  color: #c7cdda;
+  color: var(--text-dim);
 }
 .chip--real {
-  border-color: #c08bff;
-  color: #d9c2ff;
+  border-color: var(--c-di);
+  color: var(--c-di);
 }
 .chip--virtual {
-  border-color: #6fb3ff;
-  color: #bfe0ff;
+  border-color: var(--c-do);
+  color: var(--c-do);
 }
 .chip--f {
   border-color: var(--c-f);
@@ -109,8 +124,8 @@
   flex-direction: column;
   gap: 0.35rem;
   align-items: center;
-  background: #0d1322;
-  border: 1px solid #1d2540;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.7rem 0.9rem;
   overflow-x: auto;
@@ -125,19 +140,19 @@
 }
 .equation__row--values {
   font-size: 1.1rem;
-  color: #aab2c5;
+  color: var(--text-dim);
 }
 .equation .op {
-  color: #8b93a7;
+  color: var(--text-mute);
 }
 .equation__sep {
   width: 1px;
   align-self: stretch;
-  background: #1d2540;
+  background: var(--border);
   margin: 0 0.4rem;
 }
 .equation .one {
-  color: #e6e9f0;
+  color: var(--text);
 }
 .equation .sym--f {
   color: var(--c-f);
@@ -182,7 +197,7 @@
 }
 
 .measures {
-  border: 1px solid #1d2540;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.5rem 0.95rem 0.85rem;
   display: grid;
@@ -193,7 +208,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #7c8398;
+  color: var(--text-mute);
   padding: 0 0.4rem;
 }
 .measures__opt {
@@ -201,7 +216,7 @@
   align-items: center;
   gap: 0.45rem;
   font-size: 1rem;
-  color: #e6e9f0;
+  color: var(--text);
   cursor: pointer;
   user-select: none;
 }
@@ -223,7 +238,7 @@
   accent-color: var(--c-m);
 }
 .measures__desc {
-  color: #8b93a7;
+  color: var(--text-mute);
   font-size: 0.85rem;
 }
 
@@ -249,19 +264,39 @@
     max-width: 100%;
     overflow-x: auto;
   }
+  .predict__choice {
+    min-height: 44px;
+  }
+  .predict__visual {
+    padding: 0.25rem;
+  }
+  .runner__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.65rem 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg) 0%, transparent),
+      var(--bg) 28%
+    );
+  }
+  .runner__actions .btn {
+    min-height: 44px;
+  }
 }
 
 .glossary {
   font-size: 0.95rem;
-  color: #b6bdcc;
-  background: #0d1322;
-  border: 1px solid #1d2540;
+  color: var(--text-dim);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.5rem 0.95rem;
 }
 .glossary summary {
   cursor: pointer;
-  color: #8b93a7;
+  color: var(--text-mute);
   padding: 0.25rem 0;
 }
 .glossary__group {
@@ -272,7 +307,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #7c8398;
+  color: var(--text-mute);
 }
 .glossary dl {
   margin: 0;
@@ -282,14 +317,14 @@
 }
 .glossary dt {
   font-weight: 600;
-  color: #e6e9f0;
+  color: var(--text);
   white-space: nowrap;
   display: flex;
   align-items: center;
 }
 .glossary dt .term {
   font-weight: 400;
-  color: #8b93a7;
+  color: var(--text-mute);
   font-size: 0.82rem;
   margin-left: 0.4rem;
 }
@@ -320,16 +355,44 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.9rem 0.95rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
   background: color-mix(in srgb, var(--bg-elev-2) 78%, transparent);
+}
+.runner__more--featured {
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--border));
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand) 18%, transparent), transparent 42%),
+    var(--bg-elev);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
 }
 .runner__more-title {
   margin: 0;
   color: var(--text);
   font-size: 1rem;
   font-weight: 600;
+  cursor: pointer;
+}
+.runner__more--featured .runner__more-title {
+  cursor: default;
+  font-size: 1.15rem;
+}
+.runner__more-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.runner__more > :not(summary):not(:first-child) {
+  margin-top: 1rem;
+}
+.runner__more--featured .equation {
+  border-color: color-mix(in srgb, var(--brand) 45%, var(--border));
+  background: color-mix(in srgb, var(--bg-elev-2) 78%, var(--brand));
+  padding: 0.95rem 1rem;
+}
+.runner__more--featured .equation__row {
+  font-size: clamp(1.55rem, 4.5vw, 2rem);
+}
+.runner__more--featured .equation__row--values {
+  font-size: clamp(1.1rem, 3.4vw, 1.35rem);
 }
 
 .runner__controls {
@@ -404,9 +467,9 @@
 }
 .predict__choice {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   text-align: left;
   font-size: 1.05rem;
@@ -422,6 +485,23 @@
     background 0.15s ease,
     transform 0.08s ease;
 }
+.predict__visual {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--diagram-bg, #0b1020);
+}
+.predict__visual .lens-diagram {
+  border-radius: 8px;
+}
+.predict__caption {
+  color: var(--text-mute);
+  font-size: 0.85rem;
+  text-align: center;
+}
 .predict__choice:hover:not(:disabled) {
   border-color: var(--border-strong);
   transform: translateY(-1px);
@@ -433,14 +513,14 @@
   cursor: default;
 }
 .predict__choice--correct {
-  border-color: #2ee6a6;
-  background: #11331f;
-  color: #d6ffe9;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+  color: var(--text);
 }
 .predict__choice--wrong {
-  border-color: #ff7a7a;
-  background: #3a1820;
-  color: #ffd9da;
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, var(--bg-elev));
+  color: var(--text);
 }
 .predict__choice--muted {
   opacity: 0.55;
@@ -451,10 +531,10 @@
   font-size: 1.2rem;
 }
 .predict__choice--correct .predict__mark {
-  color: #2ee6a6;
+  color: var(--accent);
 }
 .predict__choice--wrong .predict__mark {
-  color: #ff7a7a;
+  color: var(--danger);
 }
 .predict__why {
   margin: 0.4rem 0 0;
@@ -475,17 +555,34 @@
 }
 
 .feedback {
+  position: relative;
+  overflow: hidden;
   border-radius: 10px;
   padding: 0.75rem 1rem;
   line-height: 1.5;
 }
+.feedback::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  pointer-events: none;
+}
 .feedback--correct {
-  background: #11331f;
-  border: 1px solid #2ee6a6;
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+  border: 1px solid var(--accent);
+}
+.feedback--correct::before {
+  background: linear-gradient(var(--accent), var(--brand));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 42%, transparent);
 }
 .feedback--incorrect {
-  background: #3a2a12;
-  border: 1px solid #ffb24d;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+}
+.feedback--incorrect::before {
+  background: linear-gradient(var(--warning), var(--danger));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--warning) 36%, transparent);
 }
 
 .plot-panel {
@@ -517,8 +614,73 @@
 }
 
 .runner--done {
+  --spark-x: 50%;
+  --spark-y: 44%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   text-align: center;
-  padding: 2rem 1rem;
+  padding: clamp(2rem, 6vw, 3rem) 1rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at var(--spark-x) var(--spark-y), color-mix(in srgb, var(--c-f) 28%, transparent), transparent 17rem),
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 38%),
+    color-mix(in srgb, var(--bg-elev) 64%, transparent);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.24);
+}
+.runner--done > :not(.runner__finish-decor) {
+  position: relative;
+  z-index: 1;
+}
+.runner__finish-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(188, 214, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 214, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(105deg, transparent 25%, var(--decor-beam) 26%, transparent 38%);
+  background-size: 30px 30px, 30px 30px, auto;
+  mask-image: radial-gradient(circle at var(--spark-x) var(--spark-y), black, transparent 74%);
+}
+.runner__spark {
+  position: absolute;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--c-f);
+  box-shadow:
+    0 0 16px var(--c-f),
+    0 0 28px color-mix(in srgb, var(--c-f) 48%, transparent);
+  animation: optic-float 2.8s ease-in-out infinite;
+}
+.runner__spark--one {
+  left: calc(var(--spark-x) - 4.5rem);
+  top: calc(var(--spark-y) - 2rem);
+}
+.runner__spark--two {
+  left: calc(var(--spark-x) + 2.6rem);
+  top: calc(var(--spark-y) + 1.2rem);
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--accent);
+  box-shadow:
+    0 0 14px var(--accent),
+    0 0 24px color-mix(in srgb, var(--accent) 42%, transparent);
+  animation-delay: -0.8s;
+}
+.runner__spark--three {
+  left: calc(var(--spark-x) + 0.8rem);
+  top: calc(var(--spark-y) - 3.8rem);
+  width: 0.34rem;
+  height: 0.34rem;
+  background: var(--brand);
+  box-shadow:
+    0 0 14px var(--brand),
+    0 0 24px color-mix(in srgb, var(--brand) 46%, transparent);
+  animation-delay: -1.5s;
 }
 .runner__celebrate {
   font-size: 3.5rem;
@@ -541,7 +703,38 @@
 }
 
 .runner--intro {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   gap: 1rem;
+  padding: clamp(1rem, 3vw, 1.25rem);
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--border));
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 90% 12%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 34%),
+    color-mix(in srgb, var(--bg-elev) 54%, transparent);
+}
+.runner--intro > :not(.runner__intro-decor) {
+  position: relative;
+  z-index: 1;
+}
+.runner__intro-decor::before {
+  inset: 0;
+  background:
+    linear-gradient(rgba(188, 214, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 214, 255, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(90deg, black, transparent 78%);
+}
+.runner__intro-decor::after {
+  right: -12%;
+  top: 24%;
+  width: min(62vw, 28rem);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--decor-beam), var(--accent), transparent);
+  box-shadow: 0 0 18px var(--decor-beam);
+  transform: rotate(-10deg);
 }
 .intro__heading {
   margin: 0;
@@ -551,7 +744,7 @@
   margin: 0;
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #c7cdda;
+  color: var(--text-dim);
 }
 .intro__para sub {
   font-size: 0.7em;

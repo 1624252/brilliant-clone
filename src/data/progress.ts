@@ -27,10 +27,39 @@ export interface Streak {
   lastActiveDate: string // "YYYY-MM-DD" in the user's local time
 }
 
+export interface QuestionStreak {
+  current: number
+  longest: number
+  lastAnsweredAt?: Timestamp | null
+}
+
+export interface PracticeStats {
+  solvedCount: number
+  totalAttempts: number
+  totalCorrect: number
+  questionStreak: QuestionStreak
+}
+
+export interface PracticeProgress {
+  problemId: string
+  attempts: number
+  correctAttempts: number
+  solved: boolean
+  lastAnswer?: number | null
+  lastCorrectAt?: Timestamp | null
+  updatedAt?: Timestamp | null
+}
+
 export interface UserProfile {
   displayName: string
   email: string
   streak: Streak
+  practiceStats?: PracticeStats
+}
+
+export interface PracticeAttemptResult {
+  correct: boolean
+  answer: number | null
 }
 
 /** Local calendar day as YYYY-MM-DD (offset in days, e.g., -1 = yesterday). */
@@ -46,6 +75,15 @@ export function localDay(offsetDays = 0): string {
 const userRef = (uid: string) => doc(db, 'users', uid)
 const progressRef = (uid: string, lessonId: string) =>
   doc(db, 'users', uid, 'progress', lessonId)
+const practiceRef = (uid: string, problemId: string) =>
+  doc(db, 'users', uid, 'practice', problemId)
+
+export const emptyPracticeStats = (): PracticeStats => ({
+  solvedCount: 0,
+  totalAttempts: 0,
+  totalCorrect: 0,
+  questionStreak: { current: 0, longest: 0, lastAnsweredAt: null },
+})
 
 /** Create or update the user profile document (called on sign-up / first login). */
 export async function ensureUserDoc(
@@ -65,6 +103,7 @@ export async function ensureUserDoc(
     email,
     createdAt: serverTimestamp(),
     streak: { current: 0, longest: 0, lastActiveDate: '' },
+    practiceStats: emptyPracticeStats(),
   })
 }
 
@@ -104,6 +143,47 @@ export async function completeLesson(uid: string, lessonId: string): Promise<voi
     { merge: true },
   )
   await bumpStreak(uid)
+}
+
+/** Persist one AP-style practice submission and update question/daily streaks. */
+export async function recordPracticeAttempt(
+  uid: string,
+  problemId: string,
+  result: PracticeAttemptResult,
+): Promise<void> {
+  const problemRef = practiceRef(uid, problemId)
+  const problemSnap = await getDoc(problemRef)
+  const previousProblem = problemSnap.data() as PracticeProgress | undefined
+  const wasSolved = previousProblem?.solved === true
+
+  const nextProblem: Record<string, unknown> = {
+    problemId,
+    attempts: (previousProblem?.attempts ?? 0) + 1,
+    correctAttempts: (previousProblem?.correctAttempts ?? 0) + (result.correct ? 1 : 0),
+    solved: wasSolved || result.correct,
+    updatedAt: serverTimestamp(),
+  }
+  if (result.answer !== null) nextProblem.lastAnswer = result.answer
+  if (result.correct) nextProblem.lastCorrectAt = serverTimestamp()
+
+  await setDoc(problemRef, nextProblem, { merge: true })
+
+  const userSnap = await getDoc(userRef(uid))
+  const prevStats: PracticeStats = userSnap.data()?.practiceStats ?? emptyPracticeStats()
+  const nextCurrent = result.correct ? (prevStats.questionStreak?.current ?? 0) + 1 : 0
+  const nextStats = {
+    solvedCount: (prevStats.solvedCount ?? 0) + (result.correct && !wasSolved ? 1 : 0),
+    totalAttempts: (prevStats.totalAttempts ?? 0) + 1,
+    totalCorrect: (prevStats.totalCorrect ?? 0) + (result.correct ? 1 : 0),
+    questionStreak: {
+      current: nextCurrent,
+      longest: Math.max(prevStats.questionStreak?.longest ?? 0, nextCurrent),
+      lastAnsweredAt: serverTimestamp(),
+    },
+  }
+  await setDoc(userRef(uid), { practiceStats: nextStats }, { merge: true })
+
+  if (result.correct) await bumpStreak(uid)
 }
 
 /** Increment the streak once per local day; reset if a day was missed. */

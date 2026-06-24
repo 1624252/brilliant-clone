@@ -23,7 +23,7 @@ export const concaveLesson: LessonDefinition = {
   id: 'concave-lenses',
   title: 'Concave Lenses',
   order: 2,
-  estMinutes: 3,
+  estMinutes: 4,
   summary: 'See how a concave lens spreads light out into a virtual focus.',
   intro: {
     heading: 'A lens that spreads light out',
@@ -45,18 +45,32 @@ export const concaveLesson: LessonDefinition = {
         {
           id: 'real-inverted',
           label: 'Real and inverted, like a projector',
+          visual: {
+            scene: { objectDistance: 30, focalLength: 20 },
+            caption: 'Projector-like result',
+          },
           feedback:
             'A diverging lens never brings light to a point on the far side, so it can’t make a real, inverted image.',
         },
         {
           id: 'none',
           label: 'No image forms',
+          visual: {
+            scene: { objectDistance: 40, focalLength: FOCAL_LENGTH },
+            showRays: false,
+            showImage: false,
+            caption: 'No formed image',
+          },
           feedback:
             'An image still forms — trace the diverging rays backward and they meet at a virtual image.',
         },
         {
           id: 'virtual-smaller',
           label: 'Virtual, upright, and smaller',
+          visual: {
+            scene: { objectDistance: 40, focalLength: FOCAL_LENGTH },
+            caption: 'Virtual reduced image',
+          },
           correct: true,
           feedback:
             'Right: a concave lens always makes a virtual, upright, reduced image on the candle’s side.',
@@ -66,6 +80,17 @@ export const concaveLesson: LessonDefinition = {
         'A concave lens **always** makes a __virtual__, __upright__, __reduced__ image — no matter where the object is.',
       // Stay hands-on: after committing, drag the candle and watch the virtual image.
       explore: objectControl,
+    },
+    {
+      kind: 'plot-rays',
+      id: 'draw-concave-rays',
+      prompt:
+        'Draw the three principal rays for this concave lens. Use the dashed back-traces to find the virtual image.',
+      scene: { objectDistance: 40, focalLength: FOCAL_LENGTH },
+      hint:
+        'For a concave lens, the **parallel** ray leaves as if it came from the near-side F, the **chief** ray stays straight, and the **focal** ray exits parallel.',
+      reveal:
+        'All three rays spread out after the concave lens. Their backward extensions meet on the candle side, so the image is **virtual, upright, and reduced**.',
     },
     {
       id: 'try-to-make-real',

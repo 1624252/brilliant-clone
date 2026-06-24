@@ -1,0 +1,131 @@
+.draw-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.draw-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.draw-toolbar__btn {
+  flex: 1 1 10rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-weight: 700;
+}
+.draw-toolbar__btn.is-active {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
+}
+.draw-toolbar__btn--parallel.is-active {
+  border-color: #ff9f43;
+}
+.draw-toolbar__btn--chief.is-active {
+  border-color: #54d6a0;
+}
+.draw-toolbar__btn--focal.is-active {
+  border-color: #ff6b9d;
+}
+
+.lens-diagram .draw-ray {
+  opacity: 0.58;
+}
+.lens-diagram .draw-ray.is-active {
+  opacity: 1;
+}
+.lens-diagram .draw-ray__guide {
+  fill: none;
+  stroke: var(--diagram-axis, #8791a8);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+  opacity: 0.55;
+}
+.lens-diagram .draw-ray__line {
+  stroke-width: 3;
+}
+.lens-diagram .draw-ray__virtual {
+  stroke-width: 2;
+  opacity: 0.35;
+}
+
+.lens-diagram .draw-handle {
+  fill: var(--bg-elev, #151b2e);
+  stroke: #ffffff;
+  stroke-width: 2;
+  cursor: grab;
+  touch-action: none;
+}
+.lens-diagram .draw-handle--end {
+  fill: #ffd166;
+  stroke: #0b1020;
+}
+.lens-diagram .draw-handle.is-active,
+.lens-diagram .draw-handle:focus-visible {
+  outline: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+
+.draw-nudges {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  color: var(--text-dim);
+}
+.draw-nudges__handles,
+.draw-nudges__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.draw-nudges button {
+  min-height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.draw-nudges button.is-active {
+  border-color: var(--accent);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .draw-toolbar__btn {
+    flex-basis: 100%;
+  }
+  .draw-nudges {
+    grid-template-columns: 1fr;
+  }
+  .draw-nudges button {
+    min-height: 44px;
+    flex: 1 1 5rem;
+  }
+  .lens-diagram .draw-handle {
+    stroke-width: 3;
+  }
+}

@@ -46,6 +46,7 @@ const {
   bumpStreak,
   completeLesson,
   ensureUserDoc,
+  recordPracticeAttempt,
   saveStepProgress,
   localDay,
 } = await import('./progress')
@@ -53,10 +54,21 @@ const {
 const userPath = (uid: string) => `users/${uid}`
 const progressPath = (uid: string, lessonId: string) =>
   `users/${uid}/progress/${lessonId}`
+const practicePath = (uid: string, problemId: string) =>
+  `users/${uid}/practice/${problemId}`
 
 const streakOf = (uid: string) =>
   store.get(userPath(uid))?.streak as
     | { current: number; longest: number; lastActiveDate: string }
+    | undefined
+const practiceStatsOf = (uid: string) =>
+  store.get(userPath(uid))?.practiceStats as
+    | {
+        solvedCount: number
+        totalAttempts: number
+        totalCorrect: number
+        questionStreak: { current: number; longest: number; lastAnsweredAt: string }
+      }
     | undefined
 
 beforeEach(() => {
@@ -261,5 +273,74 @@ describe('completeLesson', () => {
     expect(doc.status).toBe('completed')
     // merge:true means the earlier currentStepIndex is not wiped out.
     expect(doc.currentStepIndex).toBe(2)
+  })
+})
+
+describe('recordPracticeAttempt', () => {
+  it('records an incorrect attempt and resets the question streak', async () => {
+    await ensureUserDoc('userA', 'Ada', 'ada@example.com')
+    await recordPracticeAttempt('userA', 'convex-image-distance-30-10', {
+      correct: false,
+      answer: 12,
+    })
+
+    expect(store.get(practicePath('userA', 'convex-image-distance-30-10'))).toMatchObject({
+      problemId: 'convex-image-distance-30-10',
+      attempts: 1,
+      correctAttempts: 0,
+      solved: false,
+      lastAnswer: 12,
+    })
+    expect(practiceStatsOf('userA')).toMatchObject({
+      solvedCount: 0,
+      totalAttempts: 1,
+      totalCorrect: 0,
+      questionStreak: { current: 0, longest: 0 },
+    })
+  })
+
+  it('increments solved counts, question streak, and daily streak on correct answers', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 23, 9, 0))
+    await ensureUserDoc('userA', 'Ada', 'ada@example.com')
+
+    await recordPracticeAttempt('userA', 'convex-image-distance-30-10', {
+      correct: true,
+      answer: 15,
+    })
+    await recordPracticeAttempt('userA', 'convex-magnification-30-10', {
+      correct: true,
+      answer: -0.5,
+    })
+
+    expect(practiceStatsOf('userA')).toMatchObject({
+      solvedCount: 2,
+      totalAttempts: 2,
+      totalCorrect: 2,
+      questionStreak: { current: 2, longest: 2 },
+    })
+    // Both correct practice answers happen on the same local day, so the daily
+    // streak only bumps once.
+    expect(streakOf('userA')?.current).toBe(1)
+  })
+
+  it('does not double-count solved problems when a solved problem is retried', async () => {
+    await ensureUserDoc('userA', 'Ada', 'ada@example.com')
+
+    await recordPracticeAttempt('userA', 'convex-image-distance-30-10', {
+      correct: true,
+      answer: 15,
+    })
+    await recordPracticeAttempt('userA', 'convex-image-distance-30-10', {
+      correct: true,
+      answer: 15,
+    })
+
+    expect(store.get(practicePath('userA', 'convex-image-distance-30-10'))).toMatchObject({
+      attempts: 2,
+      correctAttempts: 2,
+      solved: true,
+    })
+    expect(practiceStatsOf('userA')?.solvedCount).toBe(1)
   })
 })

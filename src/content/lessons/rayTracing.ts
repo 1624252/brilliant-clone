@@ -36,7 +36,7 @@ export const rayTracingLesson: LessonDefinition = {
       kind: 'plot-rays',
       id: 'plot-beyond-2f',
       prompt:
-        'The candle sits beyond 2F. Drag the dot to **plot where the three rays cross** — make each ray follow its rule.',
+        'The candle sits beyond 2F. Draw each principal ray so they cross at the image.',
       scene: { objectDistance: 60, focalLength: FOCAL_LENGTH },
       hint: 'Use the focal points: the **parallel** ray bends through **F**, the **chief** ray stays straight through the center, and the **focal** ray leaves **parallel** to the axis.',
       reveal:

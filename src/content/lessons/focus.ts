@@ -77,18 +77,32 @@ export const focusLesson: LessonDefinition = {
         {
           id: 'never',
           label: 'They stay parallel and never cross',
+          visual: {
+            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+            showRays: false,
+            showImage: false,
+            caption: 'No crossing',
+          },
           feedback:
             'A converging lens bends parallel rays inward, so they must cross somewhere.',
         },
         {
           id: 'focal',
           label: 'They cross right at the focal point, F',
+          visual: {
+            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+            caption: 'Image at F',
+          },
           correct: true,
           feedback: 'Yes — F is defined as where parallel rays converge.',
         },
         {
           id: 'twice',
           label: 'They cross farther out, at 2F',
+          visual: {
+            scene: { objectDistance: 2 * FOCAL_LENGTH, focalLength: FOCAL_LENGTH },
+            caption: 'Image at 2F',
+          },
           feedback:
             'Rays from an object at 2F meet at 2F. Truly parallel rays come from infinitely far away, so they focus closer — right at F.',
         },

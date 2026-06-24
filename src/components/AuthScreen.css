@@ -109,9 +109,9 @@
 }
 
 .auth__error {
-  color: #ffb4b4;
-  background: #3a1820;
-  border: 1px solid #6e2a36;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
   border-radius: 10px;
   padding: 0.6rem 0.8rem;
   font-size: 0.95rem;

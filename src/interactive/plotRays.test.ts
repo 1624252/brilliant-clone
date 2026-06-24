@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { imageTip, rayChecks, type PlotScene } from './plotRays'
+import {
+  constructionPoints,
+  drawnRayChecks,
+  imageTip,
+  rayChecks,
+  type DrawnRays,
+  type PlotScene,
+} from './plotRays'
 
 // Object beyond 2F (the ray-tracing lesson scene): f=20, do=60 -> di=30, m=-0.5.
 const scene: PlotScene = { objectDistance: 60, focalLength: 20, objectHeight: 18 }
@@ -42,5 +49,37 @@ describe('plotRays geometry', () => {
     const onChief = rayChecks({ x: 10, y: -3 }, scene)
     expect(onChief.chief).toBe(true)
     expect(onChief.all).toBe(false)
+  })
+
+  it('validates drawn ray start and endpoint rules', () => {
+    const pts = constructionPoints(scene)
+    const rays: DrawnRays = {
+      parallel: { start: pts.parallelStart, end: { x: 50, y: -27 } },
+      chief: { start: pts.chiefStart, end: { x: 50, y: -15 } },
+      focal: { start: pts.focalStart, end: { x: 50, y: pts.focalStart.y } },
+    }
+    expect(drawnRayChecks(rays, scene).all).toBe(true)
+    expect(
+      drawnRayChecks(
+        { ...rays, parallel: { ...rays.parallel, start: { x: 0, y: 5 } } },
+        scene,
+      ).parallel,
+    ).toBe(false)
+    expect(
+      drawnRayChecks({ ...rays, focal: { ...rays.focal, end: { x: 50, y: 8 } } }, scene)
+        .focal,
+    ).toBe(false)
+  })
+
+  it('validates concave-lens drawn rays with a virtual reduced image', () => {
+    const concave: PlotScene = { objectDistance: 40, focalLength: -20, objectHeight: 18 }
+    const pts = constructionPoints(concave)
+    const rays: DrawnRays = {
+      parallel: { start: pts.parallelStart, end: { x: 20, y: 36 } },
+      chief: { start: pts.chiefStart, end: { x: 50, y: -22.5 } },
+      focal: { start: pts.focalStart, end: { x: 50, y: pts.focalStart.y } },
+    }
+    expect(imageTip(concave).x).toBeLessThan(0)
+    expect(drawnRayChecks(rays, concave).all).toBe(true)
   })
 })

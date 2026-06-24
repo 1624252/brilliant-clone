@@ -19,12 +19,29 @@
   --brand-ink: #06223f;
   --accent: #35e0a8;
   --accent-ink: #043022;
+  --danger: #ff7a7a;
+  --danger-bg: #3a1820;
+  --danger-text: #ffd9da;
+  --warning: #ffb24d;
+  --warning-bg: #3a2a12;
 
   /* Per-quantity colors, shared across equation, chips, diagram, glossary. */
   --c-f: #ffc14d;
   --c-do: #7aa8ff;
   --c-di: #c79bff;
   --c-m: #54e0a6;
+  --diagram-bg: #0b1020;
+  --diagram-axis: #394056;
+  --diagram-label: #bcd6ff;
+  --diagram-dim: #cdd3e1;
+  --diagram-virtual-ray: #ffffff;
+  --modal-backdrop: rgba(4, 7, 14, 0.7);
+
+  /* Decorative optics layers shared by screen chrome. */
+  --decor-beam: rgba(122, 168, 255, 0.22);
+  --decor-beam-strong: rgba(53, 224, 168, 0.28);
+  --decor-ring: rgba(188, 214, 255, 0.28);
+  --decor-glow: rgba(122, 168, 255, 0.2);
 
   color: var(--text);
   background: var(--bg);
@@ -54,11 +71,79 @@ body {
   min-height: 100vh;
 }
 
+.optic-decor {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.optic-decor::before,
+.optic-decor::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.optic-grid {
+  background-image:
+    linear-gradient(rgba(188, 214, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 214, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+}
+
+.optic-beams {
+  background:
+    linear-gradient(112deg, transparent 18%, var(--decor-beam) 19%, transparent 28%),
+    linear-gradient(70deg, transparent 42%, var(--decor-beam-strong) 43%, transparent 52%);
+}
+
+.optic-lens-ring {
+  border: 1px solid var(--decor-ring);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 32px var(--decor-glow),
+    0 0 42px var(--decor-glow);
+}
+
+@keyframes optic-shimmer {
+  from {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(130%) skewX(-18deg);
+  }
+}
+
+@keyframes optic-pulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes optic-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
 h1,
 h2,
 h3 {
   font-weight: 650;
-  color: #f3f5fb;
+  color: var(--text);
   line-height: 1.2;
 }
 
@@ -72,6 +157,15 @@ button {
 
 a {
   color: var(--brand);
+}
+
+.rich-var {
+  font-style: italic;
+  white-space: nowrap;
+}
+.rich-var sub {
+  font-size: 0.7em;
+  line-height: 0;
 }
 
 /* Shared button system */
@@ -119,4 +213,14 @@ a {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

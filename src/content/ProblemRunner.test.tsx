@@ -12,6 +12,8 @@ import type { LessonDefinition } from './types'
 import { distanceToSlider } from './logDistance'
 import { formImage } from '../engine'
 
+const shippedLessons = [focusLesson, concaveLesson, curvatureLesson, rayTracingLesson, thinLensLesson]
+
 /** Set the object-distance range input (avoids simulating SVG pointer drag). */
 function setObjectDistance(container: HTMLElement, value: number) {
   const slider = container.querySelector('input[type="range"]') as HTMLInputElement
@@ -41,7 +43,24 @@ describe('ProblemRunner intro screen', () => {
     // Steps are hidden until the learner starts.
     expect(screen.queryByText(/step 1 of/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /start lesson/i }))
-    expect(screen.getByText(/step 1 of 6/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 7/i)).toBeInTheDocument()
+  })
+})
+
+describe('lesson content quality', () => {
+  it('does not repeat exact prompts across shipped lessons', () => {
+    const prompts = shippedLessons.flatMap((lesson) => lesson.steps.map((step) => step.prompt))
+    expect(new Set(prompts).size).toBe(prompts.length)
+  })
+
+  it('keeps every predict step visual or hands-on and has one correct answer', () => {
+    for (const lesson of shippedLessons) {
+      for (const step of lesson.steps) {
+        if (!isPredictStep(step)) continue
+        expect(step.choices.filter((choice) => choice.correct)).toHaveLength(1)
+        expect(step.explore || step.choices.every((choice) => choice.visual)).toBeTruthy()
+      }
+    }
   })
 })
 
@@ -49,7 +68,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
   it('shows the first prompt and step counter', () => {
     renderStarted(thinLensLesson)
     expect(screen.getByText(/drag the candle/i)).toBeInTheDocument()
-    expect(screen.getByText(/step 1 of 6/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 1 of 7/i)).toBeInTheDocument()
   })
 
   it('gives a specific hint on a wrong attempt', () => {
@@ -70,14 +89,10 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
   })
 
-  it('advances to step 2, which accepts a virtual upright image', () => {
-    const { container } = renderStarted(thinLensLesson)
-    // Clear step 1.
-    setObjectDistance(container, 40)
-    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+  it('accepts a virtual upright image on the magnifier step', () => {
+    const { container } = render(<ProblemRunner lesson={thinLensLesson} initialStepIndex={2} />)
 
-    expect(screen.getByText(/step 2 of 6/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 3 of 7/i)).toBeInTheDocument()
     setObjectDistance(container, 10) // inside f -> virtual, upright
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/the lens magnifies/i)).toBeInTheDocument()
@@ -110,14 +125,21 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
   })
 
   it('step 6 plots the virtual image by tracing rays backward', () => {
-    render(<ProblemRunner lesson={thinLensLesson} initialStepIndex={5} />)
-    expect(screen.getByText(/step 6 of 6/i)).toBeInTheDocument()
-    expect(screen.getByText(/plot where the rays appear to meet/i)).toBeInTheDocument()
+    render(<ProblemRunner lesson={thinLensLesson} initialStepIndex={6} />)
+    expect(screen.getByText(/step 7 of 7/i)).toBeInTheDocument()
+    expect(screen.getByText(/draw the rays and their back-traces/i)).toBeInTheDocument()
 
-    const marker = screen.getByRole('button', { name: /predicted crossing point/i })
-    // Marker starts near (-50, 10); true virtual tip is (-30, 30).
-    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowRight' })
-    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowUp' })
+    for (let i = 0; i < 7; i++) {
+      fireEvent.keyDown(screen.getByRole('slider', { name: /parallel ray end point/i }), {
+        key: 'ArrowDown',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /chief ray end point/i }), {
+        key: 'ArrowDown',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /focal ray end point/i }), {
+        key: 'ArrowDown',
+      })
+    }
 
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
@@ -143,11 +165,12 @@ describe('Thin Lens extreme steps', () => {
     if (!s || !isPredictStep(s)) throw new Error('extreme 1 should be a predict step')
     expect(s.scene.objectDistance).toBe(Infinity)
     expect(s.choices.map((choice) => choice.label)).toEqual([
-      'Right at F',
-      'At 2F',
-      'No image forms',
+      'The image collapses onto F',
+      'The image stays at 2F',
+      'No image appears',
     ])
     expect(s.choices.find((choice) => choice.correct)?.id).toBe('at-f')
+    expect(s.choices.every((choice) => choice.visual)).toBe(true)
   })
 
   it('zero step passes when the object reaches the lens', () => {
@@ -170,6 +193,7 @@ describe('ProblemRunner (Focusing Light lesson)', () => {
 describe('ProblemRunner (Concave Lenses lesson)', () => {
   it('reveals the virtual, upright, smaller answer after a prediction', () => {
     renderStarted(concaveLesson)
+    expect(screen.getByText(/virtual reduced image/i)).toBeInTheDocument()
     fireEvent.click(
       screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
     )
@@ -180,14 +204,9 @@ describe('ProblemRunner (Concave Lenses lesson)', () => {
   })
 
   it('passes the "try to make a real image" step when the candle is near the lens', () => {
-    const { container } = renderStarted(concaveLesson)
-    // Clear the opening predict step.
-    fireEvent.click(
-      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    const { container } = render(<ProblemRunner lesson={concaveLesson} initialStepIndex={2} />)
 
-    expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 3 of 4/i)).toBeInTheDocument()
     setObjectDistance(container, 4) // up close — still no real image
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/can.t focus light to a real point/i)).toBeInTheDocument()
@@ -209,16 +228,9 @@ describe('ProblemRunner (Concave Lenses lesson)', () => {
   })
 
   it('passes the half-size step when the candle sits one focal length away', () => {
-    const { container } = renderStarted(concaveLesson)
-    fireEvent.click(
-      screen.getByRole('radio', { name: /virtual, upright, and smaller/i }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
-    setObjectDistance(container, 4)
-    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    const { container } = render(<ProblemRunner lesson={concaveLesson} initialStepIndex={3} />)
 
-    expect(screen.getByText(/step 3 of 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/step 4 of 4/i)).toBeInTheDocument()
     setObjectDistance(container, 20) // one focal length -> m = 0.5
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/at one focal length away/i)).toBeInTheDocument()
@@ -258,27 +270,34 @@ describe('ProblemRunner (Convex & Concave curvature lesson)', () => {
 })
 
 describe('ProblemRunner (Ray Tracing lesson)', () => {
-  it('opens with the interactive plot-the-rays step and its rule checklist', () => {
+  it('opens with the interactive draw-the-rays step and its rule checklist', () => {
     renderStarted(rayTracingLesson)
-    expect(screen.getByText(/plot where the three rays cross/i)).toBeInTheDocument()
-    // The three ray-rule badges and the draggable marker are present.
-    expect(screen.getByText(/parallel ray/i)).toBeInTheDocument()
-    expect(screen.getByText(/chief ray/i)).toBeInTheDocument()
-    expect(screen.getByText(/focal ray/i)).toBeInTheDocument()
+    expect(screen.getByText(/draw each principal ray/i)).toBeInTheDocument()
+    // The three ray-rule badges and draggable endpoint handles are present.
+    expect(screen.getByRole('radio', { name: /parallel ray/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /chief ray/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /focal ray/i })).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /predicted crossing point/i }),
+      screen.getByRole('slider', { name: /parallel ray end point/i }),
     ).toBeInTheDocument()
     // No Next yet — the rays must be plotted first.
     expect(screen.queryByRole('button', { name: /next|finish/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
   })
 
-  it('requires submit after dragging the marker onto the crossing', () => {
+  it('requires submit after drawing all three rays onto their rules', () => {
     renderStarted(rayTracingLesson)
-    const marker = screen.getByRole('button', { name: /predicted crossing point/i })
-    // Marker starts at (50, 10); the true crossing is (30, -9). Walk it there.
-    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowLeft' })
-    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowDown' })
+    for (let i = 0; i < 7; i++) {
+      fireEvent.keyDown(screen.getByRole('slider', { name: /parallel ray end point/i }), {
+        key: 'ArrowDown',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /chief ray end point/i }), {
+        key: 'ArrowDown',
+      })
+      fireEvent.keyDown(screen.getByRole('slider', { name: /focal ray end point/i }), {
+        key: 'ArrowDown',
+      })
+    }
 
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()

@@ -22,7 +22,7 @@ export const thinLensLesson: LessonDefinition = {
   id: 'thin-lens-equation',
   title: 'The Thin Lens Equation',
   order: 5,
-  estMinutes: 4,
+  estMinutes: 5,
   summary: 'Drag the candle to control where and how big the image forms.',
   intro: {
     heading: 'One equation ties it all together',
@@ -54,6 +54,17 @@ export const thinLensLesson: LessonDefinition = {
         }
         return 'Your image is **too small**. For real images with a convex lens, moving the candle closer to the lens makes the image bigger.'
       },
+    },
+    {
+      kind: 'plot-rays',
+      id: 'draw-same-size-2f',
+      prompt:
+        'Now draw the three rays for the 2F case. The equation predicts dᵢ = dₒ, and the drawing should show why.',
+      scene: { objectDistance: 40, focalLength: FOCAL_LENGTH },
+      hint:
+        'Place each ray from the object tip: parallel bends through F, chief goes through the center, and focal exits parallel. They should meet at the matching 2F mark.',
+      reveal:
+        'At **2F**, the ray drawing and the equation agree: the image lands at **2F**, inverted and the same size.',
     },
     {
       id: 'virtual-magnifier',
@@ -89,25 +100,39 @@ export const thinLensLesson: LessonDefinition = {
       kind: 'predict',
       id: 'extreme-object-at-infinity',
       prompt:
-        'Extreme 1: the candle is infinitely far away, so its rays arrive almost parallel. Where does the image form?',
+        'Extreme 1: as dₒ grows huge, the \\frac{1}{dₒ} term nearly vanishes. Which diagram matches that limit?',
       scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
       choices: [
         {
           id: 'at-f',
-          label: 'Right at F',
+          label: 'The image collapses onto F',
+          visual: {
+            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+            caption: 'dᵢ = f',
+          },
           correct: true,
           feedback:
             'Yes. When dₒ is infinite, \\frac{1}{dₒ} becomes zero, so the image distance equals the focal length.',
         },
         {
           id: 'at-2f',
-          label: 'At 2F',
+          label: 'The image stays at 2F',
+          visual: {
+            scene: { objectDistance: 2 * FOCAL_LENGTH, focalLength: FOCAL_LENGTH },
+            caption: 'dᵢ = 2f',
+          },
           feedback:
             '2F is the same-size case for an object at 2F. A faraway object sends in nearly parallel rays, which focus closer, at F.',
         },
         {
           id: 'no-image',
-          label: 'No image forms',
+          label: 'No image appears',
+          visual: {
+            scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+            showRays: false,
+            showImage: false,
+            caption: 'No image',
+          },
           feedback:
             'An image still forms. Parallel incoming rays from a faraway object converge at the focal point of a convex lens.',
         },
@@ -134,7 +159,7 @@ export const thinLensLesson: LessonDefinition = {
       kind: 'plot-rays',
       id: 'predict-inside-f',
       prompt:
-        'The candle now sits inside the focal length (closer than F). Plot where the rays appear to meet.',
+        'The candle now sits inside the focal length (closer than F). Draw the rays and their back-traces to locate the virtual image.',
       scene: { objectDistance: 12, focalLength: FOCAL_LENGTH, objectHeight: 12 },
       hint:
         'The outgoing rays diverge, so use the dashed extensions: trace the rays backward to the candle side until all three rules agree.',

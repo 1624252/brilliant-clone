@@ -9,7 +9,7 @@
 .modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(4, 7, 14, 0.7);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(3px);
 }
 .modal__panel {
@@ -158,10 +158,17 @@
   color: var(--accent);
 }
 .settings__note--err {
-  color: #ffb4b4;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
 }
 
 @media (max-width: 460px) {
+  .settings__line {
+    align-items: flex-start;
+  }
   .settings__actions {
     flex-direction: column;
   }

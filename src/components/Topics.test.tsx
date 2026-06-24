@@ -4,7 +4,18 @@ import { Topics } from './Topics'
 import { topics } from '../content'
 import type { ProgressState } from '../data/useProgress'
 
-const progress: ProgressState = { byLesson: {}, streak: null, loading: false }
+const progress: ProgressState = {
+  byLesson: {},
+  byPractice: {},
+  streak: null,
+  practiceStats: {
+    solvedCount: 0,
+    totalAttempts: 0,
+    totalCorrect: 0,
+    questionStreak: { current: 0, longest: 0, lastAnsweredAt: null },
+  },
+  loading: false,
+}
 
 describe('Topics landing page', () => {
   it('shows the available topics and a coming-soon hint', () => {

@@ -43,6 +43,15 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
           <span className="topics__name">{displayName}</span>
           <button
             type="button"
+            className="btn topics__settings"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Account settings"
+            title="Account settings"
+          >
+            ⚙
+          </button>
+          <button
+            type="button"
             className="btn topics__signout"
             onClick={() => setConfirmSignOut(true)}
           >
@@ -70,6 +79,11 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
 
       <main className="topics__main">
         <section className="topics__hero">
+          <div className="topics__hero-decor optic-decor" aria-hidden="true">
+            <span className="topics__lens-ring optic-lens-ring" />
+            <span className="topics__beam topics__beam--one" />
+            <span className="topics__beam topics__beam--two" />
+          </div>
           <p className="topics__eyebrow">Welcome{displayName ? `, ${displayName}` : ''} 👋</p>
           <h1 className="topics__title">Choose a topic</h1>
           <p className="topics__sub">Pick a subject to start learning. More are on the way.</p>
@@ -88,6 +102,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
                   disabled={!t.available}
                   onClick={() => t.available && onOpenTopic(t.id)}
                 >
+                  <span className="topic-card__sweep" aria-hidden="true" />
                   <span className="topic-card__icon" aria-hidden="true">
                     <LensIcon />
                   </span>
@@ -104,7 +119,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
                     </span>
                   )}
                   <span className="topic-card__cta">
-                    {t.available ? 'Start learning →' : 'Coming soon'}
+                    {t.available ? 'Start learning →' : 'coming soon...'}
                   </span>
                 </button>
               </li>
@@ -114,8 +129,9 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
           {/* A gentle hint that the catalog will grow. */}
           <li>
             <div className="topic-card topic-card--soon" aria-hidden="true">
+              <span className="topic-card__sweep" aria-hidden="true" />
               <span className="topic-card__icon">✨</span>
-              <span className="topic-card__title">More topics coming soon</span>
+              <span className="topic-card__title">More topics coming soon...</span>
               <span className="topic-card__blurb">
                 Waves, electricity, mechanics, and more are on the roadmap.
               </span>

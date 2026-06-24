@@ -47,7 +47,6 @@ export function ConvexLensAnimation() {
   // which sweeps in from far right and settles exactly on F at t = 1. We draw the
   // rays to that crossing and place the focal mark there, so the focus is *formed*
   // by the rays meeting — not faded in.
-  const trueF = LENS_X + F_LEN
   const xCross = t > 0.02 ? LENS_X + F_LEN / t : Infinity
   const xEnd = Math.min(xCross, RIGHT_EDGE)
   const focusOnScreen = xCross <= RIGHT_EDGE - 6
@@ -90,11 +89,9 @@ export function ConvexLensAnimation() {
       {focusOnScreen && (
         <g>
           <circle className="fpoint" cx={xCross} cy={CENTER_Y} r={4} />
-          {xCross <= trueF + 4 && (
-            <text className="flabel" x={xCross} y={CENTER_Y - 12} textAnchor="middle">
-              F
-            </text>
-          )}
+          <text className="flabel" x={xCross} y={CENTER_Y - 12} textAnchor="middle">
+            F
+          </text>
         </g>
       )}
 

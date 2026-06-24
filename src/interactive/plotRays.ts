@@ -1,4 +1,4 @@
-import { formImage, type Point } from '../engine'
+import { formImage, type Point, type RayId } from '../engine'
 
 // Geometry helpers for the "plot the three rays" interaction. The learner drags a
 // single marker (their predicted image point). Each principal ray is drawn from
@@ -25,6 +25,17 @@ export interface RayChecks {
   all: boolean
 }
 
+export interface DrawnRay {
+  start: Point
+  end: Point
+}
+
+export type DrawnRays = Record<RayId, DrawnRay>
+
+export interface DrawRayChecks extends RayChecks {
+  starts: Record<RayId, boolean>
+}
+
 /** The true image tip (optical coords) for a scene, via the thin-lens engine. */
 export function imageTip(s: PlotScene): Point {
   const { imageDistance, magnification } = formImage(s.objectDistance, s.focalLength)
@@ -38,6 +49,32 @@ function distToLine(p: Point, a: Point, b: Point): number {
   const len = Math.hypot(dx, dy)
   if (len < 1e-9) return Math.hypot(p.x - a.x, p.y - a.y)
   return Math.abs(dx * (p.y - a.y) - dy * (p.x - a.x)) / len
+}
+
+export function constructionPoints(s: PlotScene): {
+  objectTip: Point
+  center: Point
+  parallelStart: Point
+  chiefStart: Point
+  focalStart: Point
+  farFocus: Point
+  imageTip: Point
+} {
+  const h = s.objectHeight
+  const img = imageTip(s)
+  return {
+    objectTip: { x: -s.objectDistance, y: h },
+    center: { x: 0, y: 0 },
+    parallelStart: { x: 0, y: h },
+    chiefStart: { x: 0, y: 0 },
+    focalStart: { x: 0, y: img.y },
+    farFocus: { x: s.focalLength, y: 0 },
+    imageTip: img,
+  }
+}
+
+export function pointDistance(a: Point, b: Point): number {
+  return Math.hypot(a.x - b.x, a.y - b.y)
 }
 
 /**
@@ -58,4 +95,25 @@ export function rayChecks(marker: Point, s: PlotScene, tol = 3): RayChecks {
   const parallel = validSide && distToLine(F, A, marker) <= tol
   const focal = validSide && Math.abs(marker.y - img.y) <= tol
   return { chief, parallel, focal, all: chief && parallel && focal }
+}
+
+/**
+ * Rule checks for the draw-the-rays interaction. Each drawn ray has two learner-
+ * controlled points: the lens crossing (`start`) and an outgoing endpoint. The
+ * start must land on the correct lens point, and the endpoint must make the ray
+ * obey its physical rule.
+ */
+export function drawnRayChecks(rays: DrawnRays, s: PlotScene, tol = 3): DrawRayChecks {
+  const pts = constructionPoints(s)
+  const starts = {
+    parallel: pointDistance(rays.parallel.start, pts.parallelStart) <= tol,
+    chief: pointDistance(rays.chief.start, pts.chiefStart) <= tol,
+    focal: pointDistance(rays.focal.start, pts.focalStart) <= tol,
+  }
+  const parallel =
+    starts.parallel && distToLine(pts.farFocus, rays.parallel.start, rays.parallel.end) <= tol
+  const chief =
+    starts.chief && distToLine(rays.chief.end, pts.objectTip, pts.center) <= tol
+  const focal = starts.focal && Math.abs(rays.focal.end.y - rays.focal.start.y) <= tol
+  return { starts, chief, parallel, focal, all: parallel && chief && focal }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { chapter, lessons } from '../content'
+import { chapter, lessons, opticsPracticeProblems } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
 import {
@@ -17,6 +17,7 @@ interface HomeProps {
   displayName: string
   progress: ProgressState
   onOpen: (lessonId: string) => void
+  onOpenPractice: () => void
   /** Back to the topics landing page. */
   onBack: () => void
   onSignOut: () => void
@@ -27,6 +28,7 @@ export function Home({
   displayName,
   progress,
   onOpen,
+  onOpenPractice,
   onBack,
   onSignOut,
 }: HomeProps) {
@@ -41,6 +43,9 @@ export function Home({
   const milestones = deriveMilestones(status, progress.streak)
   const earnedKey = earnedMilestoneIds(milestones).join(',')
   const [celebrate, setCelebrate] = useState<Milestone[]>([])
+  const practiceSolved = opticsPracticeProblems.filter(
+    (p) => progress.byPractice[p.id]?.solved,
+  ).length
 
   // Pop a small celebration when milestones are newly earned. We remember the
   // earned set per user in localStorage; the first visit seeds it silently so we
@@ -102,6 +107,15 @@ export function Home({
           <span className="home__name">{displayName}</span>
           <button
             type="button"
+            className="btn home__settings"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Account settings"
+            title="Account settings"
+          >
+            ⚙
+          </button>
+          <button
+            type="button"
             className="btn home__signout"
             onClick={() => setConfirmSignOut(true)}
           >
@@ -114,6 +128,7 @@ export function Home({
 
       {celebrate.length > 0 && (
         <div className="ms-toast" role="status">
+          <span className="ms-toast__confetti" aria-hidden="true" />
           <span className="ms-toast__spark" aria-hidden="true">
             🎉
           </span>
@@ -141,6 +156,10 @@ export function Home({
 
       <main className="home__main">
         <section className="home__hero">
+          <div className="home__hero-decor optic-decor" aria-hidden="true">
+            <span className="home__hero-ring optic-lens-ring" />
+            <span className="home__hero-focus" />
+          </div>
           <p className="home__eyebrow">Chapter</p>
           <h1 className="home__title">{chapter.title}</h1>
           <div className="home__progress">
@@ -180,6 +199,25 @@ export function Home({
             />
           ))}
         </ol>
+
+        <section className="practice-card" aria-labelledby="practice-card-title">
+          <div>
+            <p className="home__eyebrow">Practice</p>
+            <h2 id="practice-card-title">AP-style calculation problems</h2>
+            <p>
+              Turn the lens equation into signed numerical answers, then check
+              each result against the live ray diagram.
+            </p>
+            <div className="practice-card__stats">
+              <span>{practiceSolved} / {opticsPracticeProblems.length} solved</span>
+              <span>{progress.practiceStats.questionStreak.current} question streak</span>
+              <span>Best {progress.practiceStats.questionStreak.longest}</span>
+            </div>
+          </div>
+          <button type="button" className="btn btn--primary" onClick={onOpenPractice}>
+            Practice calculations
+          </button>
+        </section>
       </main>
     </div>
   )
@@ -207,7 +245,7 @@ function RoadmapItem({
         : 'open'
 
   const statusLabel = isPlaceholder
-    ? 'Coming soon'
+    ? 'coming soon...'
     : completed
       ? 'Completed'
       : !unlocked
@@ -228,6 +266,7 @@ function RoadmapItem({
         .join(' ')}
     >
       <div className="roadmap__track" aria-hidden="true">
+        {recommended && <span className="roadmap__halo" />}
         <span className="roadmap__node">
           {completed ? <CheckIcon /> : clickable ? index : <LockIcon />}
         </span>

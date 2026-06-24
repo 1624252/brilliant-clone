@@ -52,10 +52,20 @@ export interface InteractiveStep extends StepBase {
   hint: InteractiveHint
 }
 
+export interface ChoiceVisual {
+  /** A small rendered diagram that makes the option visually inspectable. */
+  scene: { objectDistance: number; focalLength: number; objectHeight?: number }
+  showRays?: boolean
+  showImage?: boolean
+  caption?: string
+}
+
 /** One option in a predict-then-reveal question. */
 export interface Choice {
   id: string
   label: string
+  /** Optional visual option, rendered as a selectable mini ray diagram. */
+  visual?: ChoiceVisual
   /** Exactly one choice should be marked correct. */
   correct?: boolean
   /** Why this option is right/wrong — shown after the learner commits. */
@@ -85,10 +95,10 @@ export interface PredictStep extends StepBase {
 }
 
 /**
- * A "plot the rays" step: instead of choosing an answer, the learner drags a
- * single marker (their predicted image point) until all three principal rays
- * obey their rule and cross there. More active than multiple choice — they
- * construct the ray diagram themselves. Used for real-image scenes.
+ * A "plot the rays" step: instead of choosing an answer, the learner draws the
+ * three principal rays by selecting each ray and dragging its two handles until
+ * the ray obeys its rule. More active than multiple choice — they construct the
+ * ray diagram themselves.
  */
 export interface PlotRaysStep extends StepBase {
   kind: 'plot-rays'

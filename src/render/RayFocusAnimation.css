@@ -2,19 +2,19 @@
   width: 100%;
   height: auto;
   display: block;
-  background: #0b1020;
+  background: var(--diagram-bg, #0b1020);
   border-radius: 12px;
 }
 
 .focus-anim .axis {
-  stroke: #394056;
+  stroke: var(--diagram-axis, #394056);
   stroke-width: 1.5;
   stroke-dasharray: 6 6;
 }
 
 .focus-anim .lens {
   fill: rgba(140, 194, 255, 0.18);
-  stroke: #8cc2ff;
+  stroke: var(--brand, #8cc2ff);
   stroke-width: 2;
 }
 
@@ -117,9 +117,9 @@
   font-family: system-ui, sans-serif;
   font-size: 17px;
   font-weight: 700;
-  fill: #fff;
+  fill: var(--text);
   paint-order: stroke;
-  stroke: #0b1020;
+  stroke: var(--diagram-bg, #0b1020);
   stroke-width: 4px;
   stroke-linejoin: round;
 }
@@ -165,7 +165,7 @@
   padding: 0.4rem 0.85rem;
   border-radius: 999px;
   border: 1px solid var(--border-strong, #2c3656);
-  background: rgba(13, 19, 34, 0.85);
+  background: var(--bg-elev);
   color: var(--text, #e8ebf3);
   cursor: pointer;
 }
@@ -173,7 +173,7 @@
   border-color: var(--brand, #6fb3ff);
 }
 .focus-anim .caption {
-  fill: #8b93a7;
+  fill: var(--text-mute);
   font-size: 13px;
   font-family: system-ui, sans-serif;
 }
@@ -198,19 +198,19 @@
   opacity: 0.7;
 }
 .focus-anim .clens-tag {
-  fill: #ffd27a;
+  fill: var(--c-f);
   font-size: 13px;
   font-weight: 600;
   font-family: system-ui, sans-serif;
 }
 .focus-anim .clens-stage {
-  fill: #8b93a7;
+  fill: var(--text-mute);
   font-size: 14px;
   font-weight: 700;
   font-family: system-ui, sans-serif;
 }
 .focus-anim .clens-stage--convex {
-  fill: #8cc2ff;
+  fill: var(--brand);
 }
 
 @media (max-width: 600px) {

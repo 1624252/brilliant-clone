@@ -1,13 +1,11 @@
 import type { Control } from './types'
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-const LOG_BASE = 0.15
 
 function scaleFor(control: Control): number {
-  // Express the log curve in "focal-length units" when the lesson provides a
-  // focal snap mark. For f=20, log_0.15(1 - t)=1 lands exactly at F.
-  const firstPositiveSnap = control.snaps?.find((s) => s > 0)
-  return firstPositiveSnap ?? 1
+  // Use the visible scene span as the scale so the far end is already optically
+  // very far away before the final Infinity endpoint.
+  return Math.max(1, control.max - control.min)
 }
 
 function sliderFraction(raw: number, control: Control): number {
@@ -28,16 +26,16 @@ export function sliderToDistance(raw: number, control: Control): number {
   if (raw >= control.max) return Infinity
 
   const t = sliderFraction(raw, control)
-  // t is the slider's 0..1 position. log_0.15(1 - t) maps:
-  //   t = 0 -> log_0.15(1) = 0
-  //   t -> 1 -> log_0.15(0) -> Infinity
-  return scaleFor(control) * (Math.log(1 - t) / Math.log(LOG_BASE))
+  // t is the slider's 0..1 position. -log(1 - t) maps:
+  //   t = 0 -> -log(1) = 0
+  //   t -> 1 -> -log(0) -> Infinity
+  return scaleFor(control) * -Math.log(1 - t)
 }
 
 export function distanceToSlider(value: number, control: Control): number {
   if (!usesLogDistance(control)) return value
   if (!Number.isFinite(value)) return control.max
 
-  const t = 1 - Math.pow(LOG_BASE, Math.max(0, value) / scaleFor(control))
+  const t = 1 - Math.exp(-Math.max(0, value) / scaleFor(control))
   return fractionToSlider(t, control)
 }

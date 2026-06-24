@@ -74,6 +74,9 @@ export function LensScene({
   const offscreen = !Number.isFinite(objectDistance) || -objectDistance < edgeX
   const handlePos = toSvg({ x: safeX, y: objectHeight }, scene)
   const ariaNow = Number.isFinite(objectDistance) ? objectDistance : maxObjectDistance
+  const ariaValueText = Number.isFinite(objectDistance)
+    ? `${objectDistance.toFixed(1)} optical units`
+    : 'infinity'
 
   // Dragging the candle to (or past) the visible left edge means "infinitely
   // far away": the object distance jumps to ∞ and the rays become a parallel beam.
@@ -124,12 +127,13 @@ export function LensScene({
           className={`drag-handle ${offscreen ? 'drag-handle--offscreen' : ''}`}
           cx={handlePos.x}
           cy={handlePos.y}
-          r={14}
+          r={18}
           role="slider"
           aria-label="Object distance"
           aria-valuemin={minObjectDistance}
           aria-valuemax={maxObjectDistance}
           aria-valuenow={ariaNow}
+          aria-valuetext={ariaValueText}
           tabIndex={0}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

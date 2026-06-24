@@ -4,6 +4,7 @@
   stroke: #2ee6a6;
   stroke-width: 2;
   cursor: grab;
+  touch-action: none;
 }
 .lens-diagram .drag-handle:active {
   cursor: grabbing;

@@ -1,4 +1,5 @@
 export { ProblemRunner } from './ProblemRunner'
+export { opticsPracticeProblems, checkPracticeAnswer, parseNumericAnswer } from './practice'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
 export { lessons, chapter } from './lessons'
@@ -16,3 +17,9 @@ export type {
   ControlType,
   StepState,
 } from './types'
+export type {
+  AnswerCheck,
+  CalculationProblem,
+  PracticeGiven,
+  PracticeScene,
+} from './practice'

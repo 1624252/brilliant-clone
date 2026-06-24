@@ -30,4 +30,16 @@ describe('renderRich', () => {
     expect(screen.getByTestId('line').textContent).toContain('=')
     expect(screen.getByTestId('line').textContent).toContain('b')
   })
+
+  it('renders underscore optics variables with subscripts', () => {
+    const { container } = render(<p>{renderRich('Use d_o, d_i, h_o, and h_i.')}</p>)
+    expect(container.querySelectorAll('.rich-var')).toHaveLength(4)
+    expect(container.textContent).toContain('do')
+    expect(container.querySelector('.rich-var sub')?.textContent).toBe('o')
+  })
+
+  it('renders subscripts inside fractions', () => {
+    const { container } = render(<p>{renderRich('\\frac{1}{d_i}')}</p>)
+    expect(container.querySelector('.frac__den .rich-var sub')?.textContent).toBe('i')
+  })
 })

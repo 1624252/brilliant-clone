@@ -15,7 +15,6 @@ const H = 68 // half lens height
 const LEFT_EDGE = 8
 const RIGHT_EDGE = 348
 const RAY_YS = [60, 85, 135, 160] // parallel ray heights (axis drawn separately)
-const VFOCUS_X = LENS_X - F_LEN
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -101,11 +100,9 @@ export function ConcaveLensAnimation() {
       {focusOnScreen && (
         <g>
           <circle className="fpoint" cx={xVCross} cy={CENTER_Y} r={4} />
-          {xVCross >= VFOCUS_X - 4 && (
-            <text className="flabel" x={xVCross} y={CENTER_Y - 12} textAnchor="middle">
-              F
-            </text>
-          )}
+          <text className="flabel" x={xVCross} y={CENTER_Y - 12} textAnchor="middle">
+            F
+          </text>
         </g>
       )}
 

@@ -9,7 +9,7 @@
 .confirm__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(4, 7, 14, 0.7);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(3px);
 }
 .confirm__panel {

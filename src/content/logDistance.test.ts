@@ -30,24 +30,18 @@ describe('log-distance slider mapping', () => {
   })
 
   it('uses the slider fraction as a logarithmic 0-to-infinity curve', () => {
-    const q1 = sliderToDistance(20, control) // t = 0.25 -> 20 * log_0.15(0.75)
-    const mid = sliderToDistance(40, control) // t = 0.5 -> 20 * log_0.15(0.5)
-    const q3 = sliderToDistance(60, control) // t = 0.75 -> 20 * log_0.15(0.25)
+    const q1 = sliderToDistance(20, control) // t = 0.25 -> scale * -log(0.75)
+    const mid = sliderToDistance(40, control) // t = 0.5 -> scale * -log(0.5)
+    const q3 = sliderToDistance(60, control) // t = 0.75 -> scale * -log(0.25)
 
-    expect(q1).toBeCloseTo(20 * (Math.log(0.75) / Math.log(0.15)))
-    expect(mid).toBeCloseTo(20 * (Math.log(0.5) / Math.log(0.15)))
-    expect(q3).toBeCloseTo(20 * (Math.log(0.25) / Math.log(0.15)))
+    expect(q1).toBeCloseTo(80 * -Math.log(0.75))
+    expect(mid).toBeCloseTo(80 * -Math.log(0.5))
+    expect(q3).toBeCloseTo(80 * -Math.log(0.25))
     expect(q3 - mid).toBeGreaterThan(mid - q1)
   })
 
-  it('places focal-length snap marks on the base-0.15 curve', () => {
-    expect(distanceToSlider(20, control)).toBeCloseTo(68) // 1 - 0.15
-    expect(distanceToSlider(40, control)).toBeCloseTo(78.2) // 1 - 0.15^2
-    expect(distanceToSlider(60, control)).toBeCloseTo(79.73) // 1 - 0.15^3
-  })
-
   it('keeps the final finite slider step visually close to infinity', () => {
-    expect(sliderToDistance(79.99, control)).toBeGreaterThan(90)
+    expect(sliderToDistance(79.99, control)).toBeGreaterThan(700)
     expect(sliderToDistance(80, control)).toBe(Infinity)
   })
 })
