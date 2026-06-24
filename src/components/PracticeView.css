@@ -208,6 +208,178 @@
   background: var(--c-m);
 }
 
+.practice-explore {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    radial-gradient(420px 160px at 100% 0%, rgba(122, 168, 255, 0.12), transparent 70%),
+    var(--bg-elev-2);
+  padding: 0.85rem 1rem;
+}
+.practice-explore__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.practice-explore__head div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.practice-explore__head span,
+.practice-explore__note {
+  color: var(--text-mute);
+  font-size: 0.9rem;
+}
+.practice-explore__reset {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.9rem;
+}
+.practice-explore__slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-dim);
+}
+.practice-explore__slider span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.practice-explore__slider b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.practice-explore__slider input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.practice-explore__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.practice-explore__chips .chip {
+  font-size: 0.9rem;
+  padding: 0.32rem 0.68rem;
+}
+
+.equation-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, var(--border));
+  border-radius: 16px;
+  background:
+    radial-gradient(520px 180px at 0% 0%, rgba(199, 155, 255, 0.13), transparent 70%),
+    var(--bg-elev-2);
+  padding: 0.9rem 1rem;
+}
+.equation-workspace__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.equation-workspace__head div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.equation-workspace__head span,
+.equation-part__prompt,
+.equation-part__unit {
+  color: var(--text-mute);
+  font-size: 0.9rem;
+}
+.equation-workspace__progress {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  background: var(--bg-elev);
+  color: var(--brand);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.equation-workspace__formula {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-elev);
+  font-size: 1.35rem;
+}
+.equation-workspace__parts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.equation-part {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--bg-elev) 74%, transparent);
+}
+.equation-part label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.equation-part__label {
+  color: var(--c-di);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.equation-part__entry {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.equation-part__entry input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: var(--text);
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.equation-part__entry input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.equation-part__entry .btn {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+}
+.equation-part__feedback {
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.92rem;
+}
+.equation-part__feedback.is-correct {
+  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 82%, white);
+}
+.equation-part__feedback.is-incorrect {
+  color: var(--danger-text);
+  background: var(--danger-bg);
+}
+
 .practice__diagram {
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -290,6 +462,16 @@
     flex-wrap: wrap;
   }
   .practice__answer-row .btn {
+    width: 100%;
+  }
+  .practice-explore__head,
+  .practice-explore__slider span,
+  .equation-workspace__head,
+  .equation-part__entry {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .equation-part__entry .btn {
     width: 100%;
   }
 }

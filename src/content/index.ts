@@ -20,6 +20,7 @@ export type {
 export type {
   AnswerCheck,
   CalculationProblem,
+  EquationPart,
   PracticeGiven,
   PracticeScene,
 } from './practice'

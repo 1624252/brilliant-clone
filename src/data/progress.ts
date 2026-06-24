@@ -145,7 +145,7 @@ export async function completeLesson(uid: string, lessonId: string): Promise<voi
   await bumpStreak(uid)
 }
 
-/** Persist one AP-style practice submission and update question/daily streaks. */
+/** Persist one practice submission and update question/daily streaks. */
 export async function recordPracticeAttempt(
   uid: string,
   problemId: string,

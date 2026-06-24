@@ -1,6 +1,6 @@
 import type { AnswerCheck, CalculationProblem } from './types'
 
-/** Parse the leading numeric value from an AP-style answer entry. */
+/** Parse the leading numeric value from a typed practice answer. */
 export function parseNumericAnswer(raw: string): number | null {
   const cleaned = raw.trim().replace(',', '')
   if (!cleaned) return null

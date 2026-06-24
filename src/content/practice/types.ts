@@ -11,11 +11,22 @@ export interface PracticeGiven {
   value: string
 }
 
+export interface EquationPart {
+  id: string
+  label: string
+  prompt: string
+  answer: number
+  tolerance: number
+  unit?: string
+  feedback: string
+}
+
 export interface CalculationProblem {
   id: string
   title: string
   prompt: string
   givens: PracticeGiven[]
+  equationParts?: EquationPart[]
   scene: PracticeScene
   answer: number
   unit: string

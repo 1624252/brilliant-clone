@@ -104,6 +104,8 @@ export function ProblemRunner({
   const chosenChoice = isPredictStep(step)
     ? step.choices.find((c) => c.id === chosenId)
     : undefined
+  const interactiveChoice =
+    !predict && !plot && step.choices ? step.choices.find((c) => c.id === chosenId) : undefined
   const committed = !!chosenChoice?.correct
 
   // The scene to draw: from the learner's controls (interactive) or the fixed
@@ -152,7 +154,8 @@ export function ProblemRunner({
 
   function check() {
     if (isPredictStep(step) || isPlotStep(step)) return
-    setStatus(step.success(merged, image) ? 'correct' : 'incorrect')
+    const choiceOk = step.choices ? interactiveChoice?.correct === true : true
+    setStatus(step.success(merged, image) && choiceOk ? 'correct' : 'incorrect')
   }
 
   function submitPlot() {
@@ -388,6 +391,15 @@ export function ProblemRunner({
             ))}
           </div>
 
+          {step.choices && (
+            <InteractiveChoices
+              choices={step.choices}
+              chosenId={chosenId}
+              solved={status === 'correct'}
+              onChoose={setChosenId}
+            />
+          )}
+
           {status === 'correct' && (
             <div className="feedback feedback--correct" role="status">
               <strong>Correct.</strong> {renderRich(step.correctFeedback)}
@@ -395,7 +407,10 @@ export function ProblemRunner({
           )}
           {status === 'incorrect' && (
             <div className="feedback feedback--incorrect" role="status">
-              <strong>Not yet.</strong> {renderRich(hintText(step, merged, image))}
+              <strong>Not yet.</strong>{' '}
+              {interactiveChoice && !interactiveChoice.correct
+                ? renderRich(interactiveChoice.feedback)
+                : renderRich(hintText(step, merged, image))}
             </div>
           )}
 
@@ -613,6 +628,46 @@ function NumbersTools({
       </summary>
       {content}
     </details>
+  )
+}
+
+function InteractiveChoices({
+  choices,
+  chosenId,
+  solved,
+  onChoose,
+}: {
+  choices: Choice[]
+  chosenId: string | null
+  solved: boolean
+  onChoose: (id: string) => void
+}) {
+  return (
+    <div className="interactive-choices" role="radiogroup" aria-label="Your answer">
+      {choices.map((choice) => {
+        const selected = choice.id === chosenId
+        const verdict = solved
+          ? choice.correct
+            ? 'correct'
+            : 'muted'
+          : selected
+            ? 'selected'
+            : ''
+        return (
+          <button
+            key={choice.id}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            disabled={solved}
+            className={`interactive-choice ${verdict ? `interactive-choice--${verdict}` : ''}`}
+            onClick={() => onChoose(choice.id)}
+          >
+            {choice.label}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 

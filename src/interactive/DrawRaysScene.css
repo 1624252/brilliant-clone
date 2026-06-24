@@ -45,7 +45,12 @@
   stroke: var(--diagram-axis, #8791a8);
   stroke-width: 1.5;
   stroke-dasharray: 4 5;
-  opacity: 0.55;
+  opacity: 0.35;
+}
+.lens-diagram .draw-ray__incoming {
+  stroke-width: 2.4;
+  opacity: 0.62;
+  marker-end: none;
 }
 .lens-diagram .draw-ray__line {
   stroke-width: 3;

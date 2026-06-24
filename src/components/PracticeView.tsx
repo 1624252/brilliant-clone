@@ -5,7 +5,9 @@ import {
   opticsPracticeProblems,
   type AnswerCheck,
   type CalculationProblem,
+  type EquationPart,
 } from '../content'
+import { formImage } from '../engine'
 import { recordPracticeAttempt } from '../data/progress'
 import type { ProgressState } from '../data/useProgress'
 import { renderRich } from '../content/richText'
@@ -35,6 +37,8 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
   const [status, setStatus] = useState<PracticeStatus>('idle')
   const [lastCheck, setLastCheck] = useState<AnswerCheck | null>(null)
   const [measures, setMeasures] = useState<MeasureFlags>(problem.measures ?? {})
+  const [equationInputs, setEquationInputs] = useState<Record<string, string>>({})
+  const [equationChecks, setEquationChecks] = useState<Record<string, AnswerCheck>>({})
   const [trackedProblemId, setTrackedProblemId] = useState(problem.id)
 
   if (problem.id !== trackedProblemId) {
@@ -44,6 +48,8 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
     setStatus('idle')
     setLastCheck(null)
     setMeasures(problem.measures ?? {})
+    setEquationInputs({})
+    setEquationChecks({})
   }
 
   useEffect(() => {
@@ -57,6 +63,8 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
   const stats = progress.practiceStats
   const pct = Math.round((solvedCount / opticsPracticeProblems.length) * 100)
   const solved = status === 'correct'
+  const diagramDraggable = Number.isFinite(problem.scene.objectDistance)
+  const image = formImage(objectDistance, problem.scene.focalLength)
 
   async function submit() {
     const check = checkPracticeAnswer(problem, answer)
@@ -76,13 +84,31 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
     setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  function resetDiagram() {
+    setObjectDistance(problem.scene.objectDistance)
+  }
+
+  function setEquationInput(id: string, value: string) {
+    setEquationInputs((prev) => ({ ...prev, [id]: value }))
+    setEquationChecks((prev) => {
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }
+
+  function checkEquationPart(part: EquationPart) {
+    const check = checkPracticeAnswer(part, equationInputs[part.id] ?? '')
+    setEquationChecks((prev) => ({ ...prev, [part.id]: check }))
+  }
+
   return (
     <div className="practice">
       <header className="practice__bar">
         <button type="button" className="btn practice__back" onClick={onBack}>
           ← Roadmap
         </button>
-        <span className="practice__title">AP Physics II Optics Practice</span>
+        <span className="practice__title">Optics Practice Problems</span>
         <span className="practice__spacer" />
       </header>
 
@@ -91,7 +117,7 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
           <p className="practice__eyebrow">Calculation practice</p>
           <h1>Use the equation, then check it against the rays.</h1>
           <p>
-            Solve AP-style thin-lens questions with signed quantities. Correct answers
+            Solve thin-lens practice problems with signed quantities. Correct answers
             count toward your daily streak and your question streak.
           </p>
           <div className="practice__stats" aria-label="Practice progress">
@@ -131,6 +157,25 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
 
           <PracticeMeasures measures={measures} onToggleMeasure={toggleMeasure} />
 
+          <PracticeExplore
+            problem={problem}
+            objectDistance={objectDistance}
+            image={image}
+            enabled={diagramDraggable}
+            onObjectDistanceChange={setObjectDistance}
+            onReset={resetDiagram}
+          />
+
+          {problem.equationParts && (
+            <EquationWorkspace
+              parts={problem.equationParts}
+              inputs={equationInputs}
+              checks={equationChecks}
+              onInput={setEquationInput}
+              onCheck={checkEquationPart}
+            />
+          )}
+
           <div className="practice__diagram">
             <LensScene
               objectDistance={objectDistance}
@@ -139,14 +184,14 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
               minObjectDistance={5}
               maxObjectDistance={80}
               snaps={[Math.abs(problem.scene.focalLength), 2 * Math.abs(problem.scene.focalLength), 3 * Math.abs(problem.scene.focalLength)]}
-              onObjectDistanceChange={problem.scene.draggable ? setObjectDistance : undefined}
+              onObjectDistanceChange={diagramDraggable ? setObjectDistance : undefined}
               measures={measures}
             />
           </div>
-          {problem.scene.draggable && (
+          {diagramDraggable && (
             <p className="practice__drag-note">
               Drag the candle to test the setup visually. Your answer is still checked
-              against the AP-style givens above.
+              against the givens above.
             </p>
           )}
 
@@ -190,6 +235,145 @@ export function PracticeView({ uid, progress, onBack }: PracticeViewProps) {
         </section>
       </main>
     </div>
+  )
+}
+
+function EquationWorkspace({
+  parts,
+  inputs,
+  checks,
+  onInput,
+  onCheck,
+}: {
+  parts: EquationPart[]
+  inputs: Record<string, string>
+  checks: Record<string, AnswerCheck>
+  onInput: (id: string, value: string) => void
+  onCheck: (part: EquationPart) => void
+}) {
+  const completed = parts.filter((part) => checks[part.id]?.correct).length
+  return (
+    <section className="equation-workspace" aria-label="Equation workspace">
+      <div className="equation-workspace__head">
+        <div>
+          <strong>Build the equation first</strong>
+          <span>
+            Fill each reciprocal term, then use those pieces for the final answer.
+          </span>
+        </div>
+        <span className="equation-workspace__progress">
+          {completed}/{parts.length}
+        </span>
+      </div>
+      <div className="equation-workspace__formula" aria-label="Thin lens equation">
+        {renderRich('\\frac{1}{f}=\\frac{1}{d_o}+\\frac{1}{d_i}')}
+      </div>
+      <ol className="equation-workspace__parts">
+        {parts.map((part) => {
+          const check = checks[part.id]
+          return (
+            <li key={part.id} className="equation-part">
+              <label>
+                <span className="equation-part__label">{renderRich(part.label)}</span>
+                <span className="equation-part__prompt">{part.prompt}</span>
+              </label>
+              <div className="equation-part__entry">
+                <input
+                  value={inputs[part.id] ?? ''}
+                  onChange={(e) => onInput(part.id, e.target.value)}
+                  inputMode="decimal"
+                  placeholder="value"
+                  aria-label={`${part.prompt} ${part.label}`}
+                />
+                {part.unit && <span className="equation-part__unit">{part.unit}</span>}
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => onCheck(part)}
+                  disabled={(inputs[part.id] ?? '').trim() === ''}
+                >
+                  Check part
+                </button>
+              </div>
+              {check && (
+                <p
+                  className={`equation-part__feedback ${
+                    check.correct ? 'is-correct' : 'is-incorrect'
+                  }`}
+                  role="status"
+                >
+                  {check.correct
+                    ? renderRich(part.feedback)
+                    : 'Check the reciprocal and keep at least three decimal places.'}
+                </p>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
+function PracticeExplore({
+  problem,
+  objectDistance,
+  image,
+  enabled,
+  onObjectDistanceChange,
+  onReset,
+}: {
+  problem: CalculationProblem
+  objectDistance: number
+  image: ReturnType<typeof formImage>
+  enabled: boolean
+  onObjectDistanceChange: (value: number) => void
+  onReset: () => void
+}) {
+  return (
+    <section className="practice-explore" aria-label="Diagram explorer">
+      <div className="practice-explore__head">
+        <div>
+          <strong>Diagram explorer</strong>
+          <span>Move the object and watch the lens equation respond.</span>
+        </div>
+        <button type="button" className="btn practice-explore__reset" onClick={onReset}>
+          Reset to givens
+        </button>
+      </div>
+
+      {enabled ? (
+        <label className="practice-explore__slider">
+          <span>
+            Object distance <b>{fmt(objectDistance)} cm</b>
+          </span>
+          <input
+            type="range"
+            min={5}
+            max={80}
+            step={0.5}
+            value={Number.isFinite(objectDistance) ? objectDistance : 80}
+            onChange={(e) => onObjectDistanceChange(Number(e.target.value))}
+          />
+        </label>
+      ) : (
+        <p className="practice-explore__note">
+          This setup uses a very distant object, so the incoming rays are already nearly
+          parallel.
+        </p>
+      )}
+
+      <div className="practice-explore__chips" aria-label="Live diagram values">
+        <span className="chip chip--f">f: {fmt(problem.scene.focalLength)} cm</span>
+        <span className="chip chip--do">
+          d<sub>o</sub>: {fmt(objectDistance)} cm
+        </span>
+        <span className={`chip ${image.isReal ? 'chip--real' : 'chip--virtual'}`}>
+          d<sub>i</sub>: {fmt(image.imageDistance)} cm
+        </span>
+        <span className="chip chip--m">m: {fmt(image.magnification)}</span>
+      </div>
+    </section>
   )
 }
 

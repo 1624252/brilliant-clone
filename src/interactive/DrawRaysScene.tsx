@@ -12,6 +12,7 @@ import { LensScene } from './LensScene'
 import {
   constructionPoints,
   drawnRayChecks,
+  extendRayToBounds,
   type DrawnRays,
   type PlotScene,
 } from './plotRays'
@@ -197,6 +198,12 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
   }
 
   const line = (a: Point, b: Point) => `${toSvg(a, sc).x},${toSvg(a, sc).y} ${toSvg(b, sc).x},${toSvg(b, sc).y}`
+  const rayBounds = {
+    minX: -sc.halfWidth + 2,
+    maxX: sc.halfWidth - 2,
+    minY: -(sc.halfHeight - 2),
+    maxY: sc.halfHeight - 2,
+  }
   const guideStarts: Record<RayId, Point> = {
     parallel: pts.parallelStart,
     chief: pts.chiefStart,
@@ -233,14 +240,19 @@ export function DrawRaysScene({ scene, solved, onReadyChange, measures }: DrawRa
         {rayIds.map((ray) => {
           const drawn = rays[ray]
           const isActive = activeRay === ray
+          const extendedEnd = extendRayToBounds(drawn.start, drawn.end, rayBounds)
           const startSvg = toSvg(drawn.start, sc)
           const endSvg = toSvg(drawn.end, sc)
           return (
             <g key={ray} className={`draw-ray draw-ray--${ray} ${isActive ? 'is-active' : ''}`}>
               <polyline className="draw-ray__guide" points={line(pts.objectTip, guideStarts[ray])} />
               <polyline
+                className={`ray ray--${ray} draw-ray__incoming`}
+                points={line(pts.objectTip, drawn.start)}
+              />
+              <polyline
                 className={`ray ray--${ray} draw-ray__line`}
-                points={line(drawn.start, drawn.end)}
+                points={line(drawn.start, extendedEnd)}
                 markerEnd="url(#arrow)"
               />
               {isVirtual && (

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { PracticeView } from './PracticeView'
 import { opticsPracticeProblems } from '../content'
 import { recordPracticeAttempt } from '../data/progress'
@@ -41,19 +41,52 @@ describe('PracticeView', () => {
   it('shows the first problem and practice stats', () => {
     renderPractice()
 
-    expect(screen.getByText(/ap physics ii optics practice/i)).toBeInTheDocument()
+    expect(screen.getByText(/optics practice problems/i)).toBeInTheDocument()
     expect(screen.getByText(opticsPracticeProblems[0].title)).toBeInTheDocument()
     expect(screen.getByText('0/10')).toBeInTheDocument()
     expect(screen.getAllByText(/question streak/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('group', { name: /show on diagram/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/image distance/i)).toBeChecked()
+    const explorer = screen.getByRole('region', { name: /diagram explorer/i })
+    expect(explorer).toBeInTheDocument()
+    expect(within(explorer).getByRole('slider', { name: /object distance/i })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /equation workspace/i })).toBeInTheDocument()
+  })
+
+  it('lets the learner fill equation parts before the final answer', () => {
+    renderPractice()
+    const workspace = screen.getByRole('region', { name: /equation workspace/i })
+
+    fireEvent.change(
+      within(workspace).getByLabelText(/first fill the focal-length term/i),
+      { target: { value: '0.100' } },
+    )
+    fireEvent.click(within(workspace).getAllByRole('button', { name: /check part/i })[0])
+
+    expect(within(workspace).getByText(/focal term contributes/i)).toBeInTheDocument()
+    expect(within(workspace).getByText('1/3')).toBeInTheDocument()
+  })
+
+  it('lets the learner explore the diagram without changing the checked answer', () => {
+    renderPractice()
+    const explorer = screen.getByRole('region', { name: /diagram explorer/i })
+    const slider = within(explorer).getByRole('slider', {
+      name: /object distance/i,
+    }) as HTMLInputElement
+
+    fireEvent.change(slider, { target: { value: '40' } })
+
+    expect(slider.value).toBe('40')
+    expect(screen.getByText(/m:/i)).toHaveTextContent('-0.3')
+    fireEvent.click(screen.getByRole('button', { name: /reset to givens/i }))
+    expect(slider.value).toBe('30')
   })
 
   it('shows a targeted hint and records an incorrect answer', async () => {
     renderPractice()
 
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: '12' } })
-    fireEvent.click(screen.getByRole('button', { name: /check/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^check$/i }))
 
     expect(await screen.findByText(/not quite/i)).toBeInTheDocument()
     expect(screen.getAllByText(/thin-lens equation/i).length).toBeGreaterThan(1)
@@ -68,7 +101,7 @@ describe('PracticeView', () => {
     renderPractice()
 
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: '15 cm' } })
-    fireEvent.click(screen.getByRole('button', { name: /check/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^check$/i }))
 
     expect(await screen.findByText(/accepted answer/i)).toBeInTheDocument()
     expect(recordPracticeAttempt).toHaveBeenCalledWith(

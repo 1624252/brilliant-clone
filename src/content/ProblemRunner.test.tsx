@@ -188,6 +188,22 @@ describe('ProblemRunner (Focusing Light lesson)', () => {
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/races off to infinity/i)).toBeInTheDocument()
   })
+
+  it('asks for a multiple-choice prediction when the candle is pulled far away', () => {
+    const { container } = render(<ProblemRunner lesson={focusLesson} initialStepIndex={1} />)
+    expect(screen.getByText(/where does the image settle/i)).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /settles near f/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /settles near 2f/i })).toBeInTheDocument()
+
+    setObjectDistance(container, 70)
+    fireEvent.click(screen.getByRole('radio', { name: /settles near 2f/i }))
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/2f is the same-size case/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /settles near f/i }))
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/faraway object focuses close/i)).toBeInTheDocument()
+  })
 })
 
 describe('ProblemRunner (Concave Lenses lesson)', () => {

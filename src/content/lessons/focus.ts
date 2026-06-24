@@ -61,6 +61,27 @@ export const focusLesson: LessonDefinition = {
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 30 },
       success: (state, image) => image.isReal && state.objectDistance >= 60,
+      choices: [
+        {
+          id: 'at-f',
+          label: 'It settles near F',
+          correct: true,
+          feedback:
+            'Yes. As the candle moves far away, its rays arrive almost parallel, so the image approaches the focal point.',
+        },
+        {
+          id: 'at-2f',
+          label: 'It settles near 2F',
+          feedback:
+            '2F is the same-size case when the object is also at 2F. Faraway objects send nearly parallel rays, which focus closer, at F.',
+        },
+        {
+          id: 'keeps-moving-away',
+          label: 'It keeps moving farther from the lens',
+          feedback:
+            'The image moves toward the lens, not away from it. Parallel incoming rays meet at the focal point.',
+        },
+      ],
       correctFeedback: 'A faraway object focuses close to **F** — that is why F is "the focus."',
       hint: (_state, image) =>
         image.imageDistance > FOCAL_LENGTH + 3

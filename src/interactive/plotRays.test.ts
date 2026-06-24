@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   constructionPoints,
   drawnRayChecks,
+  extendRayToBounds,
   imageTip,
   rayChecks,
   type DrawnRays,
@@ -81,5 +82,23 @@ describe('plotRays geometry', () => {
     }
     expect(imageTip(concave).x).toBeLessThan(0)
     expect(drawnRayChecks(rays, concave).all).toBe(true)
+  })
+
+  it('extends drawn rays past the draggable endpoint to the scene bounds', () => {
+    expect(
+      extendRayToBounds(
+        { x: 0, y: 10 },
+        { x: 20, y: 10 },
+        { minX: -40, maxX: 80, minY: -50, maxY: 50 },
+      ),
+    ).toEqual({ x: 80, y: 10 })
+
+    const diagonal = extendRayToBounds(
+      { x: 0, y: 0 },
+      { x: 10, y: -5 },
+      { minX: -40, maxX: 80, minY: -20, maxY: 20 },
+    )
+    expect(diagonal.x).toBeCloseTo(40)
+    expect(diagonal.y).toBeCloseTo(-20)
   })
 })

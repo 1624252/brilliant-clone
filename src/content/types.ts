@@ -50,6 +50,8 @@ export interface InteractiveStep extends StepBase {
   correctFeedback: string
   /** Shown on an incorrect attempt. */
   hint: InteractiveHint
+  /** Optional answer choices layered on top of the hands-on manipulation. */
+  choices?: Choice[]
 }
 
 export interface ChoiceVisual {

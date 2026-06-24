@@ -42,6 +42,14 @@
   --decor-beam-strong: rgba(53, 224, 168, 0.28);
   --decor-ring: rgba(188, 214, 255, 0.28);
   --decor-glow: rgba(122, 168, 255, 0.2);
+  --progress-track: color-mix(in srgb, var(--diagram-bg) 72%, var(--bg-elev-2));
+  --progress-beam: linear-gradient(90deg, var(--c-f), var(--accent), var(--brand), var(--c-di));
+  --progress-stripes: repeating-linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.24) 0 2px,
+    transparent 2px 12px
+  );
+  --progress-shine: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
 
   color: var(--text);
   background: var(--bg);

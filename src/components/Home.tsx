@@ -203,7 +203,7 @@ export function Home({
         <section className="practice-card" aria-labelledby="practice-card-title">
           <div>
             <p className="home__eyebrow">Practice</p>
-            <h2 id="practice-card-title">AP-style calculation problems</h2>
+            <h2 id="practice-card-title">Practice problems</h2>
             <p>
               Turn the lens equation into signed numerical answers, then check
               each result against the live ray diagram.

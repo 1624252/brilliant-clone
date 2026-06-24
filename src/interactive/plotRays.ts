@@ -36,6 +36,13 @@ export interface DrawRayChecks extends RayChecks {
   starts: Record<RayId, boolean>
 }
 
+export interface PlotBounds {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
 /** The true image tip (optical coords) for a scene, via the thin-lens engine. */
 export function imageTip(s: PlotScene): Point {
   const { imageDistance, magnification } = formImage(s.objectDistance, s.focalLength)
@@ -75,6 +82,38 @@ export function constructionPoints(s: PlotScene): {
 
 export function pointDistance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y)
+}
+
+/** Extend the ray through `end` until it reaches the rectangular scene bounds. */
+export function extendRayToBounds(start: Point, end: Point, bounds: PlotBounds): Point {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  if (Math.hypot(dx, dy) < 1e-9) return end
+
+  const candidates: number[] = []
+  if (Math.abs(dx) > 1e-9) {
+    candidates.push((bounds.minX - start.x) / dx)
+    candidates.push((bounds.maxX - start.x) / dx)
+  }
+  if (Math.abs(dy) > 1e-9) {
+    candidates.push((bounds.minY - start.y) / dy)
+    candidates.push((bounds.maxY - start.y) / dy)
+  }
+
+  const valid = candidates
+    .filter((t) => t >= 1)
+    .map((t) => ({ x: start.x + dx * t, y: start.y + dy * t, t }))
+    .filter(
+      (p) =>
+        p.x >= bounds.minX - 1e-6 &&
+        p.x <= bounds.maxX + 1e-6 &&
+        p.y >= bounds.minY - 1e-6 &&
+        p.y <= bounds.maxY + 1e-6,
+    )
+    .sort((a, b) => a.t - b.t)
+
+  const hit = valid[0]
+  return hit ? { x: hit.x, y: hit.y } : end
 }
 
 /**
