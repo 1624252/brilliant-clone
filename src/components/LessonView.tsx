@@ -11,8 +11,6 @@ interface LessonViewProps {
   onBack: () => void
   /** Navigate to another lesson (used by the "Next lesson" finish button). */
   onOpenLesson: (lessonId: string) => void
-  /** Navigate directly to the topic practice problems. */
-  onOpenPractice?: () => void
 }
 
 export function LessonView({
@@ -21,7 +19,6 @@ export function LessonView({
   progress,
   onBack,
   onOpenLesson,
-  onOpenPractice,
 }: LessonViewProps) {
   const saved = progress.byLesson[lesson.id]
   // Resume in-progress lessons; replay completed ones from the start (intro first).
@@ -62,7 +59,6 @@ export function LessonView({
             onNextLesson={
               nextLesson ? () => onOpenLesson(nextLesson.id) : undefined
             }
-            onPractice={!nextLesson ? onOpenPractice : undefined}
             nextLessonTitle={nextLesson?.title}
           />
         </section>

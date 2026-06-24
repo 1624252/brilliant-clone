@@ -59,35 +59,61 @@ describe('lesson content quality', () => {
 })
 
 describe('ProblemRunner landmark lessons', () => {
-  it('starts the convex lesson intro and accepts the object-at-0 step', () => {
+  it('starts the convex lesson intro and creates a real image outside F', () => {
     const { container } = render(<ProblemRunner lesson={focusLesson} />)
     expect(screen.getByText(/where light comes to a focus/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /start lesson/i }))
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
 
-    setObjectDistance(container, focusLesson, 0)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    expect(screen.getByText(/object and image collapse onto the lens/i)).toBeInTheDocument()
+    expect(screen.getByRole('status').textContent).toMatch(/inside.*F/i)
+
+    setObjectDistance(container, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/outside.*F/i)
   })
 
-  it('accepts the convex focus and infinity choice steps', () => {
+  it('creates convex virtual, upright, and inverted images in the right ranges', () => {
     const { container } = renderStarted(focusLesson, 1)
-    setObjectDistance(container, focusLesson, 20)
-    fireEvent.click(screen.getByRole('radio', { name: /parallel.*infinity/i }))
-    expect(screen.getByText(/image is at/i)).toBeInTheDocument()
+    setObjectDistance(container, focusLesson, 10)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/inside.*F/i)
 
     cleanup()
-    renderStarted(focusLesson, 3)
-    fireEvent.click(screen.getByRole('button', { name: '∞' }))
-    fireEvent.click(screen.getByRole('radio', { name: /near the.*focus/i }))
-    expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument()
+    const upright = renderStarted(focusLesson, 2)
+    setObjectDistance(upright.container, focusLesson, 10)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/upright.*image happens/i)
+
+    cleanup()
+    const inverted = renderStarted(focusLesson, 3)
+    setObjectDistance(inverted.container, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/outside.*F/i)
   })
 
-  it('enables infinity for the concave lesson and accepts the virtual-focus answer', () => {
-    renderStarted(concaveLesson, 3)
-    fireEvent.click(screen.getByRole('button', { name: '∞' }))
-    fireEvent.click(screen.getByRole('radio', { name: /virtual focus/i }))
-    expect(screen.getByText(/tiny/i)).toBeInTheDocument()
+  it('creates concave virtual and upright images immediately', () => {
+    renderStarted(concaveLesson)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/virtual.*image for every real candle/i)
+
+    cleanup()
+    renderStarted(concaveLesson, 1)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/keeps the image.*upright/i)
+  })
+
+  it('uses choices to show concave real and inverted images cannot be made', () => {
+    const { container } = renderStarted(concaveLesson, 2)
+    setObjectDistance(container, concaveLesson, 60)
+    fireEvent.click(screen.getByRole('radio', { name: /no real image/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/cannot make a.*real/i)
+
+    cleanup()
+    const inverted = renderStarted(concaveLesson, 3)
+    setObjectDistance(inverted.container, concaveLesson, 10)
+    fireEvent.click(screen.getByRole('radio', { name: /no inverted image/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/cannot make an.*inverted/i)
   })
 })
 
@@ -136,15 +162,14 @@ describe('ProblemRunner thin lens applications', () => {
     expect(within(measures).getByLabelText(/image distance/i)).toBeChecked()
   })
 
-  it('finishes with a direct practice option', () => {
-    const onPractice = vi.fn()
+  it('finishes without a practice-problems option', () => {
     const { container } = render(
-      <ProblemRunner lesson={thinLensLesson} initialStepIndex={3} onPractice={onPractice} />,
+      <ProblemRunner lesson={thinLensLesson} initialStepIndex={3} />,
     )
     setObjectDistance(container, thinLensLesson, 60)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     fireEvent.click(screen.getByRole('button', { name: /finish/i }))
-    fireEvent.click(screen.getByRole('button', { name: /go to practice problems/i }))
-    expect(onPractice).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: /go to practice problems/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /review lesson/i })).toBeInTheDocument()
   })
 })

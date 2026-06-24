@@ -1,12 +1,4 @@
 export { ProblemRunner } from './ProblemRunner'
-export {
-  getSiblingPracticeProblem,
-  opticsPracticeProblems,
-  opticsPracticeTemplateIds,
-  checkPracticeAnswer,
-  checkPracticeChoice,
-  parseNumericAnswer,
-} from './practice'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
 export { lessons, chapter } from './lessons'
@@ -24,14 +16,3 @@ export type {
   ControlType,
   StepState,
 } from './types'
-export type {
-  AnswerCheck,
-  ChoiceAnswerCheck,
-  ChoicePracticeProblem,
-  CalculationProblem,
-  EquationPart,
-  PracticeProblem,
-  PracticeGiven,
-  PracticeScene,
-  PracticeCategory,
-} from './practice'

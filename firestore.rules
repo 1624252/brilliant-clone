@@ -1,35 +1,6 @@
 rules_version = '2';
 
-// Prototype owner-only rules for LensLab user progress.
-//
-// Assumed data model:
-// users/{uid}
-//   displayName: string, <= 80 chars
-//   email: string, <= 254 chars
-//   createdAt?: timestamp
-//   streak?: { current: number, longest: number, lastActiveDate: string }
-//   practiceStats?: {
-//     solvedCount: number,
-//     totalAttempts: number,
-//     totalCorrect: number,
-//     questionStreak: { current: number, longest: number, lastAnsweredAt?: timestamp | null }
-//   }
-//
-// users/{uid}/progress/{lessonId}
-//   lessonId: string matching the document id
-//   status: 'in-progress' | 'completed'
-//   currentStepIndex?: number
-//   completedAt?: timestamp
-//   updatedAt?: timestamp
-//
-// users/{uid}/practice/{problemId}
-//   problemId: string matching the document id
-//   attempts: number
-//   correctAttempts: number
-//   solved: boolean
-//   lastAnswer?: number
-//   lastCorrectAt?: timestamp
-//   updatedAt?: timestamp
+// Owner-only rules for LensLab user profile and lesson progress.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isOwner(uid) {
@@ -53,35 +24,12 @@ service cloud.firestore {
         && validShortString(streak.lastActiveDate, 10);
     }
 
-    function validQuestionStreak(questionStreak) {
-      return questionStreak is map
-        && questionStreak.keys().hasOnly(['current', 'longest', 'lastAnsweredAt'])
-        && questionStreak.keys().hasAll(['current', 'longest'])
-        && validNonNegative(questionStreak.current, 100000)
-        && validNonNegative(questionStreak.longest, 100000)
-        && (!('lastAnsweredAt' in questionStreak)
-          || questionStreak.lastAnsweredAt == null
-          || questionStreak.lastAnsweredAt is timestamp);
-    }
-
-    function validPracticeStats(stats) {
-      return stats is map
-        && stats.keys().hasOnly(['solvedCount', 'totalAttempts', 'totalCorrect', 'questionStreak'])
-        && stats.keys().hasAll(['solvedCount', 'totalAttempts', 'totalCorrect', 'questionStreak'])
-        && validNonNegative(stats.solvedCount, 100000)
-        && validNonNegative(stats.totalAttempts, 1000000)
-        && validNonNegative(stats.totalCorrect, 1000000)
-        && stats.totalCorrect <= stats.totalAttempts
-        && validQuestionStreak(stats.questionStreak);
-    }
-
     function validUserDoc(data) {
-      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'practiceStats'])
+      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak'])
         && (!('displayName' in data) || validShortString(data.displayName, 80))
         && (!('email' in data) || validShortString(data.email, 254))
         && (!('createdAt' in data) || data.createdAt is timestamp)
-        && (!('streak' in data) || validStreak(data.streak))
-        && (!('practiceStats' in data) || validPracticeStats(data.practiceStats));
+        && (!('streak' in data) || validStreak(data.streak));
     }
 
     function validLessonProgress(data, lessonId) {
@@ -101,28 +49,6 @@ service cloud.firestore {
         && (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
-    function validPracticeProgress(data, problemId) {
-      return data.keys().hasOnly([
-          'problemId',
-          'attempts',
-          'correctAttempts',
-          'solved',
-          'lastAnswer',
-          'lastCorrectAt',
-          'updatedAt'
-        ])
-        && data.keys().hasAll(['problemId', 'attempts', 'correctAttempts', 'solved', 'updatedAt'])
-        && data.problemId == problemId
-        && validShortString(data.problemId, 120)
-        && validNonNegative(data.attempts, 100000)
-        && validNonNegative(data.correctAttempts, 100000)
-        && data.correctAttempts <= data.attempts
-        && data.solved is bool
-        && (!('lastAnswer' in data) || data.lastAnswer is number)
-        && (!('lastCorrectAt' in data) || data.lastCorrectAt is timestamp)
-        && data.updatedAt is timestamp;
-    }
-
     match /users/{uid} {
       allow read: if isOwner(uid);
       allow create, update: if isOwner(uid) && validUserDoc(request.resource.data);
@@ -132,13 +58,6 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         allow create, update: if isOwner(uid)
           && validLessonProgress(request.resource.data, lessonId);
-        allow delete: if false;
-      }
-
-      match /practice/{problemId} {
-        allow read: if isOwner(uid);
-        allow create, update: if isOwner(uid)
-          && validPracticeProgress(request.resource.data, problemId);
         allow delete: if false;
       }
     }

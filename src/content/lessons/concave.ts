@@ -7,12 +7,12 @@ const FOCAL_LENGTH = -20 // negative -> diverging
 const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
-  min: 0,
+  min: 5,
   max: 80,
   step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
-  snaps: [0, 20, 40, 60],
+  snaps: [20, 40, 60],
 }
 
 export const concaveLesson: LessonDefinition = {
@@ -20,150 +20,116 @@ export const concaveLesson: LessonDefinition = {
   title: 'Concave Lenses',
   order: 2,
   estMinutes: 4,
-  summary: 'Explore the key concave-lens positions and its virtual focus pattern.',
+  summary: 'Try to make real, virtual, upright, and inverted images with a concave lens.',
   intro: {
     heading: 'A lens that spreads light out',
     animation: 'concave',
     paragraphs: [
       'A **concave lens** (one that caves inward) does the opposite of a convex lens: it makes parallel rays **diverge**, as if they fanned out from a point.',
       'That point is the **virtual focus**, and the lens has a **negative focal length, f**.',
-      'Because the rays only ever spread apart, a concave lens makes an image you **can’t project**: a __virtual__, **upright**, **reduced** image.',
+      'Try the same image targets as with a convex lens. You’ll find a concave lens always keeps real-candle images **virtual** and upright.',
     ],
   },
   steps: [
     {
-      id: 'concave-object-at-lens',
-      prompt: 'Start at 0: slide the candle all the way onto the concave lens.',
+      id: 'concave-make-virtual-image',
+      prompt: 'Move the candle until the concave lens makes a **virtual** image.',
+      controls: [objectControl],
+      fixed: { focalLength: FOCAL_LENGTH },
+      initial: { objectDistance: 30 },
+      success: (_state, image) => !image.isReal,
+      correctFeedback:
+        'Yes. A concave lens makes a **virtual** image for every real candle position.',
+      hint: () =>
+        'Watch the dotted back-traces on the candle side. Those mark a **virtual** image.',
+    },
+    {
+      id: 'concave-make-upright-image',
+      prompt: 'Move the candle until the concave lens makes an **upright** image.',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 50 },
-      success: (state) => state.objectDistance <= 0.5,
+      success: (_state, image) => image.orientation === 'upright',
       correctFeedback:
-        'At **0**, the object and virtual image collapse at the lens. Move away from 0 and the image becomes **virtual**, **upright**, and **reduced**.',
-      hint: (state) =>
-        state.objectDistance > Math.abs(state.focalLength)
-          ? 'You are still beyond the virtual focus distance. Keep sliding the candle toward the lens.'
-          : 'Keep going until the object distance readout is nearly **0**.',
+        'Correct. A concave lens keeps the image **upright** for every real candle position.',
+      hint: () =>
+        'Look at the image candle: it stays above the axis, the same way up as the object.',
     },
     {
-      id: 'concave-object-at-focus',
-      prompt:
-        'Slide the candle to the virtual focus distance. What kind of image does a concave lens make there?',
-      controls: [objectControl],
-      fixed: { focalLength: FOCAL_LENGTH },
-      initial: { objectDistance: 50 },
-      success: (state, image) =>
-        !image.isReal &&
-        Math.abs(state.objectDistance - Math.abs(state.focalLength)) < 0.75 &&
-        image.orientation === 'upright',
-      choices: [
-        {
-          id: 'half-size',
-          label: '**Virtual**, **upright**, and **reduced**',
-          correct: true,
-          feedback:
-            'Yes. At the virtual **focus** distance, the concave image is still virtual and upright, about half size.',
-        },
-        {
-          id: 'real',
-          label: '**Real** and inverted',
-          feedback:
-            'That is the convex-lens pattern. A concave lens keeps spreading rays apart, so the image stays **virtual**.',
-        },
-        {
-          id: 'magnified',
-          label: '**Virtual** and enlarged',
-          feedback:
-            'Concave lenses reduce real objects. The image stays **upright** and **reduced**.',
-        },
-      ],
-      correctFeedback:
-        'At the virtual **focus** distance, the image is **virtual**, **upright**, and **reduced**.',
-      hint: (state, image) => {
-        if (state.objectDistance > Math.abs(state.focalLength)) {
-          return 'Move closer to the virtual **focus** distance and watch the reduced image grow slightly.'
-        }
-        if (image.magnification > 0.55) {
-          return 'Move farther from the lens until the image is about half size.'
-        }
-        return 'Use the focus mark on the candle side as your target distance from the lens.'
-      },
-    },
-    {
-      id: 'concave-object-at-2focus',
-      prompt: 'Move the candle to 2 focus for the concave lens. What happens?',
+      id: 'concave-try-real-image',
+      prompt: 'Try to make a **real** image with the concave lens. Move the candle beyond **2F**, then choose what you discover.',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 30 },
       success: (state, image) =>
         !image.isReal &&
-        Math.abs(state.objectDistance - 2 * Math.abs(FOCAL_LENGTH)) < 0.75 &&
+        state.objectDistance > 2 * Math.abs(FOCAL_LENGTH) &&
         image.orientation === 'upright',
       choices: [
         {
-          id: 'between-lens-focus',
-          label: 'It stays between the lens and the **focus**',
+          id: 'no-real',
+          label: 'No real image: it stays **virtual**',
           correct: true,
           feedback:
-            'Yes. Even at **2 focus**, the concave image stays on the candle side between the lens and the **focus**.',
+            'Yes. Even at **2F**, a concave lens spreads the rays apart, so the image stays virtual.',
         },
         {
-          id: 'at-2focus',
-          label: 'It lands at **2 focus** on the far side',
+          id: 'real-2f',
+          label: 'A real image appears at **2F**',
           feedback:
             'That is the convex same-size pattern. Concave lenses do not make a real far-side image for a real object.',
         },
         {
-          id: 'infinity',
-          label: 'It moves to **infinity**',
+          id: 'real-far',
+          label: 'A real image appears beyond **2F**',
           feedback:
-            'A concave lens never sends real-object rays out parallel in this way. The image remains **virtual**.',
+            'A concave lens does not create a real projected image from a real candle.',
         },
       ],
       correctFeedback:
-        'At **2 focus**, a concave lens still makes a **virtual**, **upright**, **reduced** image between the lens and the **focus**.',
+        'Right. With a real candle, a concave lens cannot make a **real** image.',
       hint: (_state, image) =>
         image.magnification > 0.4
-          ? 'The candle is too close. Move it out toward **2 focus**.'
-          : 'Watch for the object distance to read 40 cm while the image remains virtual.',
+          ? 'Move the candle out to **2F** so you test the same landmark used by convex lenses.'
+          : 'Beyond **2F**, notice that the outgoing rays still diverge and only dotted back-traces meet.',
     },
     {
-      id: 'concave-object-at-infinity',
-      prompt: 'Now pull the candle to infinity. Where does a concave lens place the image?',
+      id: 'concave-try-inverted-image',
+      prompt: 'Try to make an **inverted** image with the concave lens. Move the candle inside **F**, then choose what you discover.',
       controls: [objectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 40 },
       success: (state, image) =>
-        state.objectDistance === Infinity &&
         !image.isReal &&
-        Math.abs(Math.abs(image.imageDistance) - Math.abs(FOCAL_LENGTH)) < 0.75,
+        state.objectDistance < Math.abs(FOCAL_LENGTH) &&
+        image.orientation === 'upright',
       choices: [
         {
-          id: 'virtual-focus',
-          label: 'Near the **virtual focus** on the candle side',
+          id: 'no-inverted',
+          label: 'No inverted image: it stays upright',
           correct: true,
           feedback:
-            'Yes. Incoming parallel rays spread out as if they came from the near-side **virtual focus**.',
+            'Correct. Even inside **F**, a concave lens keeps the image upright.',
         },
         {
-          id: 'real-focus',
-          label: 'At a **real focus** on the far side',
+          id: 'inverted-real',
+          label: 'It becomes real and inverted',
           feedback:
-            'That is the convex-lens behavior. A concave lens spreads the rays apart.',
+            'That flip happens for a convex lens outside **F**, not for a concave lens.',
         },
         {
-          id: 'none',
-          label: 'No image forms',
+          id: 'inverted-virtual',
+          label: 'It becomes virtual and inverted',
           feedback:
-            'An image forms by back-tracing the diverging rays. It is **virtual** and near the **focus**.',
+            'The image is virtual, but it stays upright for a real candle.',
         },
       ],
       correctFeedback:
-        'At **infinity**, a concave lens forms a tiny **virtual** image near the **virtual focus**.',
+        'Correct. With a real candle, a concave lens cannot make an **inverted** image.',
       hint: (state) =>
-        state.objectDistance !== Infinity
-          ? 'Use the infinity end of the slider or drag the candle to the far edge.'
-          : 'Look at the candle side of the lens: the back-traced rays point to the virtual focus.',
+        state.objectDistance >= Math.abs(FOCAL_LENGTH)
+          ? 'Move the candle inside **F** to test the strongest near-lens case.'
+          : 'Inside **F**, the image is still above the axis. Choose the answer that says it stays upright.',
     },
   ],
 }

@@ -5,6 +5,7 @@ import {
   RaySourceExplainer,
   ConvexLensExplainer,
   ConcaveLensExplainer,
+  CurvatureExplainer,
 } from './index'
 
 // Each explainer renders an <svg role="img"> plus a Replay button. These guard
@@ -15,6 +16,7 @@ const explainers = {
   RaySourceExplainer,
   ConvexLensExplainer,
   ConcaveLensExplainer,
+  CurvatureExplainer,
 }
 
 describe('replayable explainers', () => {

@@ -27,8 +27,6 @@ interface ProblemRunnerProps {
   onExit?: () => void
   /** Open the next lesson; omitted when this is the last one. */
   onNextLesson?: () => void
-  /** Open practice for this topic, used after the final lesson. */
-  onPractice?: () => void
   /** Title of the next lesson, to label the finish-screen button. */
   nextLessonTitle?: string
 }
@@ -77,7 +75,6 @@ export function ProblemRunner({
   onComplete,
   onExit,
   onNextLesson,
-  onPractice,
   nextLessonTitle,
 }: ProblemRunnerProps) {
   const resumeIndex = Math.min(Math.max(initialStepIndex, 0), lesson.steps.length - 1)
@@ -151,12 +148,14 @@ export function ProblemRunner({
       : step.controls.find((c) => c.key === 'objectDistance' && c.type === 'drag-axis')
 
   const instantInteractiveChoice = !!interactiveChoice
+  const interactiveAtTarget =
+    !predict && !plot && instantInteractiveChoice && step.success(merged, image)
   // A step is "solved" (Next becomes available) when an interactive/plot answer
   // is correct, or when a prediction has been committed (the truth is revealed).
   const solved = predict
     ? committed
     : instantInteractiveChoice
-      ? interactiveChoice.correct === true
+      ? interactiveChoice.correct === true && interactiveAtTarget
       : status === 'correct'
   const showNumbersTools = ((!predict && !plot) || committed || (plot && solved))
   const featureNumbersTools = lesson.id === 'thin-lens-equation'
@@ -170,6 +169,7 @@ export function ProblemRunner({
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
     setStatus('idle') // changing the answer clears stale feedback
+    if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
   }
 
   function check() {
@@ -181,7 +181,7 @@ export function ProblemRunner({
     if (isPredictStep(step) || isPlotStep(step) || !step.choices) return
     const choice = step.choices.find((c) => c.id === id)
     setChosenId(id)
-    setStatus(choice?.correct ? 'correct' : 'incorrect')
+    setStatus(choice?.correct && step.success(merged, image) ? 'correct' : 'incorrect')
   }
 
   function submitPlot() {
@@ -294,11 +294,6 @@ export function ProblemRunner({
           {onNextLesson && (
             <button type="button" className="btn btn--primary" onClick={onNextLesson}>
               Next lesson{nextLessonTitle ? `: ${nextLessonTitle}` : ''}
-            </button>
-          )}
-          {onPractice && (
-            <button type="button" className="btn btn--primary" onClick={onPractice}>
-              Go to practice problems
             </button>
           )}
           <button type="button" className="btn" onClick={restart}>
@@ -724,7 +719,7 @@ function InteractiveChoices({
             className={`interactive-choice ${verdict ? `interactive-choice--${verdict}` : ''}`}
             onClick={() => onChoose(choice.id)}
           >
-            {choice.label}
+            {renderRich(choice.label)}
           </button>
         )
       })}
@@ -825,7 +820,7 @@ function PredictPanel({
                     )}
                   </span>
                 )}
-                <span className="predict__label">{c.label}</span>
+                <span className="predict__label">{renderRich(c.label)}</span>
                 {showMark && (
                   <span className="predict__mark" aria-hidden="true">
                     {c.correct ? '✓' : '✗'}

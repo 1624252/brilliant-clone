@@ -25,29 +25,29 @@ export const rayTracingLesson: LessonDefinition = {
       kind: 'plot-rays',
       id: 'trace-convex-beyond-2focus',
       prompt:
-        'Convex lens: the candle is beyond 2 focus. Draw the three rays until they cross at the image.',
+        'Convex lens: the candle is beyond **2F**. Draw the three rays until they cross at the image.',
       scene: { objectDistance: 60, focalLength: FOCAL_LENGTH },
       hint:
-        'Use the focus points: the **parallel** ray bends through the far **focus**, the **chief** ray stays straight through the center, and the **focal** ray leaves **parallel**.',
+        'Use the **F** marks: the **parallel** ray bends through far **F**, the **chief** ray stays straight through the center, and the **focal** ray leaves **parallel**.',
       reveal:
-        'The convex rays cross between **focus** and **2 focus**, making a **real**, inverted, **reduced** image.',
+        'The convex rays cross between **F** and **2F**, making a **real**, inverted, **reduced** image.',
     },
     {
       kind: 'plot-rays',
       id: 'trace-convex-between-focus-2focus',
       prompt:
-        'Convex lens: the candle is between focus and 2 focus. Trace the projector case.',
+        'Convex lens: the candle is between **F** and **2F**. Trace the projector case.',
       scene: { objectDistance: 30, focalLength: FOCAL_LENGTH },
       hint:
-        'The rays should cross beyond **2 focus**. Keep the outgoing ray solid, then use dotted back-traces only if the rays diverge.',
+        'The rays should cross beyond **2F**. Keep the outgoing ray solid, then use dotted back-traces only if the rays diverge.',
       reveal:
-        'Between **focus** and **2 focus**, a convex lens makes a **real**, inverted, **enlarged** image beyond 2 focus.',
+        'Between **F** and **2F**, a convex lens makes a **real**, inverted, **enlarged** image beyond **2F**.',
     },
     {
       kind: 'plot-rays',
       id: 'trace-concave-near',
       prompt:
-        'Concave lens: the candle is between the lens and the virtual focus distance. Trace the virtual image.',
+        'Concave lens: the candle is between the lens and virtual **F**. Trace the virtual image.',
       scene: { objectDistance: 12, focalLength: -FOCAL_LENGTH, objectHeight: 12 },
       hint:
         'The **parallel** ray leaves as if it came from the near-side **focus**. Follow the colored dotted back-traces on the candle side.',
@@ -58,7 +58,7 @@ export const rayTracingLesson: LessonDefinition = {
       kind: 'plot-rays',
       id: 'trace-concave-far',
       prompt:
-        'Concave lens: the candle is beyond 2 focus. Trace the tiny virtual image near the focus.',
+        'Concave lens: the candle is beyond **2F**. Trace the tiny virtual image near **F**.',
       scene: { objectDistance: 60, focalLength: -FOCAL_LENGTH },
       hint:
         'For a concave lens, the outgoing rays diverge. The colored dotted back-traces should point back toward the candle-side **focus**.',

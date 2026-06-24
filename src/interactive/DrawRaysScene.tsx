@@ -21,7 +21,6 @@ import {
   constructionPoints,
   drawnRayChecks,
   extendRayToBounds,
-  pointDistance,
   type DrawnRays,
   type PlotScene,
 } from './plotRays'
@@ -37,7 +36,6 @@ interface DrawRaysSceneProps {
 }
 
 const TOL = 3
-const SNAP_TOL = TOL
 const sc = DEFAULT_SCENE
 const rayIds: RayId[] = ['parallel', 'chief', 'focal']
 const rayLabels: Record<RayId, string> = {
@@ -183,15 +181,23 @@ export function DrawRaysScene({
       x: clamp(next.x, -sc.halfWidth + 2, sc.halfWidth - 2),
       y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),
     }
-    const target = ruleEndpoint(ray, s)
-    const end = pointDistance(clamped, target) <= SNAP_TOL ? target : clamped
-    setRays((prev) => ({
-      ...prev,
-      [ray]: {
-        ...prev[ray],
-        end,
-      },
-    }))
+    setRays((prev) => {
+      const candidate: DrawnRays = {
+        ...prev,
+        [ray]: {
+          ...prev[ray],
+          end: clamped,
+        },
+      }
+      const end = drawnRayChecks(candidate, s, TOL)[ray] ? ruleEndpoint(ray, s) : clamped
+      return {
+        ...prev,
+        [ray]: {
+          ...prev[ray],
+          end,
+        },
+      }
+    })
   }
 
   function pointerToOptical(e: PointerEvent<SVGCircleElement>): Point | null {

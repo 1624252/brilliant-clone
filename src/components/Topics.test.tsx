@@ -6,14 +6,7 @@ import type { ProgressState } from '../data/useProgress'
 
 const progress: ProgressState = {
   byLesson: {},
-  byPractice: {},
   streak: null,
-  practiceStats: {
-    solvedCount: 0,
-    totalAttempts: 0,
-    totalCorrect: 0,
-    questionStreak: { current: 0, longest: 0, lastAnsweredAt: null },
-  },
   loading: false,
 }
 

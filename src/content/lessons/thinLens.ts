@@ -51,7 +51,7 @@ export const thinLensLesson: LessonDefinition = {
         'Inside the **focus**, the convex lens magnifies: **virtual**, **upright**, and **enlarged**.',
       hint: (_state, image) =>
         image.isReal
-          ? 'Your image is still **real and flipped**, so the rays are meeting on the far side. Move inside the **focus**.'
+          ? 'Your image is still **real and flipped**, so the rays are meeting on the far side. Move inside **F**.'
           : 'You found a **virtual** image. Move closer to the **focus** from the inside to enlarge it.',
     },
     {
@@ -62,10 +62,10 @@ export const thinLensLesson: LessonDefinition = {
       initial: { objectDistance: 60 },
       success: (_state, image) => image.isReal && image.isMagnified,
       correctFeedback:
-        'Between **focus** and **2 focus**: **real**, flipped, and **enlarged**.',
+        'Between **F** and **2F**: **real**, flipped, and **enlarged**.',
       hint: (_state, image) => {
         if (!image.isReal) {
-          return 'Your image is **virtual and upright**, so the candle is too close for projection. Move outside the **focus**.'
+          return 'Your image is **virtual and upright**, so the candle is too close for projection. Move outside **F**.'
         }
         return Math.abs(image.magnification) < 1
           ? 'Your projected image is **too small**. Move the candle closer to the **focus** while keeping it outside.'
@@ -88,7 +88,7 @@ export const thinLensLesson: LessonDefinition = {
       hint: (_state, image) =>
         image.magnification <= 0.55
           ? 'The image is too small. Move the candle closer to the concave lens.'
-          : 'Keep the candle just outside the lens, but not all the way at 0.',
+          : 'Keep the candle just inside **F**, but not right on the lens.',
     },
     {
       id: 'concave-minify-far',

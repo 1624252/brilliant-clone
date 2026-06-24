@@ -6,21 +6,39 @@ const CX = 180
 const CY = 105
 const H = 62
 const BULGE = 22
+const SLAB_HALF_WIDTH = 5
 const LEFT = 18
 const RIGHT = 342
 const RAY_YS = [68, 90, 120, 142]
 const FOCUS_OFFSET = 94
 
 function lensPath(t: number) {
-  const b = t * BULGE
-  if (Math.abs(b) < 1.5) {
-    return `M ${CX - 5},${CY - H} L ${CX + 5},${CY - H} L ${CX + 5},${CY + H} L ${CX - 5},${CY + H} Z`
+  const amount = Math.abs(t)
+  if (amount < 0.04) {
+    return `M ${CX - SLAB_HALF_WIDTH},${CY - H} L ${CX + SLAB_HALF_WIDTH},${CY - H} L ${CX + SLAB_HALF_WIDTH},${CY + H} L ${CX - SLAB_HALF_WIDTH},${CY + H} Z`
   }
-  const convex = b > 0
-  const k = Math.abs(b)
-  return convex
-    ? `M ${CX},${CY - H} C ${CX - k},${CY - H * 0.55} ${CX - k},${CY + H * 0.55} ${CX},${CY + H} C ${CX + k},${CY + H * 0.55} ${CX + k},${CY - H * 0.55} ${CX},${CY - H} Z`
-    : `M ${CX - k},${CY - H} C ${CX + k * 0.45},${CY - H * 0.4} ${CX + k * 0.45},${CY + H * 0.4} ${CX - k},${CY + H} L ${CX + k},${CY + H} C ${CX - k * 0.45},${CY + H * 0.4} ${CX - k * 0.45},${CY - H * 0.4} ${CX + k},${CY - H} Z`
+  const convex = t > 0
+  if (convex) {
+    const sw = lerp(SLAB_HALF_WIDTH, 7, amount)
+    const bulge = BULGE * amount
+    const topR = `${CX + sw},${CY - H}`
+    const botR = `${CX + sw},${CY + H}`
+    const botL = `${CX - sw},${CY + H}`
+    const topL = `${CX - sw},${CY - H}`
+    const ctrlR = `${CX + sw + bulge},${CY}`
+    const ctrlL = `${CX - sw - bulge},${CY}`
+    return `M ${topR} Q ${ctrlR} ${botR} L ${botL} Q ${ctrlL} ${topL} Z`
+  }
+
+  const sw = lerp(SLAB_HALF_WIDTH, 11, amount)
+  const inset = Math.min(sw - 2, 22 * amount)
+  const topL = `${CX - sw},${CY - H}`
+  const botL = `${CX - sw},${CY + H}`
+  const botR = `${CX + sw},${CY + H}`
+  const topR = `${CX + sw},${CY - H}`
+  const ctrlL = `${CX - sw + inset},${CY}`
+  const ctrlR = `${CX + sw - inset},${CY}`
+  return `M ${topL} Q ${ctrlL} ${botL} L ${botR} Q ${ctrlR} ${topR} Z`
 }
 
 function lerp(a: number, b: number, t: number) {
@@ -29,19 +47,19 @@ function lerp(a: number, b: number, t: number) {
 
 function stageProgress(p: number) {
   if (p < 0.3) {
-    return { label: 'convex', t: lerp(0, 1, p / 0.3), hold: false }
+    return { label: 'concave', t: lerp(-1, 0, p / 0.3), hold: false }
   }
-  if (p < 0.42) return { label: 'convex', t: 1, hold: true }
+  if (p < 0.42) return { label: 'flat', t: 0, hold: true }
   if (p < 0.58) return { label: 'flat', t: 0, hold: true }
   if (p < 0.88) {
-    return { label: 'concave', t: lerp(0, -1, (p - 0.58) / 0.3), hold: false }
+    return { label: 'convex', t: lerp(0, 1, (p - 0.58) / 0.3), hold: false }
   }
-  return { label: 'concave', t: -1, hold: true }
+  return { label: 'convex', t: 1, hold: true }
 }
 
-function pathToFocus(y: number, t: number, focusX: number) {
+function pathToFocus(y: number, amount: number, focusX: number) {
   const endAtFocus = y + ((CY - y) * (RIGHT - CX)) / (focusX - CX)
-  return lerp(y, endAtFocus, Math.abs(t))
+  return lerp(y, endAtFocus, amount)
 }
 
 export function CurvatureExplainer() {
@@ -60,10 +78,15 @@ function CurvatureAnimation() {
   const p = useAnimationProgress(5200)
   const stage = stageProgress(p)
   const t = Math.abs(stage.t) < 0.08 ? 0 : stage.t
+  const amount = Math.abs(t)
   const label = stage.label
   const realFocusX = CX + FOCUS_OFFSET
   const virtualFocusX = CX - FOCUS_OFFSET
-  const focusX = t >= 0 ? realFocusX : virtualFocusX
+  const liveRealFocusX = t > 0.02 ? CX + FOCUS_OFFSET / amount : Infinity
+  const liveVirtualFocusX = t < -0.02 ? CX - FOCUS_OFFSET / amount : -Infinity
+  const realFocusOnScreen = liveRealFocusX <= RIGHT - 6
+  const virtualFocusOnScreen = liveVirtualFocusX >= LEFT + 6
+  const focusX = t >= 0 ? liveRealFocusX : liveVirtualFocusX
   const rayClass =
     label === 'convex'
       ? 'shape-ray--converge'
@@ -85,23 +108,27 @@ function CurvatureAnimation() {
           label === 'flat'
             ? y
             : label === 'convex'
-              ? pathToFocus(y, t, realFocusX)
-              : pathToFocus(y, t, virtualFocusX)
+              ? pathToFocus(y, amount, realFocusX)
+              : pathToFocus(y, amount, virtualFocusX)
+        const virtualYEnd =
+          label === 'concave' && virtualFocusOnScreen
+            ? y + amount * ((CY - y) * (focusX - CX)) / (virtualFocusX - CX)
+            : CY
         return (
           <g key={y}>
             <path className="beam beam--in" d={`M ${LEFT},${y} L ${CX},${y}`} />
             <path className={`beam beam--out ${rayClass}`} d={`M ${CX},${y} L ${RIGHT},${yEnd}`} />
-            {label === 'concave' && Math.abs(t) > 0.18 && (
+            {label === 'concave' && virtualFocusOnScreen && (
               <path
                 className="beam--virtual shape-ray--virtual"
-                d={`M ${CX},${y} L ${virtualFocusX},${CY}`}
+                d={`M ${CX},${y} L ${focusX},${virtualYEnd}`}
               />
             )}
           </g>
         )
       })}
       <path className="lens" d={lensPath(t)} />
-      {label !== 'flat' && Math.abs(t) > 0.18 && (
+      {label !== 'flat' && (label === 'convex' ? realFocusOnScreen : virtualFocusOnScreen) && (
         <g className="shape-focus">
           <circle className="fpoint" cx={focusX} cy={CY} r={4} />
           <text className="flabel" x={focusX} y={CY - 13} textAnchor="middle">

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { chapter, lessons, opticsPracticeProblems } from '../content'
+import { chapter, lessons } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
+import { renderRich } from '../content/richText'
 import {
   deriveMilestones,
   earnedMilestoneIds,
@@ -17,7 +18,6 @@ interface HomeProps {
   displayName: string
   progress: ProgressState
   onOpen: (lessonId: string) => void
-  onOpenPractice: () => void
   /** Back to the topics landing page. */
   onBack: () => void
   onSignOut: () => void
@@ -28,7 +28,6 @@ export function Home({
   displayName,
   progress,
   onOpen,
-  onOpenPractice,
   onBack,
   onSignOut,
 }: HomeProps) {
@@ -43,10 +42,6 @@ export function Home({
   const milestones = deriveMilestones(status, progress.streak)
   const earnedKey = earnedMilestoneIds(milestones).join(',')
   const [celebrate, setCelebrate] = useState<Milestone[]>([])
-  const practiceSolved = opticsPracticeProblems.filter(
-    (p) => progress.byPractice[p.id]?.solved,
-  ).length
-
   // Pop a small celebration when milestones are newly earned. We remember the
   // earned set per user in localStorage; the first visit seeds it silently so we
   // only celebrate things earned *after* this point.
@@ -199,25 +194,6 @@ export function Home({
             />
           ))}
         </ol>
-
-        <section className="practice-card" aria-labelledby="practice-card-title">
-          <div>
-            <p className="home__eyebrow">Practice</p>
-            <h2 id="practice-card-title">Practice problems</h2>
-            <p>
-              Turn the lens equation into signed numerical answers, then check
-              each result against the live ray diagram.
-            </p>
-            <div className="practice-card__stats">
-              <span>{practiceSolved} / {opticsPracticeProblems.length} solved</span>
-              <span>{progress.practiceStats.questionStreak.current} question streak</span>
-              <span>Best {progress.practiceStats.questionStreak.longest}</span>
-            </div>
-          </div>
-          <button type="button" className="btn btn--primary" onClick={onOpenPractice}>
-            Practice calculations
-          </button>
-        </section>
       </main>
     </div>
   )
@@ -282,7 +258,7 @@ function RoadmapItem({
           <span className="roadmap__title">{lesson.title}</span>
           {recommended && <span className="tag tag--rec">Recommended</span>}
         </span>
-        {lesson.summary && <span className="roadmap__summary">{lesson.summary}</span>}
+        {lesson.summary && <span className="roadmap__summary">{renderRich(lesson.summary)}</span>}
         <span className="roadmap__foot">
           <span className="roadmap__meta">~{lesson.estMinutes} min</span>
           <span className="roadmap__status">{statusLabel}</span>

@@ -2,29 +2,21 @@ import { useEffect, useState } from 'react'
 import { collection, doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import {
-  emptyPracticeStats,
   type LessonProgress,
-  type PracticeProgress,
-  type PracticeStats,
   type Streak,
 } from './progress'
 
 export interface ProgressState {
   /** lessonId -> progress */
   byLesson: Record<string, LessonProgress>
-  /** problemId -> practice attempt state */
-  byPractice: Record<string, PracticeProgress>
   streak: Streak | null
-  practiceStats: PracticeStats
   loading: boolean
 }
 
 /** Fresh state for a user: empty data, loading until snapshots arrive. */
 const initialFor = (uid: string | null): ProgressState => ({
   byLesson: {},
-  byPractice: {},
   streak: null,
-  practiceStats: emptyPracticeStats(),
   loading: !!uid, // logged out -> nothing to load
 })
 
@@ -58,28 +50,13 @@ export function useProgress(uid: string | null): ProgressState {
       () => setState((s) => ({ ...s, loading: false })),
     )
 
-    const unsubPractice = onSnapshot(
-      collection(db, 'users', uid, 'practice'),
-      (snap) => {
-        const byPractice: Record<string, PracticeProgress> = {}
-        snap.forEach((d) => {
-          byPractice[d.id] = d.data() as PracticeProgress
-        })
-        setState((s) => ({ ...s, byPractice, loading: false }))
-      },
-      () => setState((s) => ({ ...s, loading: false })),
-    )
-
     const unsubUser = onSnapshot(doc(db, 'users', uid), (d) => {
       const streak = (d.data()?.streak as Streak | undefined) ?? null
-      const practiceStats =
-        (d.data()?.practiceStats as PracticeStats | undefined) ?? emptyPracticeStats()
-      setState((s) => ({ ...s, streak, practiceStats }))
+      setState((s) => ({ ...s, streak }))
     })
 
     return () => {
       unsubProgress()
-      unsubPractice()
       unsubUser()
     }
   }, [uid])
