@@ -9,6 +9,7 @@ const BULGE = 22
 const LEFT = 18
 const RIGHT = 342
 const RAY_YS = [68, 90, 120, 142]
+const FOCUS_OFFSET = 94
 
 function lensPath(t: number) {
   const b = t * BULGE
@@ -20,6 +21,27 @@ function lensPath(t: number) {
   return convex
     ? `M ${CX},${CY - H} C ${CX - k},${CY - H * 0.55} ${CX - k},${CY + H * 0.55} ${CX},${CY + H} C ${CX + k},${CY + H * 0.55} ${CX + k},${CY - H * 0.55} ${CX},${CY - H} Z`
     : `M ${CX - k},${CY - H} C ${CX + k * 0.45},${CY - H * 0.4} ${CX + k * 0.45},${CY + H * 0.4} ${CX - k},${CY + H} L ${CX + k},${CY + H} C ${CX - k * 0.45},${CY + H * 0.4} ${CX - k * 0.45},${CY - H * 0.4} ${CX + k},${CY - H} Z`
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t
+}
+
+function stageProgress(p: number) {
+  if (p < 0.3) {
+    return { label: 'convex', t: lerp(0, 1, p / 0.3), hold: false }
+  }
+  if (p < 0.42) return { label: 'convex', t: 1, hold: true }
+  if (p < 0.58) return { label: 'flat', t: 0, hold: true }
+  if (p < 0.88) {
+    return { label: 'concave', t: lerp(0, -1, (p - 0.58) / 0.3), hold: false }
+  }
+  return { label: 'concave', t: -1, hold: true }
+}
+
+function pathToFocus(y: number, t: number, focusX: number) {
+  const endAtFocus = y + ((CY - y) * (RIGHT - CX)) / (focusX - CX)
+  return lerp(y, endAtFocus, Math.abs(t))
 }
 
 export function CurvatureExplainer() {
@@ -36,11 +58,18 @@ export function CurvatureExplainer() {
 
 function CurvatureAnimation() {
   const p = useAnimationProgress(5200)
-  const wave = Math.sin((p * Math.PI * 2) - Math.PI / 2)
-  const t = Math.abs(wave) < 0.08 ? 0 : wave
-  const focusX = t > 0 ? CX + 80 : CX - 80
-  const label = t > 0.18 ? 'convex' : t < -0.18 ? 'concave' : 'flat'
-  const rayClass = t > 0.18 ? 'shape-ray--converge' : t < -0.18 ? 'shape-ray--diverge' : 'shape-ray--flat'
+  const stage = stageProgress(p)
+  const t = Math.abs(stage.t) < 0.08 ? 0 : stage.t
+  const label = stage.label
+  const realFocusX = CX + FOCUS_OFFSET
+  const virtualFocusX = CX - FOCUS_OFFSET
+  const focusX = t >= 0 ? realFocusX : virtualFocusX
+  const rayClass =
+    label === 'convex'
+      ? 'shape-ray--converge'
+      : label === 'concave'
+        ? 'shape-ray--diverge'
+        : 'shape-ray--flat'
 
   return (
     <svg
@@ -52,17 +81,27 @@ function CurvatureAnimation() {
     >
       <line className="axis" x1={0} y1={CY} x2={360} y2={CY} />
       {RAY_YS.map((y) => {
-        const bend = t * (CY - y) * 0.92
-        const yEnd = y + bend
+        const yEnd =
+          label === 'flat'
+            ? y
+            : label === 'convex'
+              ? pathToFocus(y, t, realFocusX)
+              : pathToFocus(y, t, virtualFocusX)
         return (
           <g key={y}>
             <path className="beam beam--in" d={`M ${LEFT},${y} L ${CX},${y}`} />
             <path className={`beam beam--out ${rayClass}`} d={`M ${CX},${y} L ${RIGHT},${yEnd}`} />
+            {label === 'concave' && Math.abs(t) > 0.18 && (
+              <path
+                className="beam--virtual shape-ray--virtual"
+                d={`M ${CX},${y} L ${virtualFocusX},${CY}`}
+              />
+            )}
           </g>
         )
       })}
       <path className="lens" d={lensPath(t)} />
-      {Math.abs(t) > 0.18 && (
+      {label !== 'flat' && Math.abs(t) > 0.18 && (
         <g className="shape-focus">
           <circle className="fpoint" cx={focusX} cy={CY} r={4} />
           <text className="flabel" x={focusX} y={CY - 13} textAnchor="middle">
@@ -71,7 +110,9 @@ function CurvatureAnimation() {
         </g>
       )}
       <text className="clens-stage shape-stage" x={CX} y={198} textAnchor="middle">
-        {label === 'flat' ? 'Flat: rays pass straight' : `${label}: rays ${label === 'convex' ? 'converge' : 'diverge'}`}
+        {label === 'flat'
+          ? 'Flat: rays pass straight'
+          : `${label}: rays ${label === 'convex' ? 'converge' : 'diverge'}`}
       </text>
     </svg>
   )

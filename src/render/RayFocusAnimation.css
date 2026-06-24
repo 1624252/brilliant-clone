@@ -201,6 +201,13 @@
   stroke-dasharray: 5 5;
   opacity: 0.7;
 }
+.focus-anim .shape-ray--virtual {
+  stroke: #ff6b9d;
+  stroke-width: 2;
+  stroke-dasharray: 1.5 6;
+  stroke-linecap: round;
+  opacity: 0.62;
+}
 .focus-anim .clens-tag {
   fill: var(--c-f);
   font-size: 13px;
@@ -251,5 +258,8 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .focus-anim .shape-ray--virtual {
+    opacity: 0.62;
   }
 }
