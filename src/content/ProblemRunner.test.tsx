@@ -338,14 +338,26 @@ describe('ProblemRunner thin lens applications', () => {
     expect(screen.getByRole('status').textContent).toMatch(/object and image collapse onto the lens/i)
   })
 
-  it('finishes without a practice-problems option', () => {
+  it('offers practice problems on the finish screen when wired', () => {
+    const onPractice = vi.fn()
     const { container } = render(
-      <ProblemRunner lesson={thinLensLesson} initialStepIndex={3} />,
+      <ProblemRunner lesson={thinLensLesson} initialStepIndex={3} onPractice={onPractice} />,
     )
     setObjectDistance(container, thinLensLesson, 60)
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     fireEvent.click(screen.getByRole('button', { name: /finish/i }))
-    expect(screen.queryByRole('button', { name: /go to practice problems/i })).not.toBeInTheDocument()
+    const practiceButton = screen.getByRole('button', { name: /practice problems/i })
+    expect(practiceButton).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /review lesson/i })).toBeInTheDocument()
+    fireEvent.click(practiceButton)
+    expect(onPractice).toHaveBeenCalledTimes(1)
+  })
+
+  it('omits the practice option when no handler is provided', () => {
+    const { container } = render(<ProblemRunner lesson={thinLensLesson} initialStepIndex={3} />)
+    setObjectDistance(container, thinLensLesson, 60)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    fireEvent.click(screen.getByRole('button', { name: /finish/i }))
+    expect(screen.queryByRole('button', { name: /practice problems/i })).not.toBeInTheDocument()
   })
 })

@@ -32,16 +32,42 @@ service cloud.firestore {
         && appearance.backgroundId in ['aurora', 'prism'];
     }
 
+    function validQuestionStreak(qs) {
+      return qs is map
+        && qs.keys().hasOnly(['current', 'longest', 'lastAnsweredAt'])
+        && (!('current' in qs) || validNonNegative(qs.current, 1000000000))
+        && (!('longest' in qs) || validNonNegative(qs.longest, 1000000000))
+        && (!('lastAnsweredAt' in qs) || qs.lastAnsweredAt is timestamp);
+    }
+
+    function validPracticeStats(ps) {
+      // `solvedCount` is a legacy field from the removed practice feature; it is
+      // tolerated (and ignored) so older profiles can still record practice.
+      return ps is map
+        && ps.keys().hasOnly(['totalAttempts', 'totalCorrect', 'questionStreak', 'solvedCount'])
+        && (!('totalAttempts' in ps) || validNonNegative(ps.totalAttempts, 1000000000))
+        && (!('totalCorrect' in ps) || validNonNegative(ps.totalCorrect, 1000000000))
+        && (!('solvedCount' in ps) || validNonNegative(ps.solvedCount, 1000000000))
+        && (!('questionStreak' in ps) || validQuestionStreak(ps.questionStreak));
+    }
+
     function validUserDoc(data) {
-      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'appearance', 'practiceStats'])
+      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'appearance', 'practiceStats', 'mastery'])
         && (!('displayName' in data) || validShortString(data.displayName, 80))
         && (!('email' in data) || validShortString(data.email, 254))
         && (!('createdAt' in data) || data.createdAt is timestamp)
         && (!('streak' in data) || validStreak(data.streak))
-        // Legacy field from the removed practice feature. Allowed only so older
-        // profiles can still update current settings without migration breakage.
-        && (!('practiceStats' in data) || data.practiceStats is map)
+        && (!('practiceStats' in data) || validPracticeStats(data.practiceStats))
+        // Per-topic mastery is a small map; values are written only by the owner.
+        && (!('mastery' in data) || (data.mastery is map && data.mastery.size() <= 50))
         && (!('appearance' in data) || validAppearance(data.appearance));
+    }
+
+    function validLeaderboardEntry(data) {
+      return data.keys().hasOnly(['displayName', 'totalCorrect', 'updatedAt'])
+        && (!('displayName' in data) || validShortString(data.displayName, 80))
+        && (!('totalCorrect' in data) || validNonNegative(data.totalCorrect, 1000000000))
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
     function validLessonProgress(data, lessonId) {
@@ -72,6 +98,15 @@ service cloud.firestore {
           && validLessonProgress(request.resource.data, lessonId);
         allow delete: if false;
       }
+    }
+
+    // Public leaderboard: any signed-in user may read the ranked list, but each
+    // user can only write their own entry, which holds nothing but a display
+    // name and their total correct-answer count.
+    match /leaderboard/{uid} {
+      allow read: if request.auth != null;
+      allow create, update: if isOwner(uid) && validLeaderboardEntry(request.resource.data);
+      allow delete: if false;
     }
   }
 }

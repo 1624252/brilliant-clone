@@ -12,6 +12,8 @@ interface LessonViewProps {
   onBack: () => void
   /** Navigate to another lesson (used by the "Next lesson" finish button). */
   onOpenLesson: (lessonId: string) => void
+  /** Open practice problems (used by the finish-screen CTA). */
+  onPractice: () => void
 }
 
 export function LessonView({
@@ -21,6 +23,7 @@ export function LessonView({
   progress,
   onBack,
   onOpenLesson,
+  onPractice,
 }: LessonViewProps) {
   const saved = progress.byLesson[lesson.id]
   const completedBefore = saved?.status === 'completed'
@@ -65,6 +68,7 @@ export function LessonView({
               nextLesson ? () => onOpenLesson(nextLesson.id) : undefined
             }
             nextLessonTitle={nextLesson?.title}
+            onPractice={onPractice}
           />
         </section>
       </main>

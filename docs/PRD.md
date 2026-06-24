@@ -175,6 +175,12 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 - Responsive layout (mobile + desktop, resizes with the window).
 - Firebase Hosting deployment.
 
+> **Update (post-MVP):** A **Practice mode** with a global **leaderboard** has since
+> been added on top of the MVP. It is documented in §21 and intentionally goes
+> beyond the original MVP scope below (which listed leaderboards and adaptive
+> practice as deferred). It still uses **no AI** — practice problems are generated
+> from deterministic, hand-authored templates.
+
 ### Out of scope (MVP — deferred)
 
 - **Any AI/LLM features** (no model calls, no generated hints, no chatbot) — Phase 2.
@@ -505,4 +511,66 @@ These are deliberately **not** in the MVP but the door is left open:
 6. Layer in the habit loop (streak, progress), routing, account management, and responsive polish.
 7. Deploy to Firebase Hosting.
 8. (Future) Lensmaker + chromatic lessons; then Phases 2–3.
+
+---
+
+## 21. Practice mode, mastery & leaderboard (post-MVP addition)
+
+Layered on top of the MVP (and beyond the original scope in §8). **No AI**:
+practice problems are generated from deterministic, hand-authored templates.
+
+### 21.1 Goals
+
+- An **endless** practice stream that reuses the lessons' interactions (drag,
+  draw-the-rays, predict, curvature) rather than multiple-choice trivia.
+- **Mastery tracking** that drives **repetition** of weak topics while
+  **interleaving** so the same topic never repeats back-to-back.
+- **Never show a question total** — practice should feel unlimited.
+- A habit loop: a **correct-answer streak**, **milestones**, and a global
+  **leaderboard** of all users by total correct answers.
+
+### 21.2 How it works
+
+- **Topics.** Six mastery topics (`src/content/practice/topics.ts`):
+  `convex-images`, `concave-images`, `curvature`, `ray-tracing`, `thin-lens`,
+  `sign-conventions`.
+- **Templates.** Each topic owns one or more `PracticeTemplate`s whose
+  `generate(rng)` returns an ordinary lesson `StepDefinition`
+  (`InteractiveStep` / `PredictStep` / `PlotRaysStep`) with randomized friendly
+  numbers — so a single shared renderer (`StepView`) handles both lessons and
+  practice. A seeded RNG (`rng.ts`) keeps generation deterministic for tests.
+- **Adaptive selection** (`select.ts`, pure + unit-tested). Each topic's weight
+  is `1 + 4 · wrongRate` with a Laplace-smoothed error rate, so weak topics
+  recur more and unseen topics get a moderate exploratory weight. The previous
+  topic is excluded each draw to force interleaving.
+- **Mastery signal.** The **first** submission per question decides the recorded
+  outcome (standard retrieval-practice). Counts live in `users/{uid}.mastery`.
+- **Stats & streak.** `users/{uid}.practiceStats` holds `totalAttempts`,
+  `totalCorrect`, and a consecutive-correct `questionStreak`. A correct answer
+  also bumps the daily learning streak.
+- **Milestones.** Derived client-side (`practiceMilestones.ts`): 10/50/100
+  correct and 5/10-in-a-row, celebrated via a `localStorage` "seen" set.
+
+### 21.3 Leaderboard & data model
+
+A single shared, public-read collection holds only a name and a score:
+
 ```
+leaderboard/{uid}
+  ├─ displayName: string
+  ├─ totalCorrect: number
+  └─ updatedAt: Timestamp
+```
+
+- **Rules:** `allow read: if request.auth != null;` (any signed-in user), but
+  `create/update` only by the owner (`request.auth.uid == uid`) and validated to
+  exactly `{displayName, totalCorrect, updatedAt}`. No email or other profile
+  data is ever exposed. The private `users/{uid}` doc stays owner-only.
+- The leaderboard entry is written in the same `writeBatch` as the practice
+  stats/mastery update, and re-synced on practice entry to pick up name changes.
+
+### 21.4 Routing & entry points
+
+- New route `/topics/:topicId/practice` → `PracticeView`.
+- Entry points: a **Practice problems** card on the roadmap and a **Practice
+  problems** button on a lesson's finish screen.

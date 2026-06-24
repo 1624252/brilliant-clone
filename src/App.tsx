@@ -16,6 +16,7 @@ import { AuthScreen } from './components/AuthScreen'
 import { Home } from './components/Home'
 import { Topics } from './components/Topics'
 import { LessonView } from './components/LessonView'
+import { PracticeView } from './components/PracticeView'
 import { Logo } from './components/Logo'
 import { chapters, lessons, lessonsByTopic } from './content'
 import './App.css'
@@ -82,9 +83,26 @@ function HomeRoute({ user, progress }: { user: User; progress: ProgressState }) 
       chapter={selectedChapter}
       lessons={topicLessons}
       onOpen={(id) => navigate(`/lessons/${id}`)}
+      onPractice={() => navigate(`/topics/${topicId}/practice`)}
       onBack={() => navigate('/')}
       // After sign-out the auth guard redirects to /login on its own.
       onSignOut={() => void logout()}
+    />
+  )
+}
+
+function PracticeRoute({ user, progress }: { user: User; progress: ProgressState }) {
+  const { topicId } = useParams()
+  const navigate = useNavigate()
+  const topicLessons = topicId ? lessonsByTopic[topicId] : undefined
+  if (!topicId || !topicLessons) return <Navigate to="/" replace />
+  const displayName = user.displayName || user.email?.split('@')[0] || 'there'
+  return (
+    <PracticeView
+      uid={user.uid}
+      displayName={displayName}
+      progress={progress}
+      onBack={() => navigate(`/topics/${topicId}`)}
     />
   )
 }
@@ -108,6 +126,7 @@ function LessonRoute({ user, progress }: { user: User; progress: ProgressState }
       progress={progress}
       onBack={() => navigate(`/topics/${topicId}`)}
       onOpenLesson={(id) => navigate(`/lessons/${id}`)}
+      onPractice={() => navigate(`/topics/${topicId}/practice`)}
     />
   )
 }
@@ -161,6 +180,10 @@ function App() {
         <Route
           path="/lessons/:lessonId"
           element={<LessonRoute user={user!} progress={progress} />}
+        />
+        <Route
+          path="/topics/:topicId/practice"
+          element={<PracticeRoute user={user!} progress={progress} />}
         />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

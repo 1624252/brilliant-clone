@@ -1,4 +1,5 @@
 export { ProblemRunner } from './ProblemRunner'
+export { StepView, type StepViewProps } from './StepView'
 export { thinLensLesson } from './lessons/thinLens'
 export { focusLesson } from './lessons/focus'
 export {

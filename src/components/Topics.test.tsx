@@ -8,6 +8,8 @@ const progress: ProgressState = {
   byLesson: {},
   streak: null,
   appearance: { avatarId: 'initial', backgroundId: 'aurora' },
+  practiceStats: null,
+  mastery: {},
   loading: false,
 }
 

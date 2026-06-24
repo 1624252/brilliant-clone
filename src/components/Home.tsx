@@ -21,6 +21,8 @@ interface HomeProps {
   chapter: { id: string; title: string }
   lessons: LessonDefinition[]
   onOpen: (lessonId: string) => void
+  /** Open the practice problems screen for this topic. */
+  onPractice: () => void
   /** Back to the topics landing page. */
   onBack: () => void
   onSignOut: () => void
@@ -33,6 +35,7 @@ export function Home({
   chapter,
   lessons,
   onOpen,
+  onPractice,
   onBack,
   onSignOut,
 }: HomeProps) {
@@ -193,6 +196,22 @@ export function Home({
             />
           ))}
         </ol>
+
+        <button type="button" className="practice-cta" onClick={onPractice}>
+          <span className="practice-cta__icon" aria-hidden="true">
+            ∞
+          </span>
+          <span className="practice-cta__text">
+            <span className="practice-cta__title">Practice problems</span>
+            <span className="practice-cta__sub">
+              Endless mixed questions that adapt to what you miss — build a streak and climb the
+              leaderboard.
+            </span>
+          </span>
+          <span className="practice-cta__chev" aria-hidden="true">
+            →
+          </span>
+        </button>
       </main>
     </div>
   )

@@ -6,12 +6,17 @@ import {
   type LessonProgress,
   type Streak,
 } from './progress'
+import type { MasteryMap, PracticeStats } from './practice'
 
 export interface ProgressState {
   /** lessonId -> progress */
   byLesson: Record<string, LessonProgress>
   streak: Streak | null
   appearance: AppearancePreferences
+  /** Aggregate practice stats (null until loaded / before any practice). */
+  practiceStats: PracticeStats | null
+  /** Per-topic practice mastery. */
+  mastery: MasteryMap
   loading: boolean
 }
 
@@ -20,6 +25,8 @@ const initialFor = (uid: string | null): ProgressState => ({
   byLesson: {},
   streak: null,
   appearance: defaultAppearance,
+  practiceStats: null,
+  mastery: {},
   loading: !!uid, // logged out -> nothing to load
 })
 
@@ -56,7 +63,9 @@ export function useProgress(uid: string | null): ProgressState {
     const unsubUser = onSnapshot(doc(db, 'users', uid), (d) => {
       const streak = (d.data()?.streak as Streak | undefined) ?? null
       const appearance = normalizeAppearance(d.data()?.appearance as Partial<AppearancePreferences> | undefined)
-      setState((s) => ({ ...s, streak, appearance }))
+      const practiceStats = (d.data()?.practiceStats as PracticeStats | undefined) ?? null
+      const mastery = (d.data()?.mastery as MasteryMap | undefined) ?? {}
+      setState((s) => ({ ...s, streak, appearance, practiceStats, mastery }))
     })
 
     return () => {

@@ -51,6 +51,34 @@ the Firebase project once in the [console](https://console.firebase.google.com/)
 
 Each user can read/write only their own `users/{uid}` document and
 `users/{uid}/progress/{lessonId}` docs. Lesson content is in the app, not the DB.
+The **leaderboard** (`leaderboard/{uid}`) is the one shared collection: any
+signed-in user can read it, but each user can only write their own entry, which
+holds nothing but a display name and a total correct-answer count.
+
+## Practice problems
+
+Beyond the guided lessons, **Practice** (reached from the roadmap card or a
+lesson's finish screen, route `/topics/:topicId/practice`) is an endless,
+adaptive question bank that reuses the same interactions as the lessons (drag,
+draw-the-rays, predict, curvature):
+
+- **Unlimited & no totals.** Problems are generated from hand-authored,
+  deterministic templates (`src/content/practice/`) that randomize friendly
+  numbers — there is no AI and no fixed count, so the stream never "runs out"
+  and no question total is shown.
+- **Adaptive + interleaved.** Per-topic mastery (right/wrong counts) is tracked
+  in `users/{uid}.mastery`; weaker topics are surfaced more often, and the same
+  topic never repeats back-to-back (`selectNextTopic`).
+- **Streak & milestones.** A correct-answer streak plus milestone badges (10/50/
+  100 correct, 5/10 in a row) keep the habit loop going; a correct answer also
+  advances the daily streak.
+- **Leaderboard.** A global ranking of all users by total correct answers.
+
+> **Testing the leaderboard locally:** the dev server talks to the real Firebase
+> project (no emulator), so leaderboard reads/writes only work once the updated
+> [`firestore.rules`](./firestore.rules) are deployed (`npm run deploy:rules`).
+> Everything else (practice problems, mastery, streak, milestones) works locally
+> without deploying.
 
 ### Deploying
 
@@ -69,8 +97,11 @@ domains by default, so Google sign-in works there with no extra setup.
 ### Data model (Firestore)
 
 ```
-users/{uid}                      displayName, email, createdAt, streak{current,longest,lastActiveDate}
+users/{uid}                      displayName, email, createdAt, streak{current,longest,lastActiveDate},
+                                 practiceStats{totalAttempts,totalCorrect,questionStreak{...}},
+                                 mastery{ [topicId]: {attempts,correct,wrong,lastSeenAt} }
 users/{uid}/progress/{lessonId}  status, currentStepIndex, completedAt, updatedAt
+leaderboard/{uid}                displayName, totalCorrect, updatedAt   (public read, owner write)
 ```
 
 ## Available scripts
@@ -114,12 +145,12 @@ Conventions:
 src/
   engine/        Pure optics math (no React). Image formation, magnification, rays.
   render/        Presentational SVG (LensDiagram, RayFocusAnimation) + scene mapping.
-  interactive/   Draggable wrapper around the diagram (LensScene).
-  content/       Data-driven lessons + the ProblemRunner that plays them.
+  interactive/   Draggable wrapper around the diagram (LensScene, DrawRaysScene).
+  content/       Data-driven lessons, StepView + ProblemRunner, and practice/ templates.
   firebase/      Firebase app/auth/firestore initialization.
   auth/          AuthProvider + useAuth (email/password, Google, persistence).
-  data/          Firestore progress/streak read-write + useProgress hook + unlock logic.
-  components/    AuthScreen, Home (dashboard), LessonView.
+  data/          Firestore progress/streak/practice/leaderboard read-write + useProgress hook.
+  components/    AuthScreen, Home (dashboard), LessonView, PracticeView, Leaderboard.
   test/          Test setup and environment sanity checks.
   App.tsx        Routing: auth → home → lesson.
 firestore.rules  Per-user security rules.

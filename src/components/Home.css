@@ -2,6 +2,66 @@
   min-height: 100vh;
 }
 
+/* Practice problems entry card, below the lesson roadmap. */
+.practice-cta {
+  width: 100%;
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: left;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.9rem;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--brand) 16%, var(--bg-elev)),
+    var(--bg-elev)
+  );
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.practice-cta:hover {
+  transform: translateY(-1px);
+  border-color: var(--brand);
+}
+
+.practice-cta__icon {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.7rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
+}
+
+.practice-cta__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.practice-cta__title {
+  font-weight: 800;
+}
+
+.practice-cta__sub {
+  font-size: 0.84rem;
+  color: var(--text-mute);
+}
+
+.practice-cta__chev {
+  margin-left: auto;
+  color: var(--text-mute);
+  font-size: 1.3rem;
+}
+
 .home__bar {
   display: flex;
   align-items: center;
