@@ -42,7 +42,8 @@ function distToLine(p: Point, a: Point, b: Point): number {
 
 /**
  * Which ray rules the marker currently satisfies (within `tol`, optical units).
- * The marker must be on the far side of the lens (x > 0) for any rule to count.
+ * The marker must be on the physically correct image side: far side for real
+ * images, candle side for virtual images.
  */
 export function rayChecks(marker: Point, s: PlotScene, tol = 3): RayChecks {
   const h = s.objectHeight
@@ -52,9 +53,9 @@ export function rayChecks(marker: Point, s: PlotScene, tol = 3): RayChecks {
   const F: Point = { x: s.focalLength, y: 0 } // far focal point
   const img = imageTip(s)
 
-  const farSide = marker.x > 0
-  const chief = farSide && distToLine(marker, P, O) <= tol
-  const parallel = farSide && distToLine(F, A, marker) <= tol
-  const focal = farSide && Math.abs(marker.y - img.y) <= tol
+  const validSide = img.x >= 0 ? marker.x > 0 : marker.x < 0
+  const chief = validSide && distToLine(marker, P, O) <= tol
+  const parallel = validSide && distToLine(F, A, marker) <= tol
+  const focal = validSide && Math.abs(marker.y - img.y) <= tol
   return { chief, parallel, focal, all: chief && parallel && focal }
 }

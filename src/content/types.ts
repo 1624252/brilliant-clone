@@ -24,6 +24,7 @@ export interface Control {
 
 /** Numeric values the learner is manipulating, keyed by control key. */
 export type StepState = Record<string, number>
+export type InteractiveHint = string | ((state: StepState, image: ImageFormation) => string)
 
 interface StepBase {
   id: string
@@ -48,7 +49,7 @@ export interface InteractiveStep extends StepBase {
   /** Shown on a correct attempt. */
   correctFeedback: string
   /** Shown on an incorrect attempt. */
-  hint: string
+  hint: InteractiveHint
 }
 
 /** One option in a predict-then-reveal question. */

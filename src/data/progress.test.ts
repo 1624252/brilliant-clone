@@ -227,6 +227,15 @@ describe('saveStepProgress', () => {
       store.get(progressPath('userB', 'thin-lens-equation'))?.currentStepIndex,
     ).toBe(0)
   })
+
+  it('does not downgrade a completed lesson when replay progress is saved', async () => {
+    await completeLesson('userA', 'thin-lens-equation')
+    await saveStepProgress('userA', 'thin-lens-equation', 1)
+
+    const doc = store.get(progressPath('userA', 'thin-lens-equation'))!
+    expect(doc.status).toBe('completed')
+    expect(doc.currentStepIndex).toBe(1)
+  })
 })
 
 describe('completeLesson', () => {

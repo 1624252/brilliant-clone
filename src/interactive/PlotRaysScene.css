@@ -21,6 +21,11 @@
 .lens-diagram .plot-out--ok {
   opacity: 1;
 }
+.lens-diagram .plot-virtual {
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+  opacity: 0.7;
+}
 
 /* The draggable predicted-crossing marker. */
 .lens-diagram .plot-marker {

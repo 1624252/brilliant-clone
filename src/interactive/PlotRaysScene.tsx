@@ -16,7 +16,7 @@ import './PlotRaysScene.css'
 interface PlotRaysSceneProps {
   scene: { objectDistance: number; focalLength: number; objectHeight?: number }
   solved: boolean
-  onSolved: () => void
+  onReadyChange: (ready: boolean) => void
   measures?: MeasureFlags
 }
 
@@ -35,7 +35,7 @@ function atX(a: Point, b: Point, x: number): Point {
  * image point) until all three principal rays obey their rule and meet there.
  * Reuses LensDiagram for the lens/candle/axis and overlays the rays + handle.
  */
-export function PlotRaysScene({ scene, solved, onSolved, measures }: PlotRaysSceneProps) {
+export function PlotRaysScene({ scene, solved, onReadyChange, measures }: PlotRaysSceneProps) {
   const H = scene.objectHeight ?? 18
   const s: PlotScene = {
     objectDistance: scene.objectDistance,
@@ -43,23 +43,29 @@ export function PlotRaysScene({ scene, solved, onSolved, measures }: PlotRaysSce
     objectHeight: H,
   }
   const I = imageTip(s)
+  const isVirtual = I.x < 0
   // Start the marker away from the answer so there's something to solve.
-  const [marker, setMarker] = useState<Point>({ x: 50, y: 10 })
+  const [marker, setMarker] = useState<Point>(
+    isVirtual ? { x: Math.max(-sc.halfWidth + 8, I.x - 20), y: 10 } : { x: 50, y: 10 },
+  )
   const draggingRef = useRef(false)
 
   const checks = rayChecks(marker, s, TOL)
 
   function moveTo(next: Point) {
     if (solved) return
+    const minX = isVirtual ? -sc.halfWidth + 2 : 1
+    const maxX = isVirtual ? -1 : sc.halfWidth - 2
     const clamped: Point = {
-      x: clamp(next.x, 1, sc.halfWidth - 2),
+      x: clamp(next.x, minX, maxX),
       y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),
     }
     if (rayChecks(clamped, s, TOL).all) {
       setMarker(I) // snap cleanly onto the true crossing
-      onSolved()
+      onReadyChange(true)
     } else {
       setMarker(clamped)
+      onReadyChange(false)
     }
   }
 
@@ -128,7 +134,7 @@ export function PlotRaysScene({ scene, solved, onSolved, measures }: PlotRaysSce
 
   const line = (a: Point, b: Point) => `${toSvg(a, sc).x},${toSvg(a, sc).y} ${toSvg(b, sc).x},${toSvg(b, sc).y}`
   // Outgoing segment from a lens crossing through the marker, extended to the edge.
-  const outTo = (c: Point) => (marker.x > c.x + 0.5 ? atX(c, marker, R) : marker)
+  const outTo = (c: Point) => (Math.abs(marker.x - c.x) > 0.5 ? atX(c, marker, R) : marker)
 
   const m = toSvg(marker, sc)
 
@@ -163,6 +169,13 @@ export function PlotRaysScene({ scene, solved, onSolved, measures }: PlotRaysSce
           points={line(B, outTo(B))}
           markerEnd="url(#arrow)"
         />
+        {isVirtual && (
+          <>
+            <polyline className="ray ray--parallel plot-virtual" points={line(A, marker)} />
+            <polyline className="ray ray--chief plot-virtual" points={line(O, marker)} />
+            <polyline className="ray ray--focal plot-virtual" points={line(B, marker)} />
+          </>
+        )}
 
         {/* draggable marker: the learner's predicted crossing point */}
         <circle className="plot-marker__pulse" cx={m.x} cy={m.y} r={22} />

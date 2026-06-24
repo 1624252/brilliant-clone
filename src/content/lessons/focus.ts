@@ -11,7 +11,7 @@ const objectControl = {
   min: 0,
   // 80 is the visible left edge of the scene; sliding/dragging to it means ∞.
   max: 80,
-  step: 0.5,
+  step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
   // Snap to the lens (0), F, 2F, and 3F so key positions are easy to hit.
@@ -44,7 +44,15 @@ export const focusLesson: LessonDefinition = {
       success: (state) => Math.abs(state.objectDistance - state.focalLength) < 0.75,
       correctFeedback:
         'At **F** the outgoing rays are **parallel**, so the image races off to infinity.',
-      hint: 'Drag the candle right onto the F mark (distance 20).',
+      hint: (state, image) => {
+        if (state.objectDistance > state.focalLength) {
+          return 'The rays still cross after the lens, so the candle is **outside F**. Move it closer until the crossing point runs off toward infinity.'
+        }
+        if (!image.isReal) {
+          return 'The rays are already spreading apart after the lens, so the candle is **inside F**. Move it slightly farther out until the outgoing rays become parallel.'
+        }
+        return 'Watch the outgoing rays: the goal is the exact spot where they stop converging or diverging and leave **parallel**.'
+      },
     },
     {
       id: 'far-object-focuses-at-f',
@@ -54,7 +62,10 @@ export const focusLesson: LessonDefinition = {
       initial: { objectDistance: 30 },
       success: (state, image) => image.isReal && state.objectDistance >= 60,
       correctFeedback: 'A faraway object focuses close to **F** — that is why F is "the focus."',
-      hint: 'Drag the candle far from the lens (past 60).',
+      hint: (_state, image) =>
+        image.imageDistance > FOCAL_LENGTH + 3
+          ? 'The image is still noticeably **past F**. As the candle moves farther away, incoming rays become more parallel and the image slides closer to F.'
+          : 'You are close: keep making the incoming rays more nearly **parallel** so the image settles right near F.',
     },
     {
       kind: 'predict',

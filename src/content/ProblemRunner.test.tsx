@@ -9,12 +9,21 @@ import { curvatureLesson } from './lessons/curvature'
 import { rayTracingLesson } from './lessons/rayTracing'
 import { isPredictStep, isPlotStep } from './types'
 import type { LessonDefinition } from './types'
+import { distanceToSlider } from './logDistance'
 import { formImage } from '../engine'
 
 /** Set the object-distance range input (avoids simulating SVG pointer drag). */
 function setObjectDistance(container: HTMLElement, value: number) {
   const slider = container.querySelector('input[type="range"]') as HTMLInputElement
-  fireEvent.change(slider, { target: { value: String(value) } })
+  const hasInfinityControl = Boolean(container.querySelector('.slider__inf'))
+  const control = thinLensLesson.steps
+    .flatMap((step) => ('controls' in step ? step.controls : []))
+    .find((c) => c.key === 'objectDistance')
+  fireEvent.change(slider, {
+    target: {
+      value: String(hasInfinityControl && control ? distanceToSlider(value, control) : value),
+    },
+  })
 }
 
 /** Render a lesson and dismiss its intro screen so the steps are visible. */
@@ -48,7 +57,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     setObjectDistance(container, 60) // real but reduced, not same-size
     fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
     expect(screen.getByText(/not yet/i)).toBeInTheDocument()
-    expect(screen.getByText(/twice the focal length/i)).toBeInTheDocument()
+    expect(screen.getByText(/too small/i)).toBeInTheDocument()
   })
 
   it('accepts the correct answer (object at 2f) and reveals Next', () => {
@@ -87,7 +96,7 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     const { container } = renderStarted(thinLensLesson)
     const slider = container.querySelector('input[type="range"]') as HTMLInputElement
     // Slide all the way to the end (the visible scene edge = infinitely far).
-    setObjectDistance(container, Number(slider.max))
+    fireEvent.change(slider, { target: { value: slider.max } })
     expect(screen.getByText(/object distance:\s*∞/i)).toBeInTheDocument()
     // The diagram switches to the "object at infinity" parallel-beam state.
     expect(screen.getByText(/object at ∞/i)).toBeInTheDocument()
@@ -99,11 +108,29 @@ describe('ProblemRunner (Thin Lens lesson)', () => {
     expect(screen.getByText(/object distance:\s*∞/i)).toBeInTheDocument()
     expect(screen.getByText(/object at ∞/i)).toBeInTheDocument()
   })
+
+  it('step 6 plots the virtual image by tracing rays backward', () => {
+    render(<ProblemRunner lesson={thinLensLesson} initialStepIndex={5} />)
+    expect(screen.getByText(/step 6 of 6/i)).toBeInTheDocument()
+    expect(screen.getByText(/plot where the rays appear to meet/i)).toBeInTheDocument()
+
+    const marker = screen.getByRole('button', { name: /predicted crossing point/i })
+    // Marker starts near (-50, 10); true virtual tip is (-30, 30).
+    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowRight' })
+    for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowUp' })
+
+    expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+
+    expect(screen.getByText(/you found it/i)).toBeInTheDocument()
+    expect(screen.getByText(/magnifying glass/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /finish/i })).toBeInTheDocument()
+  })
 })
 
 describe('Thin Lens extreme steps', () => {
   const f = 20
-  // Return an interactive step by id (these extreme steps are interactive, not predict).
+  // Return an interactive step by id (Extreme 2 remains interactive).
   const stepById = (id: string) => {
     const s = thinLensLesson.steps.find((step) => step.id === id)
     if (!s) throw new Error(`no step ${id}`)
@@ -111,12 +138,16 @@ describe('Thin Lens extreme steps', () => {
     return s
   }
 
-  it('infinity step passes only when the object is infinitely far (image lands on F)', () => {
-    const step = stepById('extreme-object-at-infinity')
-    expect(step.success({ objectDistance: 120, focalLength: f }, formImage(120, f))).toBe(false)
-    expect(
-      step.success({ objectDistance: Infinity, focalLength: f }, formImage(Infinity, f)),
-    ).toBe(true)
+  it('infinity step uses multiple choice and reveals that the image lands on F', () => {
+    const s = thinLensLesson.steps.find((step) => step.id === 'extreme-object-at-infinity')
+    if (!s || !isPredictStep(s)) throw new Error('extreme 1 should be a predict step')
+    expect(s.scene.objectDistance).toBe(Infinity)
+    expect(s.choices.map((choice) => choice.label)).toEqual([
+      'Right at F',
+      'At 2F',
+      'No image forms',
+    ])
+    expect(s.choices.find((choice) => choice.correct)?.id).toBe('at-f')
   })
 
   it('zero step passes when the object reaches the lens', () => {
@@ -239,14 +270,19 @@ describe('ProblemRunner (Ray Tracing lesson)', () => {
     ).toBeInTheDocument()
     // No Next yet — the rays must be plotted first.
     expect(screen.queryByRole('button', { name: /next|finish/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument()
   })
 
-  it('solves the plot step by dragging the marker onto the crossing', () => {
+  it('requires submit after dragging the marker onto the crossing', () => {
     renderStarted(rayTracingLesson)
     const marker = screen.getByRole('button', { name: /predicted crossing point/i })
     // Marker starts at (50, 10); the true crossing is (30, -9). Walk it there.
     for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowLeft' })
     for (let i = 0; i < 20; i++) fireEvent.keyDown(marker, { key: 'ArrowDown' })
+
+    expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
 
     expect(screen.getByText(/you found it/i)).toBeInTheDocument()
     expect(

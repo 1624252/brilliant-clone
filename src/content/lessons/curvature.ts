@@ -45,7 +45,10 @@ export const curvatureLesson: LessonDefinition = {
         image.focalLength > 0 && !isFlat(image.focalLength),
       correctFeedback:
         'A **convex** lens has a **positive focal length** — it bends parallel rays together at F.',
-      hint: 'Drag the curvature slider to the right (the positive, convex side).',
+      hint: (_state, image) =>
+        image.focalLength < 0
+          ? 'The lens is **concave** right now, so it is spreading rays apart. To make rays converge, reshape it until it bulges outward.'
+          : 'The lens is still nearly **flat**, so the focus is too far away to see. Add more outward curve until the rays clearly meet.',
     },
     {
       id: 'make-diverging',
@@ -56,7 +59,10 @@ export const curvatureLesson: LessonDefinition = {
       success: (_state, image) => image.focalLength < 0 && !isFlat(image.focalLength),
       correctFeedback:
         'A **concave** lens has a **negative focal length** — it spreads parallel rays apart.',
-      hint: 'Drag the curvature slider to the left (the negative, concave side).',
+      hint: (_state, image) =>
+        image.focalLength > 0
+          ? 'The lens is still **convex**, so it is pulling rays together. Reverse the curve so the rays fan outward instead.'
+          : 'The lens is close to flat. Keep curving it inward until the focal length becomes clearly negative.',
     },
     {
       id: 'make-flat',
@@ -67,7 +73,10 @@ export const curvatureLesson: LessonDefinition = {
       success: (_state, image) => isFlat(image.focalLength),
       correctFeedback:
         'A **flat** lens has an **enormous (infinite) focal length** — almost no focal point, so light passes nearly straight through.',
-      hint: 'Drag the curvature slider toward the middle until the lens goes flat.',
+      hint: (_state, image) =>
+        image.focalLength > 0
+          ? 'The lens still bends rays **together**, so it is not flat yet. Reduce the outward curve until the rays pass almost straight through.'
+          : 'The lens still spreads rays **apart**, so it is not flat yet. Reduce the inward curve until the rays pass almost straight through.',
     },
   ],
 }

@@ -11,7 +11,7 @@ const objectControl = {
   min: 0,
   // 80 is the visible left edge of the scene; sliding/dragging to it means ∞.
   max: 80,
-  step: 0.5,
+  step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
   // Snap to the lens (0), F, 2F, and 3F so key positions are easy to hit.
@@ -44,7 +44,16 @@ export const thinLensLesson: LessonDefinition = {
       success: (_state, image) =>
         image.isReal && Math.abs(image.magnification + 1) < 0.06,
       correctFeedback: 'That is **2F** — **same size**, just flipped.',
-      hint: 'Try the 2F mark (twice the focal length).',
+      hint: (_state, image) => {
+        if (!image.isReal) {
+          return 'Your image is **upright and virtual**, which means the candle is inside F. For a same-size flipped image, look for a **real inverted** image first.'
+        }
+        const size = Math.abs(image.magnification)
+        if (size > 1) {
+          return 'Your image is **too big**. For real images with a convex lens, moving the candle farther from the lens makes the image smaller.'
+        }
+        return 'Your image is **too small**. For real images with a convex lens, moving the candle closer to the lens makes the image bigger.'
+      },
     },
     {
       id: 'virtual-magnifier',
@@ -54,7 +63,10 @@ export const thinLensLesson: LessonDefinition = {
       initial: { objectDistance: 60 },
       success: (_state, image) => !image.isReal && image.orientation === 'upright',
       correctFeedback: 'Inside **F** the lens magnifies: **upright** and **enlarged**.',
-      hint: 'Move the candle closer than F.',
+      hint: (_state, image) =>
+        image.isReal
+          ? 'Your image is still **real and flipped**, so the rays are meeting on the far side of the lens. A magnifying glass happens when the rays leave diverging and only trace back to a virtual image.'
+          : 'You found a **virtual** image, but it is not strongly magnified yet. Keep watching the image size as the candle approaches F from the inside.',
     },
     {
       id: 'projector-real-magnified',
@@ -64,20 +76,45 @@ export const thinLensLesson: LessonDefinition = {
       initial: { objectDistance: 60 },
       success: (_state, image) => image.isReal && image.isMagnified,
       correctFeedback: 'Between **F and 2F**: **real**, flipped, and **enlarged**.',
-      hint: 'Place the candle between F and 2F.',
+      hint: (_state, image) => {
+        if (!image.isReal) {
+          return 'Your image is **virtual and upright**, so the candle is too close for projection. A projector needs rays that really meet on the far side.'
+        }
+        return Math.abs(image.magnification) < 1
+          ? 'Your projected image is **too small**. To enlarge a real image, move the candle closer to F while keeping it outside F.'
+          : 'Your image is real, but it has not reached the enlarged projector setup yet. Watch for the crossing point to move farther away as the object gets closer to F.'
+      },
     },
     {
+      kind: 'predict',
       id: 'extreme-object-at-infinity',
-      prompt: 'Extreme 1: send the candle infinitely far away (tap ∞). Where does the image form?',
-      controls: [objectControl],
-      fixed: { focalLength: FOCAL_LENGTH },
-      initial: { objectDistance: 60 },
-      // Only a truly infinite dₒ lands the image exactly on F (di → f).
-      success: (state, image) =>
-        image.isReal && Math.abs(image.imageDistance - state.focalLength) < 0.5,
-      correctFeedback:
+      prompt:
+        'Extreme 1: the candle is infinitely far away, so its rays arrive almost parallel. Where does the image form?',
+      scene: { objectDistance: Infinity, focalLength: FOCAL_LENGTH },
+      choices: [
+        {
+          id: 'at-f',
+          label: 'Right at F',
+          correct: true,
+          feedback:
+            'Yes. When dₒ is infinite, \\frac{1}{dₒ} becomes zero, so the image distance equals the focal length.',
+        },
+        {
+          id: 'at-2f',
+          label: 'At 2F',
+          feedback:
+            '2F is the same-size case for an object at 2F. A faraway object sends in nearly parallel rays, which focus closer, at F.',
+        },
+        {
+          id: 'no-image',
+          label: 'No image forms',
+          feedback:
+            'An image still forms. Parallel incoming rays from a faraway object converge at the focal point of a convex lens.',
+        },
+      ],
+      reveal:
         'With dₒ → ∞ the \\frac{1}{dₒ} term vanishes, so \\frac{1}{dᵢ} = \\frac{1}{f}: the image shrinks to a point right at **F**.',
-      hint: 'Tap the ∞ button so dₒ becomes infinite.',
+      explore: objectControl,
     },
     {
       id: 'extreme-object-at-lens',
@@ -88,38 +125,21 @@ export const thinLensLesson: LessonDefinition = {
       success: (state) => state.objectDistance <= 0.5,
       correctFeedback:
         'As dₒ → 0, dᵢ → 0 and m → 1: the image collapses onto the lens at the **same size**.',
-      hint: 'Drag the candle onto the lens, or slide dₒ down to 0.',
+      hint: (state) =>
+        state.objectDistance > FOCAL_LENGTH
+          ? 'The candle is still outside F, so the lens is making a normal real image. This extreme is about what happens as the object distance collapses toward zero.'
+          : 'You are closer, but dₒ is not tiny yet. Watch the distance chip: this extreme happens when the candle nearly touches the lens.',
     },
     {
-      kind: 'predict',
+      kind: 'plot-rays',
       id: 'predict-inside-f',
       prompt:
-        'The candle now sits inside the focal length (closer than F). Predict the image before you reveal the rays.',
-      scene: { objectDistance: 12, focalLength: FOCAL_LENGTH },
-      choices: [
-        {
-          id: 'real-inverted',
-          label: 'Real and inverted, like a projector',
-          feedback:
-            'Inverted real images need the object beyond F. Inside F the rays diverge after the lens, so they never meet on the far side.',
-        },
-        {
-          id: 'none',
-          label: 'No image forms at all',
-          feedback:
-            'An image still forms — your eye traces the diverging rays backward to a virtual image behind the candle.',
-        },
-        {
-          id: 'virtual-upright',
-          label: 'Virtual, upright, and enlarged — a magnifying glass',
-          correct: true,
-          feedback:
-            'Right: inside F the lens works as a magnifier — upright, enlarged, on the candle’s side.',
-        },
-      ],
+        'The candle now sits inside the focal length (closer than F). Plot where the rays appear to meet.',
+      scene: { objectDistance: 12, focalLength: FOCAL_LENGTH, objectHeight: 12 },
+      hint:
+        'The outgoing rays diverge, so use the dashed extensions: trace the rays backward to the candle side until all three rules agree.',
       reveal:
         'Inside the focal length the outgoing rays diverge, so they only appear to come from a **virtual, upright, enlarged** image. That is exactly how a **magnifying glass** works.',
-      explore: objectControl,
     },
   ],
 }

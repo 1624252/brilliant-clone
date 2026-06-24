@@ -11,6 +11,7 @@ import {
 import { isPredictStep, isPlotStep } from './types'
 import { renderRich } from './richText'
 import type { Choice, Control, LessonDefinition, StepDefinition, StepState } from './types'
+import { distanceToSlider, sliderToDistance, usesLogDistance } from './logDistance'
 import './ProblemRunner.css'
 
 interface ProblemRunnerProps {
@@ -31,6 +32,11 @@ interface ProblemRunnerProps {
 type Status = 'idle' | 'correct' | 'incorrect'
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(1) : '\u221e')
+
+function hintText(step: StepDefinition, state: StepState, image: ReturnType<typeof formImage>) {
+  if (isPredictStep(step) || isPlotStep(step)) return ''
+  return typeof step.hint === 'function' ? step.hint(state, image) : step.hint
+}
 
 /** Readout for a curvature control: the resulting lens type and focal length. */
 function curvatureReadout(control: Control, value: number): string | null {
@@ -76,6 +82,7 @@ export function ProblemRunner({
   const [measures, setMeasures] = useState<MeasureFlags>({})
   // Predict-then-reveal state: the committed choice (null until submitted).
   const [chosenId, setChosenId] = useState<string | null>(null)
+  const [plotReady, setPlotReady] = useState(false)
 
   function toggleMeasure(key: keyof MeasureFlags) {
     setMeasures((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -145,6 +152,11 @@ export function ProblemRunner({
     setStatus(step.success(merged, image) ? 'correct' : 'incorrect')
   }
 
+  function submitPlot() {
+    if (!isPlotStep(step)) return
+    setStatus(plotReady ? 'correct' : 'incorrect')
+  }
+
   // Replay the whole lesson from the intro (used by "Review lesson" on the finish
   // screen). Purely local — completion has already been saved.
   function restart() {
@@ -153,6 +165,7 @@ export function ProblemRunner({
     setValues(initialValues(lesson.steps[0]))
     setStatus('idle')
     setChosenId(null)
+    setPlotReady(false)
     setMeasures({})
     setDone(false)
   }
@@ -168,6 +181,7 @@ export function ProblemRunner({
     setValues(initialValues(lesson.steps[ni]))
     setStatus('idle')
     setChosenId(null)
+    setPlotReady(false)
     onStepChange?.(ni)
   }
 
@@ -258,7 +272,10 @@ export function ProblemRunner({
         <PlotRaysScene
           scene={step.scene}
           solved={status === 'correct'}
-          onSolved={() => setStatus('correct')}
+          onReadyChange={(ready) => {
+            setPlotReady(ready)
+            if (status === 'incorrect') setStatus('idle')
+          }}
           measures={measures}
         />
       ) : (
@@ -284,6 +301,14 @@ export function ProblemRunner({
             <div className="feedback feedback--correct" role="status">
               <strong>You found it.</strong> {renderRich(step.reveal)}
             </div>
+          ) : status === 'incorrect' ? (
+            <div className="feedback feedback--incorrect" role="status">
+              <strong>Not yet.</strong>{' '}
+              {renderRich(
+                step.hint ??
+                  'Keep adjusting the dot until all three ray rules are checked, then submit again.',
+              )}
+            </div>
           ) : (
             <p className="plot-panel__hint">
               {renderRich(
@@ -293,9 +318,13 @@ export function ProblemRunner({
             </p>
           )}
           <div className="runner__actions">
-            {status === 'correct' && (
+            {status === 'correct' ? (
               <button type="button" className="btn btn--primary" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
+              </button>
+            ) : (
+              <button type="button" className="btn btn--primary" onClick={submitPlot}>
+                Submit
               </button>
             )}
           </div>
@@ -330,7 +359,7 @@ export function ProblemRunner({
           )}
           {status === 'incorrect' && (
             <div className="feedback feedback--incorrect" role="status">
-              <strong>Not yet.</strong> {renderRich(step.hint)}
+              <strong>Not yet.</strong> {renderRich(hintText(step, merged, image))}
             </div>
           )}
 
@@ -349,8 +378,10 @@ export function ProblemRunner({
       )}
 
       {((!predict && !plot) || committed || (plot && solved)) && (
-      <details className="runner__more">
-        <summary>Numbers &amp; tools</summary>
+      <section className="runner__more" aria-labelledby="numbers-tools-heading">
+        <h4 id="numbers-tools-heading" className="runner__more-title">
+          Numbers &amp; tools
+        </h4>
 
       <fieldset className="measures">
         <legend>Show on diagram</legend>
@@ -498,7 +529,7 @@ export function ProblemRunner({
           </dl>
         </div>
       </details>
-      </details>
+      </section>
       )}
     </div>
   )
@@ -698,8 +729,12 @@ function SliderControl({
   onChange: (v: number) => void
 }) {
   const isInfinite = !Number.isFinite(value)
-  // A native range input can't hold Infinity, so park it at the max when infinite.
-  const sliderValue = isInfinite ? control.max : value
+  // A native range input can't hold Infinity; the logarithmic object-distance
+  // mapping approaches it smoothly at the far end.
+  const sliderValue = distanceToSlider(value, control)
+  const datalistValues = control.snaps?.map((s) =>
+    usesLogDistance(control) ? distanceToSlider(s, control) : s,
+  )
   return (
     <label className="slider">
       <span>
@@ -710,23 +745,23 @@ function SliderControl({
           type="range"
           min={control.min}
           max={control.max}
-          step={control.step ?? 1}
+          step={usesLogDistance(control) ? 'any' : (control.step ?? 1)}
           value={sliderValue}
           list={control.snaps ? `${control.key}-snaps` : undefined}
           onChange={(e) => {
             const raw = Number(e.target.value)
-            // Sliding to the far end means "infinitely far away".
-            if (control.allowInfinity && raw >= control.max) {
+            const next = sliderToDistance(raw, control)
+            if (!Number.isFinite(next)) {
               onChange(Infinity)
             } else {
-              onChange(snapValue(raw, control.snaps))
+              onChange(snapValue(Number(next.toFixed(2)), control.snaps))
             }
           }}
         />
         {control.snaps && (
           <datalist id={`${control.key}-snaps`}>
-            {control.snaps.map((s) => (
-              <option key={s} value={s} />
+            {datalistValues?.map((s, index) => (
+              <option key={control.snaps?.[index] ?? s} value={s} />
             ))}
           </datalist>
         )}

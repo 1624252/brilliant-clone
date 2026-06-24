@@ -76,7 +76,10 @@ export const concaveLesson: LessonDefinition = {
       success: (state) => state.objectDistance <= 8,
       correctFeedback:
         'No — even up close the image stays **virtual, upright, and smaller**. A diverging lens can’t focus light to a real point.',
-      hint: 'Drag the candle close to the lens (object distance near 0).',
+      hint: (state, image) =>
+        state.objectDistance > 25
+          ? `The image is still **virtual and reduced** (m = ${image.magnification.toFixed(1)}). Bring the candle closer and check whether a concave lens ever makes the rays truly meet.`
+          : 'Even close up, the outgoing rays still **spread apart**. Keep testing the near-lens limit to see whether that ever changes.',
     },
     {
       id: 'half-size-image',
@@ -89,7 +92,12 @@ export const concaveLesson: LessonDefinition = {
       success: (_state, image) => Math.abs(image.magnification - 0.5) < 0.05,
       correctFeedback:
         'At one focal length away, a concave lens shrinks the image to **half size** — still upright and virtual.',
-      hint: 'Bring the candle to about one focal length away (object distance 20).',
+      hint: (_state, image) => {
+        if (image.magnification > 0.55) {
+          return 'Your virtual image is **too large**. For a concave lens, moving the candle farther away makes the image shrink.'
+        }
+        return 'Your virtual image is **too small**. Move the candle closer and watch m climb toward one-half.'
+      },
     },
   ],
 }

@@ -10,7 +10,7 @@ const objectControl = {
   type: 'drag-axis' as const,
   min: 0,
   max: 80,
-  step: 0.5,
+  step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
   snaps: [0, FOCAL_LENGTH, 2 * FOCAL_LENGTH, 3 * FOCAL_LENGTH],
@@ -52,7 +52,14 @@ export const rayTracingLesson: LessonDefinition = {
         image.isReal && image.imageDistance > 2 * FOCAL_LENGTH,
       correctFeedback:
         'When the candle is **between F and 2F**, the rays cross **beyond 2F** — a real, enlarged image (a projector).',
-      hint: 'Move the candle between F (20) and 2F (40).',
+      hint: (_state, image) => {
+        if (!image.isReal) {
+          return 'The rays are diverging after the lens, so the candle is too close for a real crossing. A real image needs the object outside F.'
+        }
+        return image.imageDistance <= 2 * FOCAL_LENGTH
+          ? 'The crossing is not far enough out yet. To push a real image beyond 2F, make the object closer to F while keeping it outside F.'
+          : 'The crossing is beyond 2F, but check the ray diagram carefully and submit again.'
+      },
     },
     {
       id: 'inside-f-diverge',
@@ -64,7 +71,10 @@ export const rayTracingLesson: LessonDefinition = {
         !image.isReal && image.orientation === 'upright' && image.isMagnified,
       correctFeedback:
         'Inside F the three rays **spread apart** — trace them back and they meet at a **virtual, upright, enlarged** image (a magnifier).',
-      hint: 'Move the candle closer than F (object distance under 20).',
+      hint: (_state, image) =>
+        image.isReal
+          ? 'The rays are still crossing on the far side, so the candle is outside F. Move toward the point where the outgoing rays stop meeting and start diverging.'
+          : 'You are in virtual-image territory. Watch for the traced-back image to stay **upright** and grow larger than the candle.',
     },
   ],
 }

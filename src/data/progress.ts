@@ -74,11 +74,16 @@ export async function saveStepProgress(
   lessonId: string,
   currentStepIndex: number,
 ): Promise<void> {
+  const ref = progressRef(uid, lessonId)
+  const snap = await getDoc(ref)
+  const existing = snap.data() as LessonProgress | undefined
+
   await setDoc(
-    progressRef(uid, lessonId),
+    ref,
     {
       lessonId,
-      status: 'in-progress',
+      // Replaying a completed lesson should never make it incomplete again.
+      status: existing?.status === 'completed' ? 'completed' : 'in-progress',
       currentStepIndex,
       updatedAt: serverTimestamp(),
     },
