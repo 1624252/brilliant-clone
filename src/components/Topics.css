@@ -5,7 +5,7 @@
 .topics__bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
   border-bottom: 1px solid var(--border);
@@ -13,6 +13,11 @@
   position: sticky;
   top: 0;
   z-index: 5;
+}
+.topics__brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-width: 0;
 }
 .topics__user {
   display: flex;
@@ -52,12 +57,19 @@
 }
 @media (max-width: 760px) {
   .topics__bar {
-    display: flex;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'brand account';
     gap: 0.45rem 0.65rem;
     padding: 0.55rem 0.75rem 0.65rem;
   }
+  .topics__brand {
+    grid-area: brand;
+    justify-self: start;
+  }
   .topics__user {
+    grid-area: account;
+    justify-self: end;
     display: flex;
     align-items: center;
     gap: 0.45rem;
@@ -70,6 +82,9 @@
 @media (max-width: 460px) {
   .topics__bar {
     padding-inline: 0.55rem;
+  }
+  .topics__brand {
+    font-size: 1.08rem;
   }
   .topics__user {
     gap: 0.38rem;

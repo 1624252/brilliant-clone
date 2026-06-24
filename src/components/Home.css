@@ -25,12 +25,6 @@
   font-size: 0.9rem;
   flex: none;
 }
-.home__brand {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  min-width: 0;
-}
 .home__user {
   display: flex;
   align-items: center;
@@ -79,9 +73,6 @@
   }
   .home__left {
     display: contents;
-  }
-  .home__brand {
-    display: none;
   }
   .home__user {
     grid-area: account;

@@ -11,7 +11,6 @@ import {
 } from '../data/milestones'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
-import { Logo } from './Logo'
 import { AccountMenu } from './AccountMenu'
 import './Home.css'
 
@@ -90,7 +89,6 @@ export function Home({
           >
             ← Topics
           </button>
-          <Logo size={28} className="home__brand" />
         </div>
         <div className="home__user">
           <span className="home__streak" title="Daily streak">

@@ -5,6 +5,7 @@ import { deriveChapterStatus } from '../data/lessonStatus'
 import { avatarGlyph } from '../data/appearance'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
+import { Logo } from './Logo'
 import { AccountMenu } from './AccountMenu'
 import './Topics.css'
 
@@ -24,6 +25,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
   return (
     <div className="topics">
       <header className="topics__bar">
+        <Logo size={28} className="topics__brand" />
         <div className="topics__user">
           <span className="topics__streak" title="Daily streak">
             <FlameIcon /> {streak}

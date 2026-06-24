@@ -23,9 +23,10 @@ export function LessonView({
   onOpenLesson,
 }: LessonViewProps) {
   const saved = progress.byLesson[lesson.id]
-  // Resume saved position for both in-progress lessons and completed replays.
-  const resumeIndex = saved ? saved.currentStepIndex : 0
   const completedBefore = saved?.status === 'completed'
+  // In-progress lessons resume where the learner left off; completed lessons
+  // reopen from step 1 while preserving completed progress in the runner.
+  const resumeIndex = saved && !completedBefore ? saved.currentStepIndex : 0
 
   // The next real (non-placeholder) lesson by order, if any.
   const ordered = [...lessons]
