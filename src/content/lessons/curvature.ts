@@ -16,7 +16,16 @@ const curvatureControl = {
   label: 'Curvature',
 }
 
-const FLAT_CURVATURE_EPSILON = 0.03
+// Step 3 only: a short slider centered on flat so f does not swing through huge
+// values and the center is easier to hit than on the full [-1, 1] range.
+const flatCurvatureControl = {
+  ...curvatureControl,
+  min: -0.12,
+  max: 0.12,
+  step: 0.005,
+}
+
+const FLAT_CURVATURE_EPSILON = 0.05
 const isExactlyFlat = (curvature: number) => Math.abs(curvature) <= FLAT_CURVATURE_EPSILON
 const hasVisibleCurve = (curvature: number) => Math.abs(curvature) > 0.08
 
@@ -69,9 +78,9 @@ export const curvatureLesson: LessonDefinition = {
       id: 'make-flat',
       prompt:
         'Make the lens neither concave nor convex by sliding the curvature to the center. What happens to incoming parallel rays?',
-      controls: [curvatureControl],
+      controls: [flatCurvatureControl],
       fixed: { objectDistance: 40 },
-      initial: { curvature: 0.4 },
+      initial: { curvature: 0.1 },
       success: (state) => isExactlyFlat(state.curvature),
       choices: [
         {

@@ -114,7 +114,7 @@
     height: 2rem;
   }
   .home__user {
-    justify-self: center;
+    justify-self: end;
     gap: 0.38rem;
   }
   .home__streak {
@@ -345,7 +345,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.1rem;
+  padding: 0.75rem 2.6rem 0.75rem 1.1rem;
   border-radius: 14px;
   background:
     radial-gradient(circle at 12% 12%, color-mix(in srgb, var(--c-f) 28%, transparent), transparent 34%),
@@ -389,6 +389,26 @@
   color: var(--text);
   font-size: 0.88rem;
   font-weight: 650;
+}
+.ms-toast__close {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 2;
+  border: none;
+  background: color-mix(in srgb, var(--bg-elev-2) 88%, transparent);
+  color: var(--text-dim);
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.ms-toast__close:hover {
+  color: var(--text);
 }
 @keyframes ms-toast-in {
   from {

@@ -113,15 +113,23 @@ export function Home({
       {settingsOpen && <Settings progress={progress} onClose={() => setSettingsOpen(false)} />}
 
       {celebrate.length > 0 && (
-        <div className="ms-toast" role="status">
+        <div className="ms-toast" role="alertdialog" aria-labelledby="ms-toast-title">
           <span className="ms-toast__confetti" aria-hidden="true" />
           <span className="ms-toast__spark" aria-hidden="true">
             🎉
           </span>
           <div className="ms-toast__body">
-            <strong>Milestone unlocked!</strong>
+            <strong id="ms-toast-title">Milestone unlocked!</strong>
             <span>{celebrate.map((m) => m.label).join(' · ')}</span>
           </div>
+          <button
+            type="button"
+            className="ms-toast__close"
+            onClick={() => setCelebrate([])}
+            aria-label="Dismiss milestone notification"
+          >
+            ×
+          </button>
         </div>
       )}
 

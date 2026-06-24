@@ -187,8 +187,9 @@ export function ProblemRunner({
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
-    setStatus('idle') // changing the answer clears the current attempt, not saved progress
-    if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
+    // Wrong-attempt feedback stays until the next submit; only a correct attempt
+    // clears when the learner adjusts controls to try a new answer.
+    setStatus((prev) => (prev === 'correct' ? 'idle' : prev))
   }
 
   function check() {
@@ -410,9 +411,6 @@ export function ProblemRunner({
           solved={currentSolved && !stepAlreadyCompleted}
           onReadyChange={(ready) => {
             setPlotReady(ready)
-          }}
-          onInteraction={() => {
-            if (status === 'incorrect') setStatus('idle')
           }}
           onHintChange={setPlotHint}
           measures={measures}
@@ -987,20 +985,22 @@ function EquationPanel({
           }
         />
         <span className="equation__sep" />
-        <span className="sym sym--m">m</span>
-        <span className="op">=</span>
-        <Frac
-          top={
-            <span className="sym sym--di">
-              −d<sub>i</sub>
-            </span>
-          }
-          bottom={
-            <span className="sym sym--do">
-              d<sub>o</sub>
-            </span>
-          }
-        />
+        <span className="equation__group equation__group--m">
+          <span className="sym sym--m">m</span>
+          <span className="op">=</span>
+          <Frac
+            top={
+              <span className="sym sym--di">
+                −d<sub>i</sub>
+              </span>
+            }
+            bottom={
+              <span className="sym sym--do">
+                d<sub>o</sub>
+              </span>
+            }
+          />
+        </span>
       </div>
       <div className="equation__row equation__row--values">
         <Frac top={one} bottom={<span className="sym--f">{fmt(f)}</span>} />
@@ -1009,9 +1009,11 @@ function EquationPanel({
         <span className="op">+</span>
         <Frac top={one} bottom={<span className="sym--di">{fmt(dImg)}</span>} />
         <span className="equation__sep" />
-        <span className="sym--m">m</span>
-        <span className="op">=</span>
-        <span className="sym--m">{fmt(m)}</span>
+        <span className="equation__group equation__group--m">
+          <span className="sym--m">m</span>
+          <span className="op">=</span>
+          <span className="sym--m">{fmt(m)}</span>
+        </span>
       </div>
     </div>
   )

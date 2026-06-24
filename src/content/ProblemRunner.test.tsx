@@ -60,7 +60,10 @@ describe('lesson content quality', () => {
 
   it('gives the flat-lens step a forgiving center range', () => {
     const flatStep = curvatureLesson.steps.find((step) => step.id === 'make-flat')
-    expect(flatStep && 'success' in flatStep ? flatStep.success({ curvature: 0.02 }, {} as never) : false).toBe(true)
+    const control = flatStep && 'controls' in flatStep ? flatStep.controls[0] : null
+    expect(control?.min).toBe(-0.12)
+    expect(control?.max).toBe(0.12)
+    expect(flatStep && 'success' in flatStep ? flatStep.success({ curvature: 0.04 }, {} as never) : false).toBe(true)
     expect(flatStep && 'success' in flatStep ? flatStep.success({ curvature: 0.08 }, {} as never) : true).toBe(false)
   })
 })
@@ -105,6 +108,18 @@ describe('ProblemRunner landmark lessons', () => {
 
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /previous step/i })).toBeDisabled()
+  })
+
+  it('keeps incorrect hints visible while the learner adjusts the slider', () => {
+    const { container } = renderStarted(focusLesson)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/not yet/i)
+
+    setObjectDistance(container, focusLesson, 30)
+
+    expect(screen.getByRole('status').textContent).toMatch(/not yet/i)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('status').textContent).toMatch(/outside.*F/i)
   })
 
   it('keeps a solved step complete when the learner experiments afterward', () => {
@@ -250,6 +265,11 @@ describe('ProblemRunner ray tracing', () => {
         selector: '.plot-panel__hint',
       }),
     ).toBeInTheDocument()
+
+    fireEvent.keyDown(screen.getByRole('slider', { name: /parallel ray end point/i }), {
+      key: 'ArrowDown',
+    })
+    expect(screen.getByRole('status').textContent).toMatch(/not yet/i)
     expect(screen.getAllByText(/Needed/i).length).toBeGreaterThan(0)
   })
 })

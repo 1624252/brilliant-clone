@@ -210,15 +210,19 @@ body[data-background='prism']::after {
 }
 .avatar--rainbow::before {
   content: '';
-  width: 1.25em;
-  height: 0.68em;
-  border-radius: 1.2em 1.2em 0 0;
-  border-top: 0.16em solid #ff6b6b;
+  position: absolute;
+  left: 50%;
+  bottom: 0.24em;
+  width: 1.28em;
+  height: 0.64em;
+  transform: translateX(-50%);
+  border-radius: 1.28em 1.28em 0 0;
+  border-top: 0.15em solid #ff6b6b;
   box-shadow:
-    0 -0.16em 0 -0.02em #ffc14d,
-    0 -0.31em 0 -0.04em #54e0a6,
-    0 -0.46em 0 -0.06em #7aa8ff;
-  transform: translateY(0.28em);
+    0 -0.15em 0 -0.02em #ffc14d,
+    0 -0.28em 0 -0.04em #54e0a6,
+    0 -0.41em 0 -0.06em #7aa8ff,
+    0 -0.54em 0 -0.08em #c79bff;
 }
 .avatar--star {
   position: relative;
