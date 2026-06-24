@@ -105,7 +105,6 @@ export function Home({
           >
             {avatarGlyph(progress.appearance.avatarId, (displayName[0] ?? '?').toUpperCase())}
           </button>
-          <span className="home__name">{displayName}</span>
           <AccountMenu
             onOpenSettings={() => setSettingsOpen(true)}
             onSignOut={() => setConfirmSignOut(true)}

@@ -4,10 +4,8 @@ export { focusLesson } from './lessons/focus'
 export {
   lessons,
   chapter,
-  chromaticChapter,
   chapters,
   lensesLessons,
-  chromaticLessons,
   lessonsByTopic,
 } from './lessons'
 export { topics, type Topic } from './topics'

@@ -39,7 +39,6 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
           >
             {avatarGlyph(progress.appearance.avatarId, (displayName[0] ?? '?').toUpperCase())}
           </button>
-          <span className="topics__name">{displayName}</span>
           <AccountMenu
             onOpenSettings={() => setSettingsOpen(true)}
             onSignOut={() => setConfirmSignOut(true)}

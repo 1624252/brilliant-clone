@@ -4,7 +4,6 @@ import { concaveLesson } from './concave'
 import { curvatureLesson } from './curvature'
 import { rayTracingLesson } from './rayTracing'
 import { thinLensLesson } from './thinLens'
-import { chromaticAberrationLesson } from './chromaticAberration'
 import { placeholderLessons } from './placeholders'
 
 export const chapter = {
@@ -12,12 +11,7 @@ export const chapter = {
   title: 'Geometric Optics: Lenses',
 }
 
-export const chromaticChapter = {
-  id: 'chromatic-aberration',
-  title: 'Chromatic Aberration',
-}
-
-export const chapters = [chapter, chromaticChapter]
+export const chapters = [chapter]
 
 export const lensesLessons: LessonDefinition[] = [
   focusLesson,
@@ -28,12 +22,9 @@ export const lensesLessons: LessonDefinition[] = [
   ...placeholderLessons,
 ].sort((a, b) => a.order - b.order)
 
-export const chromaticLessons: LessonDefinition[] = [chromaticAberrationLesson]
-
 export const lessonsByTopic: Record<string, LessonDefinition[]> = {
   [chapter.id]: lensesLessons,
-  [chromaticChapter.id]: chromaticLessons,
 }
 
 /** All lessons (real + placeholder), ordered for lookup/routing. */
-export const lessons: LessonDefinition[] = [...lensesLessons, ...chromaticLessons]
+export const lessons: LessonDefinition[] = [...lensesLessons]

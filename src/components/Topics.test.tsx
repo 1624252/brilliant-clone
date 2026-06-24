@@ -40,9 +40,6 @@ describe('Topics landing page', () => {
     )
     fireEvent.click(screen.getByText(topics[0].title))
     expect(onOpenTopic).toHaveBeenCalledWith(topics[0].id)
-
-    fireEvent.click(screen.getByText(/chromatic aberration/i))
-    expect(onOpenTopic).toHaveBeenCalledWith('chromatic-aberration')
   })
 
   it('opens account actions from the menu', () => {

@@ -52,13 +52,6 @@
 .topics__avatar:hover {
   filter: brightness(1.08);
 }
-.topics__name {
-  color: var(--text-dim);
-  max-width: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 @media (max-width: 760px) {
   .topics__bar {
     display: grid;
@@ -86,9 +79,6 @@
   .topics__avatar {
     grid-area: avatar;
     justify-self: start;
-  }
-  .topics__name {
-    display: none;
   }
   .topics__user .account-menu {
     grid-area: menu;

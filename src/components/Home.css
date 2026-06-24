@@ -48,13 +48,6 @@
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
 }
-.home__name {
-  color: var(--text-dim);
-  max-width: 14ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .home__avatar {
   width: 2.3rem;
   height: 2.3rem;
@@ -107,9 +100,6 @@
   }
   .home__avatar {
     grid-area: avatar;
-  }
-  .home__name {
-    display: none;
   }
   .home__user .account-menu {
     grid-area: menu;

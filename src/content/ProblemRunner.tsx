@@ -8,7 +8,6 @@ import {
   ConvexLensExplainer,
   ConcaveLensExplainer,
   CurvatureExplainer,
-  ChromaticAberrationDiagram,
   type MeasureFlags,
 } from '../render'
 import { isPredictStep, isPlotStep } from './types'
@@ -117,7 +116,6 @@ export function ProblemRunner({
   const step = lesson.steps[stepIndex]
   const predict = isPredictStep(step)
   const plot = isPlotStep(step)
-  const chromatic = !predict && !plot && step.visual === 'chromatic'
   const stepAlreadyCompleted = completedSteps.has(stepIndex)
   // A prediction is "committed" (rays/image reveal, Next appears) only once the
   // learner picks the *correct* choice. A wrong pick shows an explanation and
@@ -139,9 +137,7 @@ export function ProblemRunner({
     ? values.objectDistance ?? step.scene.objectDistance
     : plot
       ? step.scene.objectDistance
-      : chromatic
-        ? merged.objectDistance ?? 60
-        : merged.objectDistance
+      : merged.objectDistance
   // A curvature control drives the focal length (reshaping the lens); otherwise
   // focalLength is read directly from the step's fixed/initial values.
   const focalLength = predict
@@ -432,12 +428,6 @@ export function ProblemRunner({
           onHintChange={setPlotHint}
           measures={measures}
           resetKey={plotResetKey}
-        />
-      ) : chromatic ? (
-        <ChromaticAberrationDiagram
-          dispersion={merged.dispersion}
-          screenDistance={merged.screenDistance}
-          correction={merged.correction}
         />
       ) : (
         <LensScene

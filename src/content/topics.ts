@@ -1,4 +1,4 @@
-import { chapter, chromaticChapter } from './lessons'
+import { chapter } from './lessons'
 
 // Top-level subjects shown on the landing page. Today there's a single available
 // topic (the lenses chapter); more can be added here as the course grows.
@@ -18,10 +18,10 @@ export const topics: Topic[] = [
     available: true,
   },
   {
-    id: chromaticChapter.id,
-    title: chromaticChapter.title,
+    id: 'chromatic-aberration',
+    title: 'Chromatic Aberration',
     blurb:
       'Explore why colors focus at different places, how fringes appear, and how lens pairs can reduce the blur.',
-    available: true,
+    available: false,
   },
 ]

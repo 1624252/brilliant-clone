@@ -12,7 +12,7 @@ export interface AvatarOption {
   id: AvatarId
   label: string
   glyph: string
-  unlock: 'default' | 'firstLesson' | 'halfway' | 'chromatic' | 'weekStreak'
+  unlock: 'default' | 'firstLesson' | 'halfway' | 'courseComplete' | 'weekStreak'
 }
 
 export interface BackgroundOption {
@@ -31,7 +31,7 @@ export const avatarOptions: AvatarOption[] = [
   { id: 'candle', label: 'Candle', glyph: '🕯️', unlock: 'firstLesson' },
   { id: 'lens', label: 'Lens', glyph: '🔍', unlock: 'firstLesson' },
   { id: 'prism', label: 'Prism', glyph: '🔺', unlock: 'halfway' },
-  { id: 'rainbow', label: 'Rainbow', glyph: '🌈', unlock: 'chromatic' },
+  { id: 'rainbow', label: 'Rainbow', glyph: '🌈', unlock: 'courseComplete' },
   { id: 'star', label: 'Star', glyph: '✦', unlock: 'weekStreak' },
 ]
 
@@ -79,8 +79,6 @@ export function avatarUnlocked(
   if (option.unlock === 'default') return true
   if (option.unlock === 'firstLesson') return completed >= 1
   if (option.unlock === 'halfway') return completed >= 3
-  if (option.unlock === 'chromatic') {
-    return byLesson['chromatic-aberration-basics']?.status === 'completed'
-  }
+  if (option.unlock === 'courseComplete') return completed >= 5
   return (streak?.longest ?? 0) >= 7
 }

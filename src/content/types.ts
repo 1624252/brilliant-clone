@@ -38,8 +38,6 @@ interface StepBase {
 export interface InteractiveStep extends StepBase {
   /** Discriminant; omit for interactive steps. */
   kind?: 'interactive'
-  /** Optional specialized visual renderer for a concept-specific interaction. */
-  visual?: 'chromatic'
   /** Values the learner can change. */
   controls: Control[]
   /** Starting values for the controls. */
