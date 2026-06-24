@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { defaultAppearance, normalizeAppearance, type AppearancePreferences } from './appearance'
 import {
   type LessonProgress,
   type Streak,
@@ -10,6 +11,7 @@ export interface ProgressState {
   /** lessonId -> progress */
   byLesson: Record<string, LessonProgress>
   streak: Streak | null
+  appearance: AppearancePreferences
   loading: boolean
 }
 
@@ -17,6 +19,7 @@ export interface ProgressState {
 const initialFor = (uid: string | null): ProgressState => ({
   byLesson: {},
   streak: null,
+  appearance: defaultAppearance,
   loading: !!uid, // logged out -> nothing to load
 })
 
@@ -52,7 +55,8 @@ export function useProgress(uid: string | null): ProgressState {
 
     const unsubUser = onSnapshot(doc(db, 'users', uid), (d) => {
       const streak = (d.data()?.streak as Streak | undefined) ?? null
-      setState((s) => ({ ...s, streak }))
+      const appearance = normalizeAppearance(d.data()?.appearance as Partial<AppearancePreferences> | undefined)
+      setState((s) => ({ ...s, streak, appearance }))
     })
 
     return () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
+import type { AppearancePreferences } from './appearance'
 import type { LessonProgress, Streak } from './progress'
 
 // A fake firestore reference our mocked SDK hands back. We only need enough
@@ -74,12 +75,17 @@ function emitProgress(uid: string, byLesson: Record<string, LessonProgress>) {
 }
 
 /** Deliver a user-doc snapshot carrying the streak for a user. */
-function emitUser(uid: string, streak: Streak | undefined) {
+function emitUser(
+  uid: string,
+  streak: Streak | undefined,
+  appearance?: AppearancePreferences,
+) {
   const l = listenerFor('doc', uid)
   act(() => {
     l.deliver({
       data: () => ({
         ...(streak ? { streak } : {}),
+        ...(appearance ? { appearance } : {}),
       }),
     })
   })
@@ -106,19 +112,21 @@ describe('useProgress', () => {
     expect(result.current.loading).toBe(true)
     expect(result.current.byLesson).toEqual({})
     expect(result.current.streak).toBeNull()
+    expect(result.current.appearance).toEqual({ avatarId: 'initial', backgroundId: 'aurora' })
   })
 
-  it('populates progress and streak when snapshots arrive', () => {
+  it('populates progress, streak, and appearance when snapshots arrive', () => {
     const { result } = renderHook(() => useProgress('userA'))
 
     emitProgress('userA', { 'focusing-light': completed('focusing-light') })
-    emitUser('userA', streakOf(3))
+    emitUser('userA', streakOf(3), { avatarId: 'lens', backgroundId: 'prism' })
 
     expect(result.current.loading).toBe(false)
     expect(result.current.byLesson['focusing-light']).toEqual(
       completed('focusing-light'),
     )
     expect(result.current.streak).toEqual(streakOf(3))
+    expect(result.current.appearance).toEqual({ avatarId: 'lens', backgroundId: 'prism' })
   })
 
   it('clears the previous user data immediately when switching accounts', () => {

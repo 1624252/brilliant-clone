@@ -65,6 +65,16 @@
   background: color-mix(in srgb, var(--brand) 14%, var(--bg-elev-2));
 }
 
+.account-menu__panel .account-menu__danger {
+  color: var(--danger-text);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.account-menu__panel .account-menu__danger:hover,
+.account-menu__panel .account-menu__danger:focus-visible {
+  background: color-mix(in srgb, var(--danger) 20%, var(--bg-elev-2));
+}
+
 @media (max-width: 460px) {
   .account-menu__toggle {
     width: 2.4rem;

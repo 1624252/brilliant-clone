@@ -117,6 +117,13 @@ function App() {
   const progress = useProgress(user?.uid ?? null)
   const location = useLocation()
 
+  useEffect(() => {
+    document.body.dataset.background = progress.appearance.backgroundId
+    return () => {
+      delete document.body.dataset.background
+    }
+  }, [progress.appearance.backgroundId])
+
   if (loading) return <Splash />
 
   return (

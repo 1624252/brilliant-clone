@@ -31,9 +31,14 @@ export function AccountMenu({ onOpenSettings, onSignOut }: AccountMenuProps) {
       {open && (
         <div className="account-menu__panel" role="menu">
           <button type="button" role="menuitem" onClick={() => choose(onOpenSettings)}>
-            Account settings
+            Account Settings
           </button>
-          <button type="button" role="menuitem" onClick={() => choose(onSignOut)}>
+          <button
+            type="button"
+            role="menuitem"
+            className="account-menu__danger"
+            onClick={() => choose(onSignOut)}
+          >
             Sign out
           </button>
         </div>

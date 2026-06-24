@@ -75,6 +75,17 @@ body {
   background-attachment: fixed;
 }
 
+body[data-background='prism'] {
+  background:
+    linear-gradient(115deg, rgba(255, 107, 107, 0.16), transparent 22%),
+    linear-gradient(135deg, transparent 18%, rgba(255, 193, 77, 0.16) 24%, transparent 34%),
+    linear-gradient(155deg, transparent 36%, rgba(84, 224, 166, 0.16) 46%, transparent 58%),
+    linear-gradient(35deg, transparent 48%, rgba(122, 168, 255, 0.18) 62%, transparent 74%),
+    radial-gradient(900px 650px at 100% 0%, rgba(199, 155, 255, 0.18), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
 #root {
   min-height: 100vh;
 }

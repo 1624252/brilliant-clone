@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { friendlyAuthError } from '../auth/errors'
+import {
+  avatarOptions,
+  backgroundOptions,
+  avatarUnlocked,
+  avatarGlyph,
+  type AppearancePreferences,
+} from '../data/appearance'
+import { saveAppearancePreferences } from '../data/progress'
+import type { ProgressState } from '../data/useProgress'
 import './Settings.css'
 
 type Note = { kind: 'ok' | 'err'; text: string } | null
@@ -15,7 +24,7 @@ function settingsAuthError(err: unknown): string {
   return friendlyAuthError(err)
 }
 
-export function Settings({ onClose }: { onClose: () => void }) {
+export function Settings({ progress, onClose }: { progress: ProgressState; onClose: () => void }) {
   const {
     user,
     hasPasswordProvider,
@@ -44,8 +53,23 @@ export function Settings({ onClose }: { onClose: () => void }) {
   const [curPw, setCurPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [pwNote, setPwNote] = useState<Note>(null)
+  const [appearance, setAppearance] = useState<AppearancePreferences>(progress.appearance)
+  const [appearanceNote, setAppearanceNote] = useState<Note>(null)
 
   const [busy, setBusy] = useState(false)
+
+  async function updateAppearance(next: AppearancePreferences) {
+    if (!user) return
+    setAppearance(next)
+    setAppearanceNote(null)
+    try {
+      await saveAppearancePreferences(user.uid, next)
+      setAppearanceNote({ kind: 'ok', text: 'Appearance saved.' })
+    } catch (err) {
+      setAppearance(progress.appearance)
+      setAppearanceNote({ kind: 'err', text: settingsAuthError(err) })
+    }
+  }
 
   function open(section: Section) {
     setEditing(section)
@@ -80,11 +104,11 @@ export function Settings({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="modal" role="dialog" aria-modal="true" aria-label="Account settings">
+    <div className="modal" role="dialog" aria-modal="true" aria-label="Account Settings">
       <div className="modal__backdrop" onClick={onClose} />
       <div className="modal__panel">
         <div className="modal__head">
-          <h2 className="modal__title">Account settings</h2>
+          <h2 className="modal__title">Account Settings</h2>
           <button type="button" className="modal__close" onClick={onClose} aria-label="Close">
             ✕
           </button>
@@ -287,6 +311,62 @@ export function Settings({ onClose }: { onClose: () => void }) {
               </div>
             )}
             <NoteLine note={pwNote} />
+          </section>
+
+          <section className="settings__section">
+            <div className="settings__info">
+              <span className="settings__label">Appearance</span>
+              <span className="settings__value">Customize your avatar and light background.</span>
+            </div>
+
+            <div className="appearance-group" aria-label="Avatar options">
+              <span className="appearance-group__title">Avatar</span>
+              <div className="appearance-options">
+                {avatarOptions.map((option) => {
+                  const unlocked = avatarUnlocked(option, progress.byLesson, progress.streak)
+                  const selected = appearance.avatarId === option.id
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={`appearance-option ${selected ? 'is-selected' : ''}`}
+                      disabled={!unlocked}
+                      onClick={() =>
+                        void updateAppearance({ ...appearance, avatarId: option.id })
+                      }
+                      title={unlocked ? option.label : 'Unlock by earning milestones'}
+                    >
+                      <span className="appearance-option__glyph">
+                        {avatarGlyph(option.id, (user?.displayName?.[0] ?? '?').toUpperCase())}
+                      </span>
+                      <span>{option.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="appearance-group" aria-label="Background options">
+              <span className="appearance-group__title">Background</span>
+              <div className="appearance-options appearance-options--wide">
+                {backgroundOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`appearance-option appearance-option--wide ${
+                      appearance.backgroundId === option.id ? 'is-selected' : ''
+                    }`}
+                    onClick={() =>
+                      void updateAppearance({ ...appearance, backgroundId: option.id })
+                    }
+                  >
+                    <span>{option.label}</span>
+                    <small>{option.description}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <NoteLine note={appearanceNote} />
           </section>
         </div>
       </div>

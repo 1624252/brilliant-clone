@@ -6,6 +6,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import type { AppearancePreferences } from './appearance'
 
 // Firestore persistence for user profile, streak, and per-lesson progress.
 // Layout (see PRD §10.3):
@@ -31,6 +32,7 @@ export interface UserProfile {
   displayName: string
   email: string
   streak: Streak
+  appearance?: AppearancePreferences
 }
 
 /** Local calendar day as YYYY-MM-DD (offset in days, e.g., -1 = yesterday). */
@@ -66,6 +68,13 @@ export async function ensureUserDoc(
     createdAt: serverTimestamp(),
     streak: { current: 0, longest: 0, lastActiveDate: '' },
   })
+}
+
+export async function saveAppearancePreferences(
+  uid: string,
+  appearance: AppearancePreferences,
+): Promise<void> {
+  await setDoc(userRef(uid), { appearance }, { merge: true })
 }
 
 /** Persist resume state as the learner advances through steps. */

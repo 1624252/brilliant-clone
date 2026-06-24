@@ -7,6 +7,7 @@ import type { ProgressState } from '../data/useProgress'
 const progress: ProgressState = {
   byLesson: {},
   streak: null,
+  appearance: { avatarId: 'initial', backgroundId: 'aurora' },
   loading: false,
 }
 

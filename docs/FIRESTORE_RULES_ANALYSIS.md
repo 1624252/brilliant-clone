@@ -11,7 +11,7 @@ Client SDK access patterns:
 - No `where`, `orderBy`, or `limit` Firestore queries are used.
 
 Data model:
-- `users/{uid}` contains private profile data (`displayName`, `email`) and the daily lesson streak.
+- `users/{uid}` contains private profile data (`displayName`, `email`), the daily lesson streak, and appearance preferences (`avatarId`, `backgroundId`).
 - `users/{uid}/progress/{lessonId}` contains resumable per-lesson progress.
 
 Access model:
@@ -23,5 +23,5 @@ Devil's advocate check:
 - Cross-user read/write: denied by `request.auth.uid == uid`.
 - Schema pollution: denied with `keys().hasOnly(...)` validators.
 - Type juggling: denied by validators for strings, numbers, maps, and timestamps.
-- Oversized strings: bounded for profile strings, lesson IDs, and local day strings.
+- Oversized strings: bounded for profile strings, lesson IDs, and local day strings; appearance fields are enum-limited.
 - Required omission on progress docs: denied by `keys().hasAll(...)`.

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { lessonsByTopic, topics } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus } from '../data/lessonStatus'
+import { avatarGlyph } from '../data/appearance'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Logo } from './Logo'
@@ -33,10 +34,10 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
             type="button"
             className="topics__avatar"
             onClick={() => setSettingsOpen(true)}
-            title="Account settings"
-            aria-label="Account settings"
+            title="Account Settings"
+            aria-label="Account Settings"
           >
-            {(displayName[0] ?? '?').toUpperCase()}
+            {avatarGlyph(progress.appearance.avatarId, (displayName[0] ?? '?').toUpperCase())}
           </button>
           <span className="topics__name">{displayName}</span>
           <AccountMenu
@@ -46,7 +47,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
         </div>
       </header>
 
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings progress={progress} onClose={() => setSettingsOpen(false)} />}
 
       {confirmSignOut && (
         <ConfirmDialog

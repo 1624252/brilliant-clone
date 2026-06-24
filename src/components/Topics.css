@@ -87,6 +87,9 @@
     grid-area: avatar;
     justify-self: start;
   }
+  .topics__name {
+    display: none;
+  }
   .topics__user .account-menu {
     grid-area: menu;
     justify-self: end;

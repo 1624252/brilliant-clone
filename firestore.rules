@@ -24,12 +24,21 @@ service cloud.firestore {
         && validShortString(streak.lastActiveDate, 10);
     }
 
+    function validAppearance(appearance) {
+      return appearance is map
+        && appearance.keys().hasOnly(['avatarId', 'backgroundId'])
+        && appearance.keys().hasAll(['avatarId', 'backgroundId'])
+        && appearance.avatarId in ['initial', 'candle', 'lens', 'prism', 'rainbow', 'star']
+        && appearance.backgroundId in ['aurora', 'prism'];
+    }
+
     function validUserDoc(data) {
-      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak'])
+      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'appearance'])
         && (!('displayName' in data) || validShortString(data.displayName, 80))
         && (!('email' in data) || validShortString(data.email, 254))
         && (!('createdAt' in data) || data.createdAt is timestamp)
-        && (!('streak' in data) || validStreak(data.streak));
+        && (!('streak' in data) || validStreak(data.streak))
+        && (!('appearance' in data) || validAppearance(data.appearance));
     }
 
     function validLessonProgress(data, lessonId) {

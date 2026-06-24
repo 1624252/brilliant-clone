@@ -3,6 +3,7 @@ import type { LessonDefinition } from '../content'
 import type { ProgressState } from '../data/useProgress'
 import { deriveChapterStatus, type LessonStatusView } from '../data/lessonStatus'
 import { renderRich } from '../content/richText'
+import { avatarGlyph } from '../data/appearance'
 import {
   deriveMilestones,
   earnedMilestoneIds,
@@ -99,10 +100,10 @@ export function Home({
             type="button"
             className="home__avatar"
             onClick={() => setSettingsOpen(true)}
-            title="Account settings"
-            aria-label="Account settings"
+            title="Account Settings"
+            aria-label="Account Settings"
           >
-            {(displayName[0] ?? '?').toUpperCase()}
+            {avatarGlyph(progress.appearance.avatarId, (displayName[0] ?? '?').toUpperCase())}
           </button>
           <span className="home__name">{displayName}</span>
           <AccountMenu
@@ -112,7 +113,7 @@ export function Home({
         </div>
       </header>
 
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Settings progress={progress} onClose={() => setSettingsOpen(false)} />}
 
       {celebrate.length > 0 && (
         <div className="ms-toast" role="status">

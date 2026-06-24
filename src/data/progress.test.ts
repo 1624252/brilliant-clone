@@ -46,6 +46,7 @@ const {
   bumpStreak,
   completeLesson,
   ensureUserDoc,
+  saveAppearancePreferences,
   saveStepProgress,
   localDay,
 } = await import('./progress')
@@ -110,6 +111,18 @@ describe('ensureUserDoc', () => {
     expect(doc.displayName).toBe('Ada Lovelace')
     expect(doc.email).toBe('ada@new.com')
     expect(doc.streak).toEqual({ current: 4, longest: 9, lastActiveDate: '2026-06-20' })
+  })
+})
+
+describe('saveAppearancePreferences', () => {
+  it('stores appearance preferences on the user profile', async () => {
+    await ensureUserDoc('userA', 'Ada', 'ada@example.com')
+    await saveAppearancePreferences('userA', { avatarId: 'lens', backgroundId: 'prism' })
+
+    expect(store.get(userPath('userA'))?.appearance).toEqual({
+      avatarId: 'lens',
+      backgroundId: 'prism',
+    })
   })
 })
 

@@ -77,7 +77,7 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
       'back brand menu'
-      'streak avatar menu';
+      'streak avatar .';
     align-items: center;
     justify-items: center;
     gap: 0.45rem 0.65rem;
@@ -108,9 +108,13 @@
   .home__avatar {
     grid-area: avatar;
   }
+  .home__name {
+    display: none;
+  }
   .home__user .account-menu {
     grid-area: menu;
-    justify-self: start;
+    justify-self: end;
+    align-self: center;
   }
 }
 

@@ -203,7 +203,7 @@ Every lesson opens with a short, mostly-visual **intro** (heading + a few senten
 - FR-1: Sign up with email/password (with a display name) or Google.
 - FR-2: Stay signed in across sessions (persisted auth).
 - FR-3: Sign out (behind a confirmation dialog).
-- FR-4: Manage the account: change display name, change email (re-auth required), change password, and link a same-email Google/password credential. Creating an email account that collides with an existing Google login is blocked with a helpful message.
+- FR-4: Manage the account: change display name, change email (re-auth required), change password, link a same-email Google/password credential, and save appearance preferences (avatar + background). Creating an email account that collides with an existing Google login is blocked with a helpful message.
 - FR-5: Routes are auth-gated: unauthenticated users are sent to `/login`.
 
 ### 9.2 Lessons & interactive steps
@@ -398,10 +398,14 @@ users/{uid}
   ├─ displayName: string
   ├─ email: string
   ├─ createdAt: Timestamp
-  └─ streak: {
+  ├─ streak: {
         current: number,          // consecutive active days
         longest: number,
         lastActiveDate: string    // "YYYY-MM-DD", user's local day
+     }
+  └─ appearance: {
+        avatarId: 'initial' | 'candle' | 'lens' | 'prism' | 'rainbow' | 'star',
+        backgroundId: 'aurora' | 'prism'
      }
 
 users/{uid}/progress/{lessonId}   // one doc per lesson
