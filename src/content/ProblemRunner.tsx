@@ -404,17 +404,6 @@ export function ProblemRunner({
 
       {!promptNearAction && promptBlock}
 
-      {featureNumbersTools && showNumbersTools && (
-        <NumbersTools
-          featured
-          measures={measures}
-          onToggleMeasure={toggleMeasure}
-          focalLength={focalLength}
-          objectDistance={objectDistance}
-          image={image}
-        />
-      )}
-
       {plot ? (
         <DrawRaysScene
           scene={step.scene}
@@ -547,6 +536,17 @@ export function ProblemRunner({
               </button>
             )}
           </div>
+
+          {featureNumbersTools && showNumbersTools && (
+            <NumbersTools
+              featured
+              measures={measures}
+              onToggleMeasure={toggleMeasure}
+              focalLength={focalLength}
+              objectDistance={objectDistance}
+              image={image}
+            />
+          )}
         </>
       )}
 

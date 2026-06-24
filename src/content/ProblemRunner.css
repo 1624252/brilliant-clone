@@ -27,15 +27,18 @@
 .runner__step-btn {
   width: 2rem;
   height: 2rem;
+  padding: 0;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-elev);
   color: var(--text);
   cursor: pointer;
-  font: inherit;
+  display: inline-grid;
+  place-items: center;
+  font-family: system-ui, sans-serif;
   font-size: 1rem;
   font-weight: 800;
-  line-height: 1;
+  line-height: 0;
 }
 .runner__step-btn:disabled {
   cursor: not-allowed;
@@ -202,10 +205,11 @@
 .equation__row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.6rem;
   font-size: 1.4rem;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 .equation__row--values {
   font-size: 1.1rem;
@@ -314,6 +318,16 @@
 @media (max-width: 600px) {
   .measures {
     grid-template-columns: 1fr;
+    gap: 0.55rem;
+    padding: 0.55rem 0.75rem 0.8rem;
+  }
+  .measures__opt {
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+  .measures__desc {
+    display: block;
+    line-height: 1.25;
   }
   .runner__prompt {
     font-size: 1.15rem;
@@ -328,10 +342,34 @@
   .runner__actions .btn {
     flex: 1 1 auto;
   }
-  /* The live equation can be wide; let it scroll instead of overflowing. */
   .equation {
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden;
+    align-items: stretch;
+    padding: 0.65rem;
+  }
+  .equation__row {
+    gap: 0.35rem 0.5rem;
+    font-size: clamp(1.05rem, 6vw, 1.35rem);
+    justify-content: center;
+  }
+  .equation__row--values {
+    font-size: clamp(0.92rem, 4.6vw, 1.08rem);
+  }
+  .equation__sep {
+    display: none;
+  }
+  .runner__more--featured {
+    padding: 0.75rem;
+  }
+  .runner__more--featured .equation {
+    padding: 0.7rem;
+  }
+  .runner__more--featured .equation__row {
+    font-size: clamp(1.05rem, 6vw, 1.35rem);
+  }
+  .runner__more--featured .equation__row--values {
+    font-size: clamp(0.92rem, 4.6vw, 1.08rem);
   }
   .predict__choice {
     min-height: 44px;
@@ -498,12 +536,16 @@
   flex: none;
   width: 2.4rem;
   height: 2.4rem;
+  padding: 0;
   border-radius: 50%;
   border: 1px solid var(--border-strong);
   background: var(--bg-elev);
   color: var(--text);
-  font-size: 1.2rem;
-  line-height: 1;
+  display: inline-grid;
+  place-items: center;
+  font-family: system-ui, sans-serif;
+  font-size: 1.15rem;
+  line-height: 0;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
