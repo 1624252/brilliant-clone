@@ -10,10 +10,10 @@ import {
 import type { Point, RayId } from '../engine'
 import {
   LensDiagram,
-  DEFAULT_SCENE,
   toSvg,
   svgXToOpticalX,
   svgYToOpticalY,
+  type SceneParams,
   type MeasureFlags,
 } from '../render'
 import { LensScene } from './LensScene'
@@ -37,7 +37,12 @@ interface DrawRaysSceneProps {
 }
 
 const TOL = 3
-const sc = DEFAULT_SCENE
+const PLOT_SCENE: SceneParams = {
+  viewWidth: 600,
+  viewHeight: 400,
+  halfWidth: 46,
+  halfHeight: 34,
+}
 const rayIds: RayId[] = ['parallel', 'chief', 'focal']
 const rayLabels: Record<RayId, string> = {
   parallel: 'Parallel ray',
@@ -52,38 +57,47 @@ function atX(a: Point, b: Point, x: number): Point {
   return { x, y: a.y + slope * (x - a.x) }
 }
 
-function pointOnLineInScene(a: Point, b: Point): Point {
-  const preferredX = Math.min(50, sc.halfWidth - 8)
+function plotSceneFor(s: PlotScene): SceneParams {
+  const leftExtent = Math.max(s.objectDistance + 6, 34)
+  const rightExtent = Math.max(Math.abs(s.focalLength) * 2 + 10, 42)
+  return {
+    ...PLOT_SCENE,
+    halfWidth: Math.min(62, Math.max(leftExtent, rightExtent)),
+  }
+}
+
+function pointOnLineInScene(a: Point, b: Point, scene: SceneParams): Point {
+  const preferredX = Math.min(34, scene.halfWidth - 8)
   const slope = (b.y - a.y) / (b.x - a.x)
   if (Math.abs(slope) < 1e-6) return { x: preferredX, y: a.y }
 
   let p = atX(a, b, preferredX)
-  const yLimit = sc.halfHeight - 4
+  const yLimit = scene.halfHeight - 4
   if (Math.abs(p.y) > yLimit) {
     const targetY = p.y > 0 ? yLimit : -yLimit
     const x = a.x + (targetY - a.y) / slope
-    p = { x: clamp(x, 8, sc.halfWidth - 4), y: targetY }
+    p = { x: clamp(x, 8, scene.halfWidth - 4), y: targetY }
   }
   return p
 }
 
-function ruleEndpoint(ray: RayId, s: PlotScene): Point {
+function ruleEndpoint(ray: RayId, s: PlotScene, scene: SceneParams): Point {
   const pts = constructionPoints(s)
-  if (ray === 'parallel') return pointOnLineInScene(pts.parallelStart, pts.farFocus)
-  if (ray === 'chief') return pointOnLineInScene(pts.objectTip, pts.center)
-  return { x: Math.min(50, sc.halfWidth - 8), y: pts.focalStart.y }
+  if (ray === 'parallel') return pointOnLineInScene(pts.parallelStart, pts.farFocus, scene)
+  if (ray === 'chief') return pointOnLineInScene(pts.objectTip, pts.center, scene)
+  return { x: Math.min(34, scene.halfWidth - 8), y: pts.focalStart.y }
 }
 
-function initialRays(s: PlotScene): DrawnRays {
+function initialRays(s: PlotScene, scene: SceneParams): DrawnRays {
   const pts = constructionPoints(s)
   const offset = (p: Point, dy: number): Point => ({
     x: p.x,
-    y: clamp(p.y + dy, -(sc.halfHeight - 4), sc.halfHeight - 4),
+    y: clamp(p.y + dy, -(scene.halfHeight - 4), scene.halfHeight - 4),
   })
   return {
-    parallel: { start: pts.parallelStart, end: offset(ruleEndpoint('parallel', s), 18) },
-    chief: { start: pts.chiefStart, end: offset(ruleEndpoint('chief', s), -18) },
-    focal: { start: pts.focalStart, end: offset(ruleEndpoint('focal', s), 18) },
+    parallel: { start: pts.parallelStart, end: offset(ruleEndpoint('parallel', s, scene), 18) },
+    chief: { start: pts.chiefStart, end: offset(ruleEndpoint('chief', s, scene), -18) },
+    focal: { start: pts.focalStart, end: offset(ruleEndpoint('focal', s, scene), 18) },
   }
 }
 
@@ -159,8 +173,9 @@ export function DrawRaysScene({
     [H, scene.focalLength, scene.objectDistance],
   )
   const pts = constructionPoints(s)
+  const plotScene = useMemo(() => plotSceneFor(s), [s])
   const sceneKey = `${s.objectDistance}:${s.focalLength}:${s.objectHeight}`
-  const [rays, setRays] = useState<DrawnRays>(() => initialRays(s))
+  const [rays, setRays] = useState<DrawnRays>(() => initialRays(s, plotScene))
   const [activeRay, setActiveRay] = useState<RayId>('parallel')
   const [trackedSceneKey, setTrackedSceneKey] = useState(sceneKey)
   const [trackedResetKey, setTrackedResetKey] = useState(resetKey)
@@ -171,13 +186,13 @@ export function DrawRaysScene({
 
   if (sceneKey !== trackedSceneKey) {
     setTrackedSceneKey(sceneKey)
-    setRays(initialRays(s))
+    setRays(initialRays(s, plotScene))
     setActiveRay('parallel')
   }
 
   if (resetKey !== trackedResetKey) {
     setTrackedResetKey(resetKey)
-    setRays(initialRays(s))
+    setRays(initialRays(s, plotScene))
     setActiveRay('parallel')
     draggingRef.current = null
   }
@@ -204,8 +219,8 @@ export function DrawRaysScene({
     if (solved) return
     onInteraction?.()
     const clamped = {
-      x: clamp(next.x, -sc.halfWidth + 2, sc.halfWidth - 2),
-      y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),
+      x: clamp(next.x, -plotScene.halfWidth + 2, plotScene.halfWidth - 2),
+      y: clamp(next.y, -(plotScene.halfHeight - 2), plotScene.halfHeight - 2),
     }
     setRays((prev) => {
       const candidate: DrawnRays = {
@@ -215,7 +230,7 @@ export function DrawRaysScene({
           end: clamped,
         },
       }
-      const end = drawnRayChecks(candidate, s, TOL)[ray] ? ruleEndpoint(ray, s) : clamped
+      const end = drawnRayChecks(candidate, s, TOL)[ray] ? ruleEndpoint(ray, s, plotScene) : clamped
       return {
         ...prev,
         [ray]: {
@@ -231,11 +246,12 @@ export function DrawRaysScene({
     const ctm = svg?.getScreenCTM()
     if (!svg || !ctm) return null
     const local = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse())
-    return { x: svgXToOpticalX(local.x, sc), y: svgYToOpticalY(local.y, sc) }
+    return { x: svgXToOpticalX(local.x, plotScene), y: svgYToOpticalY(local.y, plotScene) }
   }
 
   function onPointerDown(ray: RayId, e: PointerEvent<SVGCircleElement>) {
     if (solved) return
+    e.preventDefault()
     draggingRef.current = ray
     setActiveRay(ray)
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -246,11 +262,13 @@ export function DrawRaysScene({
   function onPointerMove(e: PointerEvent<SVGCircleElement>) {
     const ray = draggingRef.current
     if (!ray) return
+    e.preventDefault()
     const p = pointerToOptical(e)
     if (p) updateEnd(ray, p)
   }
 
   function onPointerUp(e: PointerEvent<SVGCircleElement>) {
+    e.preventDefault()
     draggingRef.current = null
     e.currentTarget.releasePointerCapture(e.pointerId)
   }
@@ -286,12 +304,13 @@ export function DrawRaysScene({
     )
   }
 
-  const line = (a: Point, b: Point) => `${toSvg(a, sc).x},${toSvg(a, sc).y} ${toSvg(b, sc).x},${toSvg(b, sc).y}`
+  const line = (a: Point, b: Point) =>
+    `${toSvg(a, plotScene).x},${toSvg(a, plotScene).y} ${toSvg(b, plotScene).x},${toSvg(b, plotScene).y}`
   const rayBounds = {
-    minX: -sc.halfWidth + 2,
-    maxX: sc.halfWidth - 2,
-    minY: -(sc.halfHeight - 2),
-    maxY: sc.halfHeight - 2,
+    minX: -plotScene.halfWidth + 2,
+    maxX: plotScene.halfWidth - 2,
+    minY: -(plotScene.halfHeight - 2),
+    maxY: plotScene.halfHeight - 2,
   }
   const guideStarts: Record<RayId, Point> = {
     parallel: pts.parallelStart,
@@ -319,12 +338,14 @@ export function DrawRaysScene({
       </div>
 
       <LensDiagram
+        className="draw-lens-diagram"
         objectDistance={s.objectDistance}
         focalLength={s.focalLength}
         objectHeight={H}
         showRays={false}
         showImage={false}
         measures={measures}
+        scene={plotScene}
       >
         {orderedRayIds.map((ray) => {
           const drawn = rays[ray]
@@ -334,7 +355,7 @@ export function DrawRaysScene({
             x: drawn.start.x - (drawn.end.x - drawn.start.x),
             y: drawn.start.y - (drawn.end.y - drawn.start.y),
           }, rayBounds)
-          const endSvg = toSvg(drawn.end, sc)
+          const endSvg = toSvg(drawn.end, plotScene)
           return (
             <g key={ray} className={`draw-ray draw-ray--${ray} ${isActive ? 'is-active' : ''}`}>
               <polyline className="draw-ray__guide" points={line(pts.objectTip, guideStarts[ray])} />
@@ -366,8 +387,8 @@ export function DrawRaysScene({
                 role="slider"
                 tabIndex={0}
                 aria-label={`${rayLabels[ray]} end point`}
-                aria-valuemin={-sc.halfWidth}
-                aria-valuemax={sc.halfWidth}
+                aria-valuemin={-plotScene.halfWidth}
+                aria-valuemax={plotScene.halfWidth}
                 aria-valuenow={Number(rays[ray].end.x.toFixed(1))}
                 aria-valuetext={`x ${rays[ray].end.x.toFixed(1)}, y ${rays[ray].end.y.toFixed(1)}`}
                 onFocus={() => setActiveRay(ray)}

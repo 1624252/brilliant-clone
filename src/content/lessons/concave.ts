@@ -15,6 +15,12 @@ const objectControl = {
   snaps: [20, 40, 60],
 }
 
+const nearLensObjectControl = {
+  ...objectControl,
+  min: 0,
+  snaps: [0, 20, 40, 60],
+}
+
 export const concaveLesson: LessonDefinition = {
   id: 'concave-lenses',
   title: 'Concave Lenses',
@@ -96,7 +102,7 @@ export const concaveLesson: LessonDefinition = {
     {
       id: 'concave-try-inverted-image',
       prompt: 'Try to make an **inverted** image with the concave lens. Move the candle inside **F**, then choose what you discover.',
-      controls: [objectControl],
+      controls: [nearLensObjectControl],
       fixed: { focalLength: FOCAL_LENGTH },
       initial: { objectDistance: 40 },
       success: (state, image) =>

@@ -67,8 +67,8 @@
 .plot-rules {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
   padding: 0;
   margin: 0.75rem 0 0;
 }
@@ -77,8 +77,8 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.9rem;
-  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+  padding: 0.7rem 0.85rem;
   border-radius: 12px;
   border: 1px dashed color-mix(in srgb, var(--text-mute) 42%, var(--border));
   background:
@@ -131,11 +131,12 @@
 }
 
 @media (max-width: 600px) {
-  .plot-rules {
-    grid-template-columns: 1fr;
-  }
   .plot-rules li {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
+    align-items: start;
     width: 100%;
+  }
+  .plot-rules .requirement-state {
+    padding-top: 0.1rem;
   }
 }

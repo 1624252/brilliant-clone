@@ -4,6 +4,10 @@
   gap: 0.75rem;
 }
 
+.lens-diagram.draw-lens-diagram {
+  touch-action: none;
+}
+
 .draw-toolbar {
   display: flex;
   flex-wrap: wrap;

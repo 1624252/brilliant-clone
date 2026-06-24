@@ -5,6 +5,7 @@ import {
   avatarOptions,
   backgroundOptions,
   avatarUnlocked,
+  avatarUnlockText,
   avatarGlyph,
   type AppearancePreferences,
 } from '../data/appearance'
@@ -54,21 +55,35 @@ export function Settings({ progress, onClose }: { progress: ProgressState; onClo
   const [newPw, setNewPw] = useState('')
   const [pwNote, setPwNote] = useState<Note>(null)
   const [appearance, setAppearance] = useState<AppearancePreferences>(progress.appearance)
-  const [appearanceNote, setAppearanceNote] = useState<Note>(null)
+  const [avatarNote, setAvatarNote] = useState<Note>(null)
+  const [backgroundNote, setBackgroundNote] = useState<Note>(null)
 
   const [busy, setBusy] = useState(false)
 
-  async function updateAppearance(next: AppearancePreferences) {
+  async function updateAppearance(
+    next: AppearancePreferences,
+    setNote: (note: Note) => void,
+    okText = 'Appearance saved.',
+  ) {
     if (!user) return
     setAppearance(next)
-    setAppearanceNote(null)
+    setNote(null)
     try {
       await saveAppearancePreferences(user.uid, next)
-      setAppearanceNote({ kind: 'ok', text: 'Appearance saved.' })
+      setNote({ kind: 'ok', text: okText })
     } catch (err) {
       setAppearance(progress.appearance)
-      setAppearanceNote({ kind: 'err', text: settingsAuthError(err) })
+      setNote({ kind: 'err', text: settingsAuthError(err) })
     }
+  }
+
+  function chooseAvatar(option: (typeof avatarOptions)[number], unlocked: boolean) {
+    const text = avatarUnlockText(option, unlocked)
+    if (!unlocked) {
+      setAvatarNote({ kind: 'err', text })
+      return
+    }
+    void updateAppearance({ ...appearance, avatarId: option.id }, setAvatarNote, text)
   }
 
   function open(section: Section) {
@@ -316,7 +331,6 @@ export function Settings({ progress, onClose }: { progress: ProgressState; onClo
           <section className="settings__section">
             <div className="settings__info">
               <span className="settings__label">Appearance</span>
-              <span className="settings__value">Customize your avatar and light background.</span>
             </div>
 
             <div className="appearance-group" aria-label="Avatar options">
@@ -329,21 +343,23 @@ export function Settings({ progress, onClose }: { progress: ProgressState; onClo
                     <button
                       key={option.id}
                       type="button"
-                      className={`appearance-option ${selected ? 'is-selected' : ''}`}
-                      disabled={!unlocked}
-                      onClick={() =>
-                        void updateAppearance({ ...appearance, avatarId: option.id })
-                      }
-                      title={unlocked ? option.label : 'Unlock by earning milestones'}
+                      className={`appearance-option ${selected ? 'is-selected' : ''} ${
+                        unlocked ? '' : 'is-locked'
+                      }`}
+                      aria-disabled={!unlocked}
+                      onClick={() => chooseAvatar(option, unlocked)}
+                      title={avatarUnlockText(option, unlocked)}
                     >
-                      <span className="appearance-option__glyph">
+                      <span className={`appearance-option__glyph avatar--${option.id}`}>
                         {avatarGlyph(option.id, (user?.displayName?.[0] ?? '?').toUpperCase())}
                       </span>
                       <span>{option.label}</span>
+                      {!unlocked && <small>Locked</small>}
                     </button>
                   )
                 })}
               </div>
+              <NoteLine note={avatarNote} />
             </div>
 
             <div className="appearance-group" aria-label="Background options">
@@ -357,16 +373,20 @@ export function Settings({ progress, onClose }: { progress: ProgressState; onClo
                       appearance.backgroundId === option.id ? 'is-selected' : ''
                     }`}
                     onClick={() =>
-                      void updateAppearance({ ...appearance, backgroundId: option.id })
+                      void updateAppearance(
+                        { ...appearance, backgroundId: option.id },
+                        setBackgroundNote,
+                      )
                     }
                   >
+                    <span className={`appearance-preview appearance-preview--${option.id}`} aria-hidden="true" />
                     <span>{option.label}</span>
                     <small>{option.description}</small>
                   </button>
                 ))}
               </div>
+              <NoteLine note={backgroundNote} />
             </div>
-            <NoteLine note={appearanceNote} />
           </section>
         </div>
       </div>

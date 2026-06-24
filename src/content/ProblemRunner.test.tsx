@@ -10,6 +10,7 @@ import { thinLensLesson } from './lessons/thinLens'
 import { distanceToSlider } from './logDistance'
 import { isPlotStep } from './types'
 import type { LessonDefinition } from './types'
+import { imageDistance } from '../engine'
 
 const shippedLessons = [focusLesson, concaveLesson, curvatureLesson, rayTracingLesson, thinLensLesson]
 
@@ -139,13 +140,31 @@ describe('ProblemRunner landmark lessons', () => {
     fireEvent.click(screen.getByRole('radio', { name: /no inverted image/i }))
     expect(screen.getByRole('status').textContent).toMatch(/flips below the axis/i)
 
-    setObjectDistance(inverted.container, concaveLesson, 10)
+    expect(screen.getAllByRole('slider', { name: /object distance/i })[0]).toHaveAttribute(
+      'aria-valuemin',
+      '0',
+    )
+    setObjectDistance(inverted.container, concaveLesson, 0)
     fireEvent.click(screen.getByRole('radio', { name: /no inverted image/i }))
     expect(screen.getByRole('status').textContent).toMatch(/cannot make an.*inverted/i)
   })
 })
 
 describe('ProblemRunner ray tracing', () => {
+  it('keeps the projector-case ray crossing visible in the plot scene', () => {
+    const projectorStep = rayTracingLesson.steps.find(
+      (step) => step.id === 'trace-convex-between-focus-2focus',
+    )
+    expect(projectorStep && 'scene' in projectorStep ? projectorStep.scene.objectDistance : 0).toBeGreaterThan(20)
+    expect(projectorStep && 'scene' in projectorStep ? projectorStep.scene.objectDistance : 0).toBeLessThan(40)
+    expect(
+      imageDistance(
+        projectorStep && 'scene' in projectorStep ? projectorStep.scene.objectDistance : 0,
+        projectorStep && 'scene' in projectorStep ? projectorStep.scene.focalLength : 1,
+      ),
+    ).toBeLessThanOrEqual(50)
+  })
+
   it('opens with four plot-ray steps and exposes reset rays', () => {
     renderStarted(rayTracingLesson)
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()

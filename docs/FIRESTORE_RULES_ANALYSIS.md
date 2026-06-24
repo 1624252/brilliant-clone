@@ -12,6 +12,7 @@ Client SDK access patterns:
 
 Data model:
 - `users/{uid}` contains private profile data (`displayName`, `email`), the daily lesson streak, and appearance preferences (`avatarId`, `backgroundId`).
+- Existing user docs may still contain legacy `practiceStats`; rules allow that map so current settings updates do not break older accounts.
 - `users/{uid}/progress/{lessonId}` contains resumable per-lesson progress.
 
 Access model:

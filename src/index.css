@@ -88,6 +88,85 @@ body[data-background='prism'] {
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+body[data-background='prism']::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(110deg, transparent 8%, rgba(255, 107, 107, 0.18) 14%, transparent 22%),
+    linear-gradient(118deg, transparent 22%, rgba(255, 193, 77, 0.2) 30%, transparent 38%),
+    linear-gradient(126deg, transparent 38%, rgba(84, 224, 166, 0.18) 46%, transparent 54%),
+    linear-gradient(134deg, transparent 52%, rgba(122, 168, 255, 0.2) 62%, transparent 70%),
+    linear-gradient(142deg, transparent 66%, rgba(199, 155, 255, 0.18) 76%, transparent 84%);
+  filter: blur(0.3px);
+  opacity: 0.9;
+  animation: prism-beams-drift 9s ease-in-out infinite alternate;
+  transform-origin: var(--prism-x, 50vw) var(--prism-y, 50vh);
+}
+
+body[data-background='prism']::after {
+  content: '';
+  position: fixed;
+  left: var(--prism-x, 50vw);
+  top: var(--prism-y, 50vh);
+  width: 13rem;
+  height: 13rem;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 34%),
+    conic-gradient(from 210deg, rgba(255, 107, 107, 0.16), rgba(255, 193, 77, 0.18), rgba(84, 224, 166, 0.14), rgba(122, 168, 255, 0.18), rgba(199, 155, 255, 0.14), rgba(255, 107, 107, 0.16));
+  filter: blur(14px);
+  opacity: 0.75;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+
+@keyframes prism-beams-drift {
+  from {
+    transform: translate3d(calc(-2% + var(--prism-shift-x, 0%)), calc(-1% + var(--prism-shift-y, 0%)), 0) rotate(-1deg);
+  }
+  to {
+    transform: translate3d(calc(2% + var(--prism-shift-x, 0%)), calc(1% + var(--prism-shift-y, 0%)), 0) rotate(1deg);
+  }
+}
+
+.avatar--initial {
+  background: linear-gradient(135deg, var(--brand), var(--c-di));
+}
+.avatar--candle {
+  background:
+    radial-gradient(circle at 50% 22%, #fff3b0 0 10%, #ff9f43 11% 27%, transparent 28%),
+    radial-gradient(circle at 50% 68%, #fff7de 0 12%, #f2c470 13% 22%, transparent 23%),
+    linear-gradient(160deg, #412617, #ffc14d);
+}
+.avatar--lens {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.86), rgba(122,168,255,0.34) 38%, transparent 41%),
+    linear-gradient(135deg, #7aa8ff, #35e0a8);
+}
+.avatar--prism {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.74), transparent 32%),
+    conic-gradient(from 220deg, #ff6b6b, #ffc14d, #54e0a6, #7aa8ff, #c79bff, #ff6b6b);
+}
+.avatar--rainbow {
+  background:
+    radial-gradient(circle at 50% 62%, rgba(255,255,255,0.52), transparent 28%),
+    linear-gradient(135deg, #ff6b6b, #ffc14d 24%, #54e0a6 48%, #7aa8ff 72%, #c79bff);
+}
+.avatar--star {
+  background:
+    radial-gradient(circle at 50% 45%, #fff7c2 0 10%, transparent 12%),
+    radial-gradient(circle at 50% 50%, rgba(255,193,77,0.82), transparent 42%),
+    linear-gradient(135deg, #111936, #7aa8ff);
 }
 
 .optic-decor {

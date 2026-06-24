@@ -124,6 +124,24 @@ function App() {
     }
   }, [progress.appearance.backgroundId])
 
+  useEffect(() => {
+    if (progress.appearance.backgroundId !== 'prism') return
+    const moveLens = (event: PointerEvent) => {
+      document.body.style.setProperty('--prism-x', `${event.clientX}px`)
+      document.body.style.setProperty('--prism-y', `${event.clientY}px`)
+      document.body.style.setProperty('--prism-shift-x', `${(event.clientX / window.innerWidth - 0.5) * 5}%`)
+      document.body.style.setProperty('--prism-shift-y', `${(event.clientY / window.innerHeight - 0.5) * 4}%`)
+    }
+    window.addEventListener('pointermove', moveLens, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', moveLens)
+      document.body.style.removeProperty('--prism-x')
+      document.body.style.removeProperty('--prism-y')
+      document.body.style.removeProperty('--prism-shift-x')
+      document.body.style.removeProperty('--prism-shift-y')
+    }
+  }, [progress.appearance.backgroundId])
+
   if (loading) return <Splash />
 
   return (

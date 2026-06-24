@@ -98,7 +98,7 @@ export function Home({
           </span>
           <button
             type="button"
-            className="home__avatar"
+            className={`home__avatar avatar--${progress.appearance.avatarId}`}
             onClick={() => setSettingsOpen(true)}
             title="Account Settings"
             aria-label="Account Settings"

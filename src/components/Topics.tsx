@@ -32,7 +32,7 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
           </span>
           <button
             type="button"
-            className="topics__avatar"
+            className={`topics__avatar avatar--${progress.appearance.avatarId}`}
             onClick={() => setSettingsOpen(true)}
             title="Account Settings"
             aria-label="Account Settings"

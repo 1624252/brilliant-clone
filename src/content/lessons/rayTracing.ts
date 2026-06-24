@@ -37,7 +37,7 @@ export const rayTracingLesson: LessonDefinition = {
       id: 'trace-convex-between-focus-2focus',
       prompt:
         'Convex lens: the candle is between **F** and **2F**. Trace the projector case.',
-      scene: { objectDistance: 30, focalLength: FOCAL_LENGTH },
+      scene: { objectDistance: 35, focalLength: FOCAL_LENGTH },
       hint:
         'The rays should cross beyond **2F**. Keep the outgoing ray **solid**, then use **dotted back-traces** only if the rays diverge.',
       reveal:

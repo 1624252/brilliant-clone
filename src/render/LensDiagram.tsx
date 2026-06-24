@@ -10,6 +10,7 @@ import {
 import './LensDiagram.css'
 
 interface LensDiagramProps {
+  className?: string
   objectDistance: number
   focalLength: number
   objectHeight?: number
@@ -42,6 +43,7 @@ const RAY_CLASS: Record<string, string> = {
  * from objectDistance/focalLength via the engine and draws it. No state.
  */
 export function LensDiagram({
+  className,
   objectDistance,
   focalLength,
   objectHeight = 18,
@@ -104,7 +106,7 @@ export function LensDiagram({
 
   return (
     <svg
-      className="lens-diagram"
+      className={`lens-diagram${className ? ` ${className}` : ''}`}
       viewBox={`0 0 ${scene.viewWidth} ${scene.viewHeight}`}
       preserveAspectRatio="xMidYMid meet"
       role="img"

@@ -33,11 +33,14 @@ service cloud.firestore {
     }
 
     function validUserDoc(data) {
-      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'appearance'])
+      return data.keys().hasOnly(['displayName', 'email', 'createdAt', 'streak', 'appearance', 'practiceStats'])
         && (!('displayName' in data) || validShortString(data.displayName, 80))
         && (!('email' in data) || validShortString(data.email, 254))
         && (!('createdAt' in data) || data.createdAt is timestamp)
         && (!('streak' in data) || validStreak(data.streak))
+        // Legacy field from the removed practice feature. Allowed only so older
+        // profiles can still update current settings without migration breakage.
+        && (!('practiceStats' in data) || data.practiceStats is map)
         && (!('appearance' in data) || validAppearance(data.appearance));
     }
 

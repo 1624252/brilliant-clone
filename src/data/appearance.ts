@@ -44,7 +44,7 @@ export const backgroundOptions: BackgroundOption[] = [
   {
     id: 'prism',
     label: 'Prism beams',
-    description: 'Animated rainbow light beams.',
+    description: 'Rainbow beams bend around your pointer.',
   },
 ]
 
@@ -81,4 +81,18 @@ export function avatarUnlocked(
   if (option.unlock === 'halfway') return completed >= 3
   if (option.unlock === 'courseComplete') return completed >= 5
   return (streak?.longest ?? 0) >= 7
+}
+
+export function avatarUnlockText(option: AvatarOption, unlocked: boolean) {
+  if (option.unlock === 'default') return 'Available by default.'
+  if (option.unlock === 'firstLesson') {
+    return unlocked ? 'Unlocked by finishing your first lesson.' : 'Unlock by finishing any lesson.'
+  }
+  if (option.unlock === 'halfway') {
+    return unlocked ? 'Unlocked by reaching halfway.' : 'Unlock by completing 3 lessons.'
+  }
+  if (option.unlock === 'courseComplete') {
+    return unlocked ? 'Unlocked by completing the course.' : 'Unlock by completing all 5 lens lessons.'
+  }
+  return unlocked ? 'Unlocked by earning a week-long streak.' : 'Unlock with a 7-day streak.'
 }

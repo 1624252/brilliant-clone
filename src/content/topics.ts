@@ -17,11 +17,4 @@ export const topics: Topic[] = [
       'Discover how lenses bend light to form images — focal points, ray tracing, and the thin lens equation.',
     available: true,
   },
-  {
-    id: 'chromatic-aberration',
-    title: 'Chromatic Aberration',
-    blurb:
-      'Explore why colors focus at different places, how fringes appear, and how lens pairs can reduce the blur.',
-    available: false,
-  },
 ]
