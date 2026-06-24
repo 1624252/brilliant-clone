@@ -83,6 +83,10 @@ export function ProblemRunner({
   const [stepIndex, setStepIndex] = useState(resumeIndex)
   const [values, setValues] = useState<StepState>(initialValues(lesson.steps[resumeIndex]))
   const [status, setStatus] = useState<Status>('idle')
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(
+    () => new Set(Array.from({ length: resumeIndex }, (_, i) => i)),
+  )
+  const [furthestStepIndex, setFurthestStepIndex] = useState(resumeIndex)
   const [done, setDone] = useState(false)
   const [measures, setMeasures] = useState<MeasureFlags>(() => initialMeasures(lesson))
   // Predict-then-reveal state: the committed choice (null until submitted).
@@ -104,6 +108,7 @@ export function ProblemRunner({
   const step = lesson.steps[stepIndex]
   const predict = isPredictStep(step)
   const plot = isPlotStep(step)
+  const stepAlreadyCompleted = completedSteps.has(stepIndex)
   // A prediction is "committed" (rays/image reveal, Next appears) only once the
   // learner picks the *correct* choice. A wrong pick shows an explanation and
   // lets them try again — they get multiple chances.
@@ -112,7 +117,7 @@ export function ProblemRunner({
     : undefined
   const interactiveChoice =
     !predict && !plot && step.choices ? step.choices.find((c) => c.id === chosenId) : undefined
-  const committed = !!chosenChoice?.correct
+  const committed = !!chosenChoice?.correct || (predict && stepAlreadyCompleted)
 
   // The scene to draw: from the learner's controls (interactive) or the fixed
   // predict/plot scene. In a predict step the outcome stays hidden until commit.
@@ -152,11 +157,12 @@ export function ProblemRunner({
     !predict && !plot && instantInteractiveChoice && step.success(merged, image)
   // A step is "solved" (Next becomes available) when an interactive/plot answer
   // is correct, or when a prediction has been committed (the truth is revealed).
-  const solved = predict
+  const currentSolved = predict
     ? committed
     : instantInteractiveChoice
       ? interactiveChoice.correct === true && interactiveAtTarget
       : status === 'correct'
+  const solved = stepAlreadyCompleted || currentSolved
   const showNumbersTools = ((!predict && !plot) || committed || (plot && solved))
   const featureNumbersTools = lesson.id === 'thin-lens-equation'
   const promptNearAction = lesson.id === 'thin-lens-equation'
@@ -166,10 +172,17 @@ export function ProblemRunner({
     </p>
   )
 
+  useEffect(() => {
+    if (!currentSolved || stepAlreadyCompleted) return
+    setCompletedSteps((prev) => new Set(prev).add(stepIndex))
+  }, [currentSolved, stepAlreadyCompleted, stepIndex])
+
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
-    setStatus('idle') // changing the answer clears stale feedback
-    if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
+    if (!stepAlreadyCompleted) {
+      setStatus('idle') // changing the answer clears stale feedback until solved
+      if (!isPredictStep(step) && !isPlotStep(step)) setChosenId(null)
+    }
   }
 
   function check() {
@@ -201,6 +214,7 @@ export function ProblemRunner({
     setPlotHint('')
     setPlotResetKey(0)
     setMeasures(initialMeasures(lesson))
+    setCompletedSteps(new Set())
     setDone(false)
   }
 
@@ -211,28 +225,30 @@ export function ProblemRunner({
       return
     }
     const ni = stepIndex + 1
-    setStepIndex(ni)
-    setValues(initialValues(lesson.steps[ni]))
-    setStatus('idle')
-    setChosenId(null)
-    setPlotReady(false)
-    setPlotHint('')
-    setPlotResetKey(0)
+    loadStep(ni)
+    setFurthestStepIndex((current) => Math.max(current, ni))
     onStepChange?.(ni)
   }
 
-  function previous() {
-    if (stepIndex === 0) return
-    const pi = stepIndex - 1
-    setStepIndex(pi)
-    setValues(initialValues(lesson.steps[pi]))
+  function loadStep(index: number) {
+    setStepIndex(index)
+    setValues(initialValues(lesson.steps[index]))
     setStatus('idle')
     setChosenId(null)
     setPlotReady(false)
     setPlotHint('')
     setPlotResetKey(0)
     setMeasures(initialMeasures(lesson))
-    onStepChange?.(pi)
+  }
+
+  function previous() {
+    if (stepIndex === 0) return
+    loadStep(stepIndex - 1)
+  }
+
+  function forwardToReachedStep() {
+    if (stepIndex >= furthestStepIndex) return
+    loadStep(stepIndex + 1)
   }
 
   function resetPlot() {
@@ -329,12 +345,36 @@ export function ProblemRunner({
         const total = lesson.steps.length
         const filled = stepIndex + (solved ? 1 : 0)
         const pct = Math.round((filled / total) * 100)
+        const canGoBack = stepIndex > 0
+        const canGoForward = stepIndex < furthestStepIndex
         return (
           <div className="runner__progress">
             <div className="runner__progress-head">
-              <span>
-                Step {stepIndex + 1} of {total}
-              </span>
+              <div className="runner__step-nav" aria-label="Step navigation">
+                <button
+                  type="button"
+                  className="runner__step-btn"
+                  onClick={previous}
+                  disabled={!canGoBack}
+                  aria-label="Previous step"
+                  title="Previous step"
+                >
+                  ←
+                </button>
+                <span>
+                  Step {stepIndex + 1} of {total}
+                </span>
+                <button
+                  type="button"
+                  className="runner__step-btn"
+                  onClick={forwardToReachedStep}
+                  disabled={!canGoForward}
+                  aria-label="Next reached step"
+                  title="Next reached step"
+                >
+                  →
+                </button>
+              </div>
               <span className="runner__progress-pct">{pct}%</span>
             </div>
             <div
@@ -367,9 +407,11 @@ export function ProblemRunner({
       {plot ? (
         <DrawRaysScene
           scene={step.scene}
-          solved={status === 'correct'}
+          solved={solved}
           onReadyChange={(ready) => {
             setPlotReady(ready)
+          }}
+          onInteraction={() => {
             if (status === 'incorrect') setStatus('idle')
           }}
           onHintChange={setPlotHint}
@@ -396,47 +438,33 @@ export function ProblemRunner({
       {plot ? (
         <div className="plot-panel">
           {promptNearAction && promptBlock}
-          {status === 'correct' ? (
+          {status === 'incorrect' && (
+            <div className="feedback feedback--incorrect feedback--pop" role="status">
+              <strong>Not yet.</strong> Keep working through the <strong>unmet requirements</strong> below.
+            </div>
+          )}
+          {solved ? (
             <div className="feedback feedback--correct" role="status">
               <strong>You found it.</strong> {renderRich(step.reveal)}
-            </div>
-          ) : status === 'incorrect' ? (
-            <div className="feedback feedback--incorrect" role="status">
-              <strong>Not yet.</strong>{' '}
-              {renderRich(
-                plotHint ||
-                  (step.hint ??
-                    'Keep adjusting the ray endpoints until all three requirements are marked Done, then submit again.'),
-              )}
             </div>
           ) : (
             <p className="plot-panel__hint">
               {renderRich(
                 plotHint ||
                   (step.hint ??
-                    'Drag each ray endpoint so every ray follows its rule and the requirements are marked Done.'),
+                    'Drag each **ray endpoint** so every ray follows its rule and the requirements are marked **Done**.'),
               )}
             </p>
           )}
           <div className="runner__actions">
-            {status === 'correct' ? (
+            {solved ? (
               <>
-                {stepIndex > 0 && (
-                  <button type="button" className="btn" onClick={previous}>
-                    Back
-                  </button>
-                )}
                 <button type="button" className="btn btn--primary" onClick={next}>
                   {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
                 </button>
               </>
             ) : (
               <>
-                {stepIndex > 0 && (
-                  <button type="button" className="btn" onClick={previous}>
-                    Back
-                  </button>
-                )}
                 <button type="button" className="btn btn--primary" onClick={submitPlot}>
                   Submit
                 </button>
@@ -456,7 +484,6 @@ export function ProblemRunner({
           canExplore={committed && !!step.explore}
           onChoose={setChosenId}
           onNext={next}
-          onPrevious={stepIndex > 0 ? previous : undefined}
           isLast={stepIndex + 1 >= lesson.steps.length}
         />
       ) : (
@@ -476,12 +503,12 @@ export function ProblemRunner({
             <InteractiveChoices
               choices={step.choices}
               chosenId={chosenId}
-              solved={status === 'correct'}
+              solved={solved}
               onChoose={chooseInteractive}
             />
           )}
 
-          {status === 'correct' && (
+          {solved && (
             <div className="feedback feedback--correct" role="status">
               <strong>Correct.</strong> {renderRich(step.correctFeedback)}
             </div>
@@ -498,12 +525,7 @@ export function ProblemRunner({
           {promptNearAction && promptBlock}
 
           <div className="runner__actions">
-            {stepIndex > 0 && (
-              <button type="button" className="btn" onClick={previous}>
-                Back
-              </button>
-            )}
-            {status === 'correct' ? (
+            {solved ? (
               <button type="button" className="btn btn--primary" onClick={next}>
                 {stepIndex + 1 >= lesson.steps.length ? 'Finish' : 'Next'}
               </button>
@@ -774,7 +796,6 @@ function PredictPanel({
   canExplore,
   onChoose,
   onNext,
-  onPrevious,
   isLast,
 }: {
   step: { prompt: string; choices: Choice[]; reveal: string }
@@ -784,7 +805,6 @@ function PredictPanel({
   canExplore: boolean
   onChoose: (id: string) => void
   onNext: () => void
-  onPrevious?: () => void
   isLast: boolean
 }) {
   const chosen = step.choices.find((c) => c.id === chosenId)
@@ -893,11 +913,6 @@ function PredictPanel({
       )}
 
       <div className="runner__actions">
-        {onPrevious && (
-          <button type="button" className="btn" onClick={onPrevious}>
-            Back
-          </button>
-        )}
         {solved && (
           <button type="button" className="btn btn--primary" onClick={onNext}>
             {isLast ? 'Finish' : 'Next'}

@@ -27,7 +27,7 @@ export const concaveLesson: LessonDefinition = {
     paragraphs: [
       'A **concave lens** (one that caves inward) does the opposite of a convex lens: it makes parallel rays **diverge**, as if they fanned out from a point.',
       'That point is the **virtual focus**, and the lens has a **negative focal length, f**.',
-      'Try the same image targets as with a convex lens. You’ll find a concave lens always keeps real-candle images **virtual** and upright.',
+      'Try the same image targets as with a convex lens. You’ll find a concave lens always keeps real-candle images **virtual**, **upright**, and **reduced**.',
     ],
   },
   steps: [
@@ -41,7 +41,7 @@ export const concaveLesson: LessonDefinition = {
       correctFeedback:
         'Yes. A concave lens makes a **virtual** image for every real candle position.',
       hint: () =>
-        'A **virtual** image appears where dotted back-traces meet on the same side of the lens as the object. Watch those dotted lines point back to the image.',
+        'A **virtual** image appears where **dotted back-traces** meet on the **same side of the lens as the object**. Watch those dotted lines point back to the image.',
     },
     {
       id: 'concave-make-upright-image',
@@ -53,7 +53,7 @@ export const concaveLesson: LessonDefinition = {
       correctFeedback:
         'Correct. A concave lens keeps the image **upright** for every real candle position.',
       hint: () =>
-        'An **upright** image points the same way as the object. Look for the image candle standing above the axis instead of hanging below it.',
+        'An **upright** image points the __same way as the object__. Look for the image candle standing above the axis instead of hanging below it.',
     },
     {
       id: 'concave-try-real-image',
@@ -68,30 +68,30 @@ export const concaveLesson: LessonDefinition = {
       choices: [
         {
           id: 'no-real',
-          label: 'No real image: it stays **virtual** near **F**',
+          label: 'No **real** image: it stays **virtual** near **F**',
           correct: true,
           feedback:
-            'Yes. Even beyond **2F**, a concave lens spreads the rays apart, so the image stays virtual near **F** on the same side of the lens as the object.',
+            'Yes. Even beyond **2F**, a concave lens spreads the rays apart, so the image stays **virtual** near **F** on the **same side of the lens as the object**.',
         },
         {
           id: 'real-2f',
-          label: 'A real image appears at **2F**',
+          label: 'A **real** image appears at **2F**',
           feedback:
-            'That is the convex same-size pattern. Concave lenses do not make a real image on the opposite side of the lens from a real object.',
+            'That is the convex same-size pattern. Concave lenses do not make a **real** image on the **opposite side of the lens from a real object**.',
         },
         {
           id: 'real-far',
-          label: 'A real image appears beyond **2F**',
+          label: 'A **real** image appears beyond **2F**',
           feedback:
-            'A concave lens does not create a real projected image from a real candle.',
+            'A concave lens does not create a **real projected image** from a real candle.',
         },
       ],
       correctFeedback:
-        'Right. With a real candle, a concave lens cannot make a **real** image; the virtual image stays near **F** on the same side of the lens as the object.',
+        'Right. With a real candle, a concave lens cannot make a **real** image; the **virtual** image stays near **F** on the **same side of the lens as the object**.',
       hint: (_state, image) =>
         image.magnification > 0.4
-          ? 'To test for a **real** image, look for solid outgoing rays meeting on the opposite side of the lens from the object. Keep dragging until you have tried a far-away candle setup.'
-          : 'A **real** image would be solid outgoing rays crossing on the opposite side of the lens from the object. Here the outgoing rays still diverge and only dotted back-traces meet.',
+          ? 'To test for a **real** image, look for __solid outgoing rays__ meeting on the **opposite side of the lens from the object**. Keep dragging until you have tried a far-away candle setup.'
+          : 'A **real** image would be solid outgoing rays crossing on the **opposite side of the lens from the object**. Here the outgoing rays still **diverge** and only **dotted back-traces** meet.',
     },
     {
       id: 'concave-try-inverted-image',
@@ -106,30 +106,30 @@ export const concaveLesson: LessonDefinition = {
       choices: [
         {
           id: 'no-inverted',
-          label: 'No inverted image: it stays upright',
+          label: 'No **inverted** image: it stays **upright**',
           correct: true,
           feedback:
-            'Correct. Even inside **F**, a concave lens keeps the image upright.',
+            'Correct. Even inside **F**, a concave lens keeps the image **upright**.',
         },
         {
           id: 'inverted-real',
-          label: 'It becomes real and inverted',
+          label: 'It becomes **real** and **inverted**',
           feedback:
-            'That flip happens for a convex lens outside **F**, not for a concave lens.',
+            'That flip happens for a **convex** lens outside **F**, not for a **concave** lens.',
         },
         {
           id: 'inverted-virtual',
-          label: 'It becomes virtual and inverted',
+          label: 'It becomes **virtual** and **inverted**',
           feedback:
-            'The image is virtual, but it stays upright for a real candle.',
+            'The image is **virtual**, but it stays **upright** for a real candle.',
         },
       ],
       correctFeedback:
         'Correct. With a real candle, a concave lens cannot make an **inverted** image.',
       hint: (state) =>
         state.objectDistance >= Math.abs(FOCAL_LENGTH)
-          ? 'To test for an **inverted** image, watch whether the image candle ever flips below the axis while you drag the object close to the lens.'
-          : 'An **inverted** image would hang below the axis. This image still stands upright, so choose the discovery that says it stays upright.',
+          ? 'To test for an **inverted** image, watch whether the image candle ever flips __below the axis__ while you drag the object close to the lens.'
+          : 'An **inverted** image would hang below the axis. This image still stands **upright**, so choose the discovery that says it stays upright.',
     },
   ],
 }

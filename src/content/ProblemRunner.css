@@ -13,10 +13,37 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 0.75rem;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-mute);
+}
+.runner__step-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.runner__step-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.runner__step-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+.runner__step-btn:not(:disabled):hover {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, var(--bg-elev));
 }
 .runner__progress-pct {
   font-weight: 700;
@@ -664,6 +691,19 @@
 .feedback--incorrect::before {
   background: linear-gradient(var(--warning), var(--danger));
   box-shadow: 0 0 18px color-mix(in srgb, var(--warning) 36%, transparent);
+}
+.feedback--pop {
+  animation: feedback-pop 0.18s ease-out;
+}
+@keyframes feedback-pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .plot-panel {

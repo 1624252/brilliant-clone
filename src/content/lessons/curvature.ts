@@ -45,11 +45,11 @@ export const curvatureLesson: LessonDefinition = {
       success: (state, image) =>
         image.focalLength > 0 && hasVisibleCurve(state.curvature),
       correctFeedback:
-        'A **convex** lens has a **positive focal length** — it bends parallel rays together at F.',
+        'A **convex** lens has a **positive focal length** — it bends **parallel rays** together at **F**.',
       hint: (_state, image) =>
         image.focalLength < 0
-          ? 'The lens is **concave** right now, so it is spreading rays apart. To make rays converge, reshape it until it bulges outward.'
-          : 'The lens is still nearly **flat**, so the focus is too far away to see. Add more outward curve until the rays clearly meet.',
+          ? 'The lens is **concave** right now, so it is spreading rays apart. To make rays **converge**, reshape it until it __bulges outward__.'
+          : 'The lens is still nearly **flat**, so **F** is too far away to see. Add more __outward curve__ until the rays clearly meet.',
     },
     {
       id: 'make-diverging',
@@ -59,11 +59,11 @@ export const curvatureLesson: LessonDefinition = {
       initial: { curvature: 0.4 },
       success: (state, image) => image.focalLength < 0 && hasVisibleCurve(state.curvature),
       correctFeedback:
-        'A **concave** lens has a **negative focal length** — it spreads parallel rays apart.',
+        'A **concave** lens has a **negative focal length** — it spreads **parallel rays** apart.',
       hint: (_state, image) =>
         image.focalLength > 0
-          ? 'The lens is still **convex**, so it is pulling rays together. Reverse the curve so the rays fan outward instead.'
-          : 'The lens is close to flat. Keep curving it inward until the focal length becomes clearly negative.',
+          ? 'The lens is still **convex**, so it is pulling rays together. Reverse the curve so the rays __fan outward__ instead.'
+          : 'The lens is close to **flat**. Keep curving it __inward__ until the focal length becomes clearly **negative**.',
     },
     {
       id: 'make-flat',
@@ -76,30 +76,30 @@ export const curvatureLesson: LessonDefinition = {
       choices: [
         {
           id: 'straight',
-          label: 'They pass almost straight through',
+          label: 'They pass almost **straight through**',
           correct: true,
           feedback:
-            'Yes. With no inward or outward curve, the lens does not steer the parallel rays together or apart.',
+            'Yes. With no **inward** or **outward** curve, the lens does not steer the **parallel rays** together or apart.',
         },
         {
           id: 'converge',
-          label: 'They bend together to a real focus',
+          label: 'They bend together to a **real focus**',
           feedback:
-            'That would mean the lens is still convex. Move the shape closer to the center where it is neither concave nor convex.',
+            'That would mean the lens is still **convex**. Move the shape closer to the center where it is neither concave nor convex.',
         },
         {
           id: 'diverge',
-          label: 'They spread apart from a virtual focus',
+          label: 'They spread apart from a **virtual focus**',
           feedback:
-            'That would mean the lens is still concave. Move the shape closer to the center where it is neither concave nor convex.',
+            'That would mean the lens is still **concave**. Move the shape closer to the center where it is neither concave nor convex.',
         },
       ],
       correctFeedback:
-        'A **flat** lens has an **enormous (infinite) focal length** — almost no focal point, so light passes nearly straight through.',
+        'A **flat** lens has an **enormous (infinite) focal length** — no nearby **F**, so light passes nearly **straight through**.',
       hint: (_state, image) =>
         image.focalLength > 0
-          ? 'The lens still bends rays **together**, so it is not flat yet. Reduce the outward curve until the rays pass almost straight through.'
-          : 'The lens still spreads rays **apart**, so it is not flat yet. Reduce the inward curve until the rays pass almost straight through.',
+          ? 'The lens still bends rays **together**, so it is not flat yet. Reduce the __outward curve__ until the rays pass almost straight through.'
+          : 'The lens still spreads rays **apart**, so it is not flat yet. Reduce the __inward curve__ until the rays pass almost straight through.',
     },
   ],
 }

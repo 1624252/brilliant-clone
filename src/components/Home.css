@@ -71,37 +71,13 @@
 .home__avatar:hover {
   filter: brightness(1.08);
 }
-.home__settings,
-.home__signout {
-  padding: 0.45rem 0.9rem;
-  font-size: 0.95rem;
-}
-.home__settings {
-  width: 2.75rem;
-  height: 2.75rem;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  display: inline-grid;
-  place-items: center;
-  font-size: 1.45rem;
-  line-height: 1;
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-.home__settings:hover {
-  border-color: transparent;
-  background: transparent;
-}
-
 @media (max-width: 760px) {
   .home__bar {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      'back brand signout'
-      'streak avatar settings';
+      'back brand menu'
+      'streak avatar menu';
     align-items: center;
     justify-items: center;
     gap: 0.45rem 0.65rem;
@@ -132,15 +108,9 @@
   .home__avatar {
     grid-area: avatar;
   }
-  .home__settings {
-    grid-area: settings;
+  .home__user .account-menu {
+    grid-area: menu;
     justify-self: start;
-  }
-  .home__signout {
-    grid-area: signout;
-    justify-self: end;
-    padding: 0.45rem 0.75rem;
-    min-height: 44px;
   }
 }
 
@@ -165,21 +135,9 @@
     content: '←';
     font-size: 1.2rem;
   }
-  .home__settings {
-    width: 2.35rem;
-    height: 2.35rem;
-    min-width: 44px;
-    min-height: 44px;
-    font-size: 1.25rem;
-  }
   .home__avatar {
     width: 2.15rem;
     height: 2.15rem;
-  }
-  .home__signout {
-    font-size: 0.78rem;
-    min-width: 4.65rem;
-    padding: 0.35rem 0.55rem;
   }
 }
 

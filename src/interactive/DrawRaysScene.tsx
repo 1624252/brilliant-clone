@@ -30,6 +30,7 @@ interface DrawRaysSceneProps {
   scene: { objectDistance: number; focalLength: number; objectHeight?: number }
   solved: boolean
   onReadyChange: (ready: boolean) => void
+  onInteraction?: () => void
   onHintChange?: (hint: string) => void
   measures?: MeasureFlags
   resetKey?: number
@@ -143,6 +144,7 @@ export function DrawRaysScene({
   scene,
   solved,
   onReadyChange,
+  onInteraction,
   onHintChange,
   measures,
   resetKey = 0,
@@ -200,6 +202,7 @@ export function DrawRaysScene({
 
   function updateEnd(ray: RayId, next: Point) {
     if (solved) return
+    onInteraction?.()
     const clamped = {
       x: clamp(next.x, -sc.halfWidth + 2, sc.halfWidth - 2),
       y: clamp(next.y, -(sc.halfHeight - 2), sc.halfHeight - 2),

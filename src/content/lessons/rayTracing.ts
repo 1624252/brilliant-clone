@@ -16,8 +16,8 @@ export const rayTracingLesson: LessonDefinition = {
     animation: 'focus',
     paragraphs: [
       'You only need **three special rays** from the top of the object to locate its image.',
-      'For a **convex lens**, real rays may cross on the opposite side of the lens from the object; for a **concave lens**, dotted back-traces meet on the same side as the object.',
-      'Drag each ray close to its correct path and it will snap into place. The requirement turns done only when that ray rule is actually satisfied.',
+      'For a **convex lens**, **real rays** may cross on the opposite side of the lens from the object; for a **concave lens**, **dotted back-traces** meet on the same side as the object.',
+      'Drag each ray close to its correct path and it will **snap into place**. The requirement turns **Done** only when that ray rule is actually satisfied.',
     ],
   },
   steps: [
@@ -28,9 +28,9 @@ export const rayTracingLesson: LessonDefinition = {
         'Convex lens: the candle is beyond **2F**. Draw the three rays until they cross at the image.',
       scene: { objectDistance: 60, focalLength: FOCAL_LENGTH },
       hint:
-        'Use the **F** marks: the **parallel** ray bends through far **F**, the **chief** ray stays straight through the center, and the **focal** ray leaves **parallel**.',
+        'Use the **F** marks: the **parallel** ray bends through **F**, the **chief** ray stays straight through the **center**, and the **focal** ray leaves **parallel**.',
       reveal:
-        'The convex rays cross between **F** and **2F**, making a **real**, inverted, **reduced** image.',
+        'The convex rays cross between **F** and **2F**, making a **real**, **inverted**, **reduced** image.',
     },
     {
       kind: 'plot-rays',
@@ -39,9 +39,9 @@ export const rayTracingLesson: LessonDefinition = {
         'Convex lens: the candle is between **F** and **2F**. Trace the projector case.',
       scene: { objectDistance: 30, focalLength: FOCAL_LENGTH },
       hint:
-        'The rays should cross beyond **2F**. Keep the outgoing ray solid, then use dotted back-traces only if the rays diverge.',
+        'The rays should cross beyond **2F**. Keep the outgoing ray **solid**, then use **dotted back-traces** only if the rays diverge.',
       reveal:
-        'Between **F** and **2F**, a convex lens makes a **real**, inverted, **enlarged** image beyond **2F**.',
+        'Between **F** and **2F**, a convex lens makes a **real**, **inverted**, **enlarged** image beyond **2F**.',
     },
     {
       kind: 'plot-rays',
@@ -50,9 +50,9 @@ export const rayTracingLesson: LessonDefinition = {
         'Concave lens: the candle is between the lens and virtual **F**. Trace the virtual image.',
       scene: { objectDistance: 12, focalLength: -FOCAL_LENGTH, objectHeight: 12 },
       hint:
-        'The **parallel** ray leaves as if it came from **F** on the same side as the object. Follow the colored dotted back-traces there.',
+        'The **parallel** ray leaves as if it came from **F** on the same side as the object. Follow the colored **dotted back-traces** there.',
       reveal:
-        'The concave rays spread out. Their dotted back-traces meet on the same side of the lens as the object, making a **virtual**, **upright**, **reduced** image.',
+        'The concave rays **spread out**. Their **dotted back-traces** meet on the same side of the lens as the object, making a **virtual**, **upright**, **reduced** image.',
     },
     {
       kind: 'plot-rays',
@@ -61,9 +61,9 @@ export const rayTracingLesson: LessonDefinition = {
         'Concave lens: the candle is beyond **2F**. Trace the tiny virtual image near **F**.',
       scene: { objectDistance: 60, focalLength: -FOCAL_LENGTH },
       hint:
-        'For a concave lens, the outgoing rays diverge. The colored dotted back-traces should point back toward **F** on the same side as the object.',
+        'For a **concave** lens, the outgoing rays **diverge**. The colored **dotted back-traces** should point back toward **F** on the same side as the object.',
       reveal:
-        'Farther objects make the concave image smaller and closer to the **virtual focus**, but it remains **virtual**, **upright**, and **reduced**.',
+        'Farther objects make the concave image **smaller** and closer to the **virtual focus**, but it remains **virtual**, **upright**, and **reduced**.',
     },
   ],
 }

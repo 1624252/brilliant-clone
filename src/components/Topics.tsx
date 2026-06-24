@@ -5,6 +5,7 @@ import { deriveChapterStatus } from '../data/lessonStatus'
 import { Settings } from './Settings'
 import { ConfirmDialog } from './ConfirmDialog'
 import { Logo } from './Logo'
+import { AccountMenu } from './AccountMenu'
 import './Topics.css'
 
 interface TopicsProps {
@@ -41,22 +42,10 @@ export function Topics({ displayName, progress, onOpenTopic, onSignOut }: Topics
             {(displayName[0] ?? '?').toUpperCase()}
           </button>
           <span className="topics__name">{displayName}</span>
-          <button
-            type="button"
-            className="btn topics__settings"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Account settings"
-            title="Account settings"
-          >
-            ⚙
-          </button>
-          <button
-            type="button"
-            className="btn topics__signout"
-            onClick={() => setConfirmSignOut(true)}
-          >
-            Sign out
-          </button>
+          <AccountMenu
+            onOpenSettings={() => setSettingsOpen(true)}
+            onSignOut={() => setConfirmSignOut(true)}
+          />
         </div>
       </header>
 

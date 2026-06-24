@@ -40,4 +40,22 @@ describe('Topics landing page', () => {
     fireEvent.click(screen.getByText(topics[0].title))
     expect(onOpenTopic).toHaveBeenCalledWith(topics[0].id)
   })
+
+  it('opens account actions from the menu', () => {
+    const onSignOut = vi.fn()
+    render(
+      <Topics
+        displayName="Patrick"
+        progress={progress}
+        onOpenTopic={() => {}}
+        onSignOut={onSignOut}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /account menu/i }))
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^sign out$/i }))
+    expect(onSignOut).toHaveBeenCalledTimes(1)
+  })
 })

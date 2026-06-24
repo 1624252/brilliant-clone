@@ -94,10 +94,21 @@ describe('ProblemRunner landmark lessons', () => {
     renderStarted(focusLesson, 1)
     expect(screen.getByText(/step 2 of 4/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
 
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^back$/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /previous step/i })).toBeDisabled()
+  })
+
+  it('keeps a solved step complete when the learner experiments afterward', () => {
+    const { container } = renderStarted(focusLesson)
+    setObjectDistance(container, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument()
+
+    setObjectDistance(container, focusLesson, 10)
+
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeInTheDocument()
   })
 
   it('creates concave virtual and upright images immediately', () => {
@@ -192,21 +203,33 @@ describe('ProblemRunner ray tracing', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     expect(screen.queryByText(/you found it/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('status').textContent).toMatch(/not yet/i)
+    expect(
+      screen.getByText(/parallel ray.*opposite side.*object/i, {
+        selector: '.plot-panel__hint',
+      }),
+    ).toBeInTheDocument()
     expect(screen.getAllByText(/Needed/i).length).toBeGreaterThan(0)
   })
 })
 
 describe('ProblemRunner step navigation', () => {
-  it('can go forward again after returning to the previous step', () => {
+  it('can go forward only to a step the learner already reached', () => {
     const { container } = renderStarted(focusLesson, 1)
-    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
-    setObjectDistance(container, focusLesson, 30)
-    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
-    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
+    expect(screen.getByRole('button', { name: /next reached step/i })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: /next reached step/i }))
     expect(screen.getByText(/step 2 of 4/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
+    setObjectDistance(container, focusLesson, 30)
+    fireEvent.click(screen.getByRole('button', { name: /next reached step/i }))
+    expect(screen.getByText(/step 2 of 4/i)).toBeInTheDocument()
 
+    expect(screen.getByRole('button', { name: /next reached step/i })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: /previous step/i }))
     expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument()
   })
 })
