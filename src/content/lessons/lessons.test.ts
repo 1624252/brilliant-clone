@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { lessons, lessonsByTopic } from './index'
-import { isPredictStep } from '../types'
+import { isPlotStep, isPredictStep } from '../types'
 
 describe('lesson roadmap integrity', () => {
   it('has unique lesson ids', () => {
@@ -37,6 +37,21 @@ describe('lesson roadmap integrity', () => {
           expect(step.choices.some((c) => c.correct)).toBe(true)
         }
       }
+    }
+  })
+
+  it('allows every concave-lens drag step to reach zero object distance', () => {
+    const concaveLesson = lessons.find((l) => l.id === 'concave-lenses')
+
+    expect(concaveLesson).toBeDefined()
+    for (const step of concaveLesson?.steps ?? []) {
+      if (isPredictStep(step) || isPlotStep(step)) continue
+      const objectControl = step.controls.find(
+        (control) => control.key === 'objectDistance' && control.type === 'drag-axis',
+      )
+
+      expect(objectControl?.min).toBe(0)
+      expect(objectControl?.snaps).toContain(0)
     }
   })
 })

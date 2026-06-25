@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { makeRng } from './rng'
 import { templatesByTopic } from './templates'
+import { objectControl } from './templates/types'
 import { practiceTopicIds, type PracticeTopicId } from './topics'
 import { isPredictStep, isPlotStep, type InteractiveStep, type StepDefinition } from '../types'
 import { formImage, sliderToFocalLength } from '../../engine'
@@ -38,6 +39,16 @@ function isInteractive(step: StepDefinition): step is InteractiveStep {
 }
 
 describe('practice templates', () => {
+  it('allows concave practice object distances to reach zero', () => {
+    const concaveControl = objectControl(-20)
+    const convexControl = objectControl(20)
+
+    expect(concaveControl.min).toBe(0)
+    expect(concaveControl.snaps).toContain(0)
+    expect(convexControl.min).toBe(5)
+    expect(convexControl.snaps).not.toContain(0)
+  })
+
   for (const topicId of practiceTopicIds) {
     it(`generates valid, solvable problems for "${topicId}"`, () => {
       for (let seed = 0; seed < 200; seed++) {

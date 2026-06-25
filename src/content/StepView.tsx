@@ -84,6 +84,7 @@ export function StepView({
   const [chosenId, setChosenId] = useState<string | null>(null)
   const [plotReady, setPlotReady] = useState(false)
   const [plotHint, setPlotHint] = useState('')
+  const [submittedHint, setSubmittedHint] = useState('')
   const [plotResetKey, setPlotResetKey] = useState(0)
 
   function toggleMeasure(key: keyof MeasureFlags) {
@@ -142,12 +143,16 @@ export function StepView({
 
   function setValue(key: string, value: number) {
     setValues((prev) => ({ ...prev, [key]: value }))
-    setStatus((prev) => (prev === 'correct' ? 'idle' : prev))
+    if (status === 'correct') {
+      setSubmittedHint('')
+      setStatus('idle')
+    }
   }
 
   function check() {
     if (isPredictStep(step) || isPlotStep(step)) return
     const ok = step.success(merged, image)
+    setSubmittedHint(ok ? '' : hintText(step, merged, image))
     setStatus(ok ? 'correct' : 'incorrect')
     onAttempt?.(ok)
   }
@@ -156,7 +161,9 @@ export function StepView({
     if (isPredictStep(step) || isPlotStep(step) || !step.choices) return
     const choice = step.choices.find((c) => c.id === id)
     const ok = !!(choice?.correct && step.success(merged, image))
+    const feedback = choice && !choice.correct ? choice.feedback : hintText(step, merged, image)
     setChosenId(id)
+    setSubmittedHint(ok ? '' : feedback)
     setStatus(ok ? 'correct' : 'incorrect')
     onAttempt?.(ok)
   }
@@ -170,14 +177,22 @@ export function StepView({
 
   function submitPlot() {
     if (!isPlotStep(step)) return
-    setStatus(plotReady ? 'correct' : 'incorrect')
-    onAttempt?.(plotReady)
+    const ok = plotReady
+    setSubmittedHint(
+      ok
+        ? ''
+        : plotHint ||
+            'A ray still breaks its rule. Adjust the endpoints until every requirement below is marked **Done**.',
+    )
+    setStatus(ok ? 'correct' : 'incorrect')
+    onAttempt?.(ok)
   }
 
   function resetPlot() {
     setStatus('idle')
     setPlotReady(false)
     setPlotHint('')
+    setSubmittedHint('')
     setPlotResetKey((key) => key + 1)
   }
 
@@ -226,11 +241,7 @@ export function StepView({
           {promptNearAction && promptBlock}
           {status === 'incorrect' ? (
             <div className="feedback feedback--incorrect feedback--pop" role="status">
-              <strong>Not yet.</strong>{' '}
-              {renderRich(
-                plotHint ||
-                  'A ray still breaks its rule. Adjust the endpoints until every requirement below is marked **Done**.',
-              )}
+              <strong>Not yet.</strong> {renderRich(submittedHint)}
             </div>
           ) : currentSolved ? (
             <div className="feedback feedback--correct" role="status">
@@ -239,9 +250,8 @@ export function StepView({
           ) : (
             <p className="plot-panel__hint">
               {renderRich(
-                plotHint ||
-                  (step.hint ??
-                    'Drag each **ray endpoint** so every ray follows its rule and the requirements are marked **Done**.'),
+                step.hint ??
+                  'Drag each **ray endpoint** so every ray follows its rule and the requirements are marked **Done**.',
               )}
             </p>
           )}
@@ -303,10 +313,7 @@ export function StepView({
           )}
           {status === 'incorrect' && (
             <div className="feedback feedback--incorrect" role="status">
-              <strong>Not yet.</strong>{' '}
-              {interactiveChoice && !interactiveChoice.correct
-                ? renderRich(interactiveChoice.feedback)
-                : renderRich(hintText(step, merged, image))}
+              <strong>Not yet.</strong> {renderRich(submittedHint)}
             </div>
           )}
 

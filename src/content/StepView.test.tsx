@@ -69,4 +69,28 @@ describe('StepView practice API', () => {
     expect(onAttempt).toHaveBeenLastCalledWith(false)
     expect(screen.queryByRole('button', { name: /next question/i })).not.toBeInTheDocument()
   })
+
+  it('updates interactive hints only when checking an answer', () => {
+    const dynamicHintStep: InteractiveStep = {
+      ...interactiveStep,
+      success: () => false,
+      hint: (state) => (state.objectDistance < 20 ? 'Move farther away.' : 'Move closer.'),
+    }
+    render(<StepView step={dynamicHintStep} nextLabel="Next question" onNext={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/move farther away/i)).toBeInTheDocument()
+
+    const range = screen
+      .getAllByRole('slider')
+      .find((el): el is HTMLInputElement => el instanceof HTMLInputElement)
+    expect(range).toBeDefined()
+    fireEvent.change(range!, { target: { value: '30' } })
+
+    expect(screen.getByText(/move farther away/i)).toBeInTheDocument()
+    expect(screen.queryByText(/move closer/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /check answer/i }))
+    expect(screen.getByText(/move closer/i)).toBeInTheDocument()
+  })
 })

@@ -22,16 +22,18 @@ export interface GeneratedProblem {
 export const FOCALS = [12, 15, 18, 20] as const
 
 /** A draggable object-distance control mirroring the one used by the lessons. */
-export function objectControl(focalLength: number, min = 5): Control {
+export function objectControl(focalLength: number, min?: number): Control {
   const f = Math.abs(focalLength)
+  const minDistance = min ?? (focalLength < 0 ? 0 : 5)
+  const snaps = minDistance === 0 ? [0, f, 2 * f, 3 * f] : [f, 2 * f, 3 * f]
   return {
     key: 'objectDistance',
     type: 'drag-axis',
-    min,
+    min: minDistance,
     max: 80,
     step: 0.01,
     label: 'Object distance',
     allowInfinity: true,
-    snaps: [f, 2 * f, 3 * f],
+    snaps,
   }
 }

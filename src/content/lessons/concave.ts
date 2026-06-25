@@ -7,18 +7,16 @@ const FOCAL_LENGTH = -20 // negative -> diverging
 const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
-  min: 5,
+  min: 0,
   max: 80,
   step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
-  snaps: [20, 40, 60],
+  snaps: [0, 20, 40, 60],
 }
 
 const nearLensObjectControl = {
   ...objectControl,
-  min: 0,
-  snaps: [0, 20, 40, 60],
 }
 
 export const concaveLesson: LessonDefinition = {
