@@ -208,8 +208,11 @@ export function DrawRaysScene({
     setTrackedResetKey(resetKey)
     setRays(initialRays(s, plotScene))
     setActiveRay('parallel')
-    draggingRef.current = null
   }
+
+  useEffect(() => {
+    draggingRef.current = null
+  }, [resetKey])
 
   useEffect(() => {
     onReadyChange(checks.all)

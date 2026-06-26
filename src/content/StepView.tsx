@@ -250,7 +250,7 @@ export function StepView({
           ) : (
             <p className="plot-panel__hint">
               {renderRich(
-                step.hint ??
+                (plotHint || step.hint) ??
                   'Drag each **ray endpoint** so every ray follows its rule and the requirements are marked **Done**.',
               )}
             </p>
