@@ -189,6 +189,24 @@ export function Home({
           </div>
         </section>
 
+        <button type="button" className="studio-feature" onClick={onStudio}>
+          <span className="studio-feature__shine" aria-hidden="true" />
+          <span className="studio-feature__icon" aria-hidden="true">
+            <SparkIcon />
+          </span>
+          <span className="studio-feature__text">
+            <span className="studio-feature__badge">New · AI powered</span>
+            <span className="studio-feature__title">AI Simulation Studio</span>
+            <span className="studio-feature__sub">
+              Describe any optics idea — chromatic aberration, a candle through a convex lens — and
+              get a live, interactive simulation built just for you.
+            </span>
+          </span>
+          <span className="studio-feature__chev" aria-hidden="true">
+            →
+          </span>
+        </button>
+
         <ol className="roadmap">
           {status.items.map((item, i) => (
             <RoadmapItem
@@ -209,21 +227,6 @@ export function Home({
             <span className="practice-cta__sub">
               Endless mixed questions that adapt to what you miss — build a streak and climb the
               leaderboard.
-            </span>
-          </span>
-          <span className="practice-cta__chev" aria-hidden="true">
-            →
-          </span>
-        </button>
-
-        <button type="button" className="practice-cta practice-cta--studio" onClick={onStudio}>
-          <span className="practice-cta__icon" aria-hidden="true">
-            AI
-          </span>
-          <span className="practice-cta__text">
-            <span className="practice-cta__title">Simulation Studio</span>
-            <span className="practice-cta__sub">
-              Describe any optics simulation and get a live, interactive version you can play with.
             </span>
           </span>
           <span className="practice-cta__chev" aria-hidden="true">
@@ -314,6 +317,19 @@ function FlameIcon() {
     </svg>
   )
 }
+function SparkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 2l1.8 5.3a4 4 0 0 0 2.9 2.9L22 12l-5.3 1.8a4 4 0 0 0-2.9 2.9L12 22l-1.8-5.3a4 4 0 0 0-2.9-2.9L2 12l5.3-1.8a4 4 0 0 0 2.9-2.9z"
+      />
+      <circle cx="19" cy="5" r="1.6" fill="currentColor" opacity="0.85" />
+      <circle cx="5" cy="18" r="1.2" fill="currentColor" opacity="0.7" />
+    </svg>
+  )
+}
+
 function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">

@@ -48,7 +48,7 @@ describe('buildSandboxDoc', () => {
     const doc = buildSandboxDoc(goodSpec)
     expect(doc).toContain("connect-src 'none'")
     expect(doc).toContain('function Simulation()')
-    expect(doc).toContain('ReactDOM.createRoot')
+    expect(doc).toContain('createRoot')
     expect(doc).toContain('https://unpkg.com')
   })
 
@@ -56,6 +56,56 @@ describe('buildSandboxDoc', () => {
     const doc = buildSandboxDoc({ ...goodSpec, code: 'function Simulation() { return null } // </script>' })
     expect(doc).not.toContain('// </script>')
     expect(doc).toContain('<\\/script>')
+  })
+
+  it('keeps the existing Lab toolkit API for backward compatibility', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    for (const name of ['colors', 'clamp', 'thinLens', 'scene', 'principalRays']) {
+      expect(doc).toContain(name)
+    }
+    // scene mapping helpers the exemplars rely on.
+    expect(doc).toContain('poly: function')
+  })
+
+  it('exposes the new Lab helpers', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    for (const name of ['lerp', 'lensPath', 'ticks', 'arrowPoints', 'chain', 'defs:']) {
+      expect(doc).toContain(name)
+    }
+  })
+
+  it('extends Lab.colors without dropping existing keys', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    for (const key of ['axis:', 'ray:', 'object:', 'image:', 'accent:', 'flame:', 'glass:', 'grid:']) {
+      expect(doc).toContain(key)
+    }
+  })
+
+  it('injects the shared SVG <defs> ids referenced by url(#...)', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    for (const id of ['labGlow', 'labGlowStrong', 'labFlame', 'labGlass']) {
+      expect(doc).toContain(`id="${id}"`)
+    }
+    expect(doc).toContain('<defs>')
+  })
+
+  it('keeps security and mobile harness invariants', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    // CSP / sandbox guardrails must stay intact.
+    expect(doc).toContain("connect-src 'none'")
+    expect(doc).toContain("default-src 'none'")
+    // Clean native slider styling and preserved fade animation.
+    expect(doc).toContain('accent-color: #6cc5ff')
+    expect(doc).toContain('simfade')
+    // Common helpers exposed as bare globals so generated code can call them
+    // unprefixed without crashing (e.g. lerp/clamp), plus React bound explicitly.
+    expect(doc).toContain('window.lerp = lerp')
+    expect(doc).toContain('window.clamp = clamp')
+    // Manual transpile-and-run so compile errors are surfaced (not a silent blank).
+    expect(doc).toContain('Babel.transform')
+    // Error boundary + async error capture so a throw shows a message, not a blank.
+    expect(doc).toContain('getDerivedStateFromError')
+    expect(doc).toContain('unhandledrejection')
   })
 })
 

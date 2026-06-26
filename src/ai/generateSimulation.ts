@@ -10,7 +10,7 @@ interface GenerateSimulationResponse {
  * for the prompt. The OpenAI key stays in Supabase secrets; this only calls the
  * public Edge Function URL. Throws on any failure (no fallback simulation).
  */
-export async function generateSimulation(prompt: string): Promise<SimulationSpec> {
+export async function generateSimulation(prompt: string, signal?: AbortSignal): Promise<SimulationSpec> {
   const functionUrl = import.meta.env.VITE_SUPABASE_GENERATE_SIMULATION_URL
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
   if (!functionUrl) throw new Error('VITE_SUPABASE_GENERATE_SIMULATION_URL is not configured.')
@@ -22,6 +22,7 @@ export async function generateSimulation(prompt: string): Promise<SimulationSpec
       ...(anonKey ? { Authorization: `Bearer ${anonKey}`, apikey: anonKey } : {}),
     },
     body: JSON.stringify({ prompt }),
+    signal,
   })
 
   const data = (await response.json().catch(() => ({}))) as GenerateSimulationResponse
@@ -44,4 +45,33 @@ export async function generateSimulation(prompt: string): Promise<SimulationSpec
   if (!validation.ok) throw new Error(validation.errors.join(' '))
 
   return spec
+}
+
+interface SuggestPromptResponse {
+  idea?: string
+  error?: string
+}
+
+/**
+ * Ask the proxy for a single fresh, fun simulation idea for the topic. Pass an
+ * `avoid` list (recent ideas + example prompts) so suggestions stay varied.
+ */
+export async function suggestSimulationPrompt(topic: string, avoid: string[] = []): Promise<string> {
+  const functionUrl = import.meta.env.VITE_SUPABASE_GENERATE_SIMULATION_URL
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  if (!functionUrl) throw new Error('VITE_SUPABASE_GENERATE_SIMULATION_URL is not configured.')
+
+  const response = await fetch(functionUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(anonKey ? { Authorization: `Bearer ${anonKey}`, apikey: anonKey } : {}),
+    },
+    body: JSON.stringify({ mode: 'idea', topic, avoid }),
+  })
+
+  const data = (await response.json().catch(() => ({}))) as SuggestPromptResponse
+  if (!response.ok) throw new Error(data.error ?? 'Could not suggest an idea.')
+  if (!data.idea || !data.idea.trim()) throw new Error('The AI did not return an idea.')
+  return data.idea.trim()
 }

@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { SimulationStudio } from './SimulationStudio'
-import { generateSimulation } from '../ai/generateSimulation'
+import { generateSimulation, suggestSimulationPrompt } from '../ai/generateSimulation'
 import type { SimulationSpec } from '../ai/simulationContract'
 
 vi.mock('../ai/generateSimulation', () => ({
   generateSimulation: vi.fn(),
+  suggestSimulationPrompt: vi.fn(),
 }))
 
 const mockedGenerate = vi.mocked(generateSimulation)
+const mockedSuggest = vi.mocked(suggestSimulationPrompt)
 
 const spec: SimulationSpec = {
   id: 'chromatic-aberration',
@@ -21,6 +23,7 @@ const spec: SimulationSpec = {
 describe('SimulationStudio', () => {
   beforeEach(() => {
     mockedGenerate.mockReset()
+    mockedSuggest.mockReset()
   })
 
   it('renders a generated simulation on success', async () => {
@@ -50,13 +53,40 @@ describe('SimulationStudio', () => {
     expect(screen.queryByTitle(/interactive simulation/i)).not.toBeInTheDocument()
   })
 
-  it('generates from an example chip', async () => {
+  it('generates a detailed prompt from an example chip', async () => {
     mockedGenerate.mockResolvedValueOnce(spec)
     render(<SimulationStudio topicTitle="Geometric Optics: Lenses" onBack={() => {}} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /chromatic aberration simulation/i }))
+    fireEvent.click(screen.getByRole('button', { name: /convex lens image visualizer/i }))
 
     expect(await screen.findByRole('heading', { name: /chromatic aberration/i })).toBeInTheDocument()
-    expect(mockedGenerate).toHaveBeenCalledWith('Chromatic aberration simulation')
+    expect(mockedGenerate).toHaveBeenCalledTimes(1)
+    expect(mockedGenerate.mock.calls[0][0]).toMatch(/convex lens image visualizer with a candle/i)
+  })
+
+  it('cancels an in-progress generation', () => {
+    mockedGenerate.mockReturnValueOnce(new Promise<SimulationSpec>(() => {}))
+    render(<SimulationStudio topicTitle="Geometric Optics: Lenses" onBack={() => {}} />)
+
+    fireEvent.change(screen.getByRole('textbox', { name: /what do you want to simulate/i }), {
+      target: { value: 'chromatic aberration' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /build simulation/i }))
+
+    const cancel = screen.getByRole('button', { name: /cancel/i })
+    expect(cancel).toBeInTheDocument()
+    fireEvent.click(cancel)
+    expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument()
+  })
+
+  it('fills the prompt with a generated idea', async () => {
+    mockedSuggest.mockResolvedValueOnce('A draggable prism that splits sunlight into a rainbow you can steer.')
+    render(<SimulationStudio topicTitle="Geometric Optics: Lenses" onBack={() => {}} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /generate prompt/i }))
+
+    const textarea = await screen.findByRole('textbox', { name: /what do you want to simulate/i })
+    expect((textarea as HTMLTextAreaElement).value).toMatch(/draggable prism that splits sunlight/i)
+    expect(mockedSuggest).toHaveBeenCalledTimes(1)
   })
 })

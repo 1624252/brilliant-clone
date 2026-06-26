@@ -9,10 +9,20 @@ interactive, animated, and mobile/resizable friendly.
 
 1. The learner enters a prompt in `SimulationStudio` ([src/components/SimulationStudio.tsx](../src/components/SimulationStudio.tsx)).
 2. `generateSimulation` ([src/ai/generateSimulation.ts](../src/ai/generateSimulation.ts)) POSTs the prompt to the Supabase Edge Function URL in `VITE_SUPABASE_GENERATE_SIMULATION_URL`.
-3. The Edge Function ([supabase/functions/generate-simulation/index.ts](../supabase/functions/generate-simulation/index.ts)) calls OpenAI (`gpt-4o`), validates the result, and returns `{ result: { title, description, code } }`.
+3. The Edge Function ([supabase/functions/generate-simulation/index.ts](../supabase/functions/generate-simulation/index.ts)) runs two OpenAI calls: **(1)** expand the short topic into a detailed, structured **plan** with labeled sections — Title, Concept, Scene, Controls, Animation, Physics & accuracy, Result & readouts, Visual style, Layout (fast `gpt-4o-mini`), then **(2)** generate the runnable React simulation from that plan (`gpt-4o`, lean system prompt + prompt→code gold exemplars). It validates the result and returns `{ result: { title, description, code } }`. (If the plan is malformed it falls back to the raw topic for stage 2.)
 4. The client re-validates with `validateSimulationSpec` and renders `SimulationSandbox` ([src/components/SimulationSandbox.tsx](../src/components/SimulationSandbox.tsx)).
 5. The sandbox builds an iframe document with `buildSandboxDoc` and runs the component.
 6. On any failure the Studio shows the error. There is no fallback simulation.
+
+## "Surprise me" (idea mode)
+
+The same Edge Function also serves a lightweight idea generator. The **Surprise me**
+button in the Studio calls `suggestSimulationPrompt` ([src/ai/generateSimulation.ts](../src/ai/generateSimulation.ts)),
+which POSTs `{ mode: 'idea', topic, avoid }` instead of a prompt. The function asks
+OpenAI (higher temperature, ~220 tokens) for a single novel, optics-themed prompt and
+returns `{ idea: string }`. The client sends the example chip labels plus recently
+suggested ideas in `avoid` so suggestions stay fresh and don't repeat. The returned
+idea is dropped into the prompt box for the learner to build (or tweak first).
 
 ## Result Contract
 
@@ -69,7 +79,7 @@ responsive size (`width: min(100%, 960px)`, `height: clamp(420px, 72vh, 760px)`)
   capabilities: `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
   `localStorage`, `sessionStorage`, `indexedDB`, `document.cookie`, dynamic
   `import()`, `window.parent`/`window.top`, `opener`, and `navigator.sendBeacon`.
-- Code size is capped (20k chars) and the component shape is required.
+- Code size is capped (40k chars) and the component shape is required.
 - On any validation or generation failure the Studio shows the error; it never
   substitutes a canned simulation.
 
