@@ -574,3 +574,86 @@ leaderboard/{uid}
 - New route `/topics/:topicId/practice` → `PracticeView`.
 - Entry points: a **Practice problems** card on the roadmap and a **Practice
   problems** button on a lesson's finish screen.
+
+## 22. AI Simulation Studio (Phase 2)
+
+The Simulation Studio lets a learner describe a simulation in plain language and
+get a live, interactive version to play with. Unlike lessons and practice (which
+are deterministic and AI-free), the Studio uses AI to author the simulation, then
+runs the generated code in a locked-down sandbox window.
+
+### 22.1 How it works
+
+- The learner types a prompt (e.g. "chromatic aberration simulation").
+- A server-side OpenAI proxy (Supabase Edge Function `generate-simulation`, with
+  `OPENAI_API_KEY` in Supabase secrets) returns a single self-contained
+  interactive React component as `{ title, description, code }`.
+- The app validates the result and runs it inside a fixed-size, responsive,
+  mobile-friendly sandbox window (an `allow-scripts`-only iframe whose CSP blocks
+  all network access). React and Babel load from a pinned CDN to transpile and run
+  the component.
+- The simulation is fully interactive and animated: working sliders, draggable
+  elements, `requestAnimationFrame` motion, and SVG/Canvas visuals.
+- On any failure the Studio shows the error; there is no canned fallback.
+
+See `docs/AI_SIMULATION_INTERFACE.md` for the full contract and sandbox details.
+
+### 22.2 Example prompts
+
+- **User:** chromatic aberration simulation
+  **Output:** a chromatic aberration simulation with a slider allowing you to
+  adjust the intensity of the effect, and a window next to it showing how it would
+  look on a screen.
+- **User:** image visualizer with a candle, convex lens
+  **Output:** an image-visualizer window on the right showing the displayed image,
+  a screen whose distance you set with a slider, a candle whose distance you set
+  with a slider, and rays to show how the light bends.
+
+### 22.3 Learning-science rationale
+
+The Studio is designed to support how people actually learn, not just to be a
+novelty:
+
+- **Active learning through manipulation.** Learners change parameters (sliders,
+  drags) and immediately see the effect, instead of reading static text. Doing and
+  observing builds intuition far better than passive review.
+- **Inquiry / curiosity-driven learning.** The learner poses their own "what if?"
+  question as the prompt, which raises engagement, ownership, and motivation to
+  understand the answer.
+- **Dual coding and multiple representations.** Simulations pair a visual model
+  (rays, lenses, screens, fringing) with controls and numeric readouts, reinforcing
+  the same concept across verbal, symbolic, and visual channels.
+- **Variable manipulation and hypothesis testing.** Changing one variable at a
+  time (intensity, object distance, focal length) helps learners isolate causes and
+  build accurate causal mental models, surfacing and correcting misconceptions.
+- **Immediate feedback loop.** Real-time visual response shortens the
+  feedback cycle, which is strongly associated with better conceptual understanding
+  and retention.
+- **Lower barrier to exploration.** Generating a tailored sandbox on demand lets
+  learners investigate niche ideas the fixed curriculum does not cover, extending
+  curiosity beyond the lesson roadmap.
+
+**Honest limitation.** The Studio produces an exploratory sandbox, not a graded or
+guaranteed-correct physics authority. It complements — it does not replace — the
+validated lessons and practice, which remain the source of truth for correctness
+and progress.
+
+### 22.4 Functional requirements
+
+- **FR-SIM-1:** Authenticated learners can open the Studio from the topic roadmap.
+- **FR-SIM-2:** A learner can submit a natural-language prompt and receive an
+  interactive generated simulation, or a clear error.
+- **FR-SIM-3:** The OpenAI key is never exposed client-side; generation happens only
+  through the Supabase Edge Function.
+- **FR-SIM-4:** Generated code runs only inside a sandboxed, network-blocked iframe;
+  it cannot access the app origin, cookies, storage, or the network.
+- **FR-SIM-5:** Server and client both reject code that uses forbidden capabilities
+  (network, storage, cookies, frame escape) before it renders.
+- **FR-SIM-6:** The simulation window is fixed-size, responsive, and mobile friendly.
+- **FR-SIM-7:** The Studio is sandbox-only and does not affect lessons, practice,
+  mastery, streaks, or the leaderboard.
+
+### 22.5 Routing & entry points
+
+- New route `/topics/:topicId/studio` → `SimulationStudio`.
+- Entry point: an **AI Simulation Studio** card on the topic roadmap.

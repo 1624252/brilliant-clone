@@ -28,6 +28,21 @@
   border-color: var(--brand);
 }
 
+/* AI Simulation Studio entry card, below the practice card. */
+.practice-cta--studio {
+  margin-top: 0.75rem;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--accent) 16%, var(--bg-elev)),
+    var(--bg-elev)
+  );
+}
+
+.practice-cta--studio .practice-cta__icon {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
 .practice-cta__icon {
   flex: none;
   width: 2.4rem;

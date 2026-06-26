@@ -23,6 +23,8 @@ interface HomeProps {
   onOpen: (lessonId: string) => void
   /** Open the practice problems screen for this topic. */
   onPractice: () => void
+  /** Open the AI Simulation Studio for this topic. */
+  onStudio: () => void
   /** Back to the topics landing page. */
   onBack: () => void
   onSignOut: () => void
@@ -36,6 +38,7 @@ export function Home({
   lessons,
   onOpen,
   onPractice,
+  onStudio,
   onBack,
   onSignOut,
 }: HomeProps) {
@@ -206,6 +209,21 @@ export function Home({
             <span className="practice-cta__sub">
               Endless mixed questions that adapt to what you miss — build a streak and climb the
               leaderboard.
+            </span>
+          </span>
+          <span className="practice-cta__chev" aria-hidden="true">
+            →
+          </span>
+        </button>
+
+        <button type="button" className="practice-cta practice-cta--studio" onClick={onStudio}>
+          <span className="practice-cta__icon" aria-hidden="true">
+            AI
+          </span>
+          <span className="practice-cta__text">
+            <span className="practice-cta__title">Simulation Studio</span>
+            <span className="practice-cta__sub">
+              Describe any optics simulation and get a live, interactive version you can play with.
             </span>
           </span>
           <span className="practice-cta__chev" aria-hidden="true">

@@ -14,7 +14,8 @@
     "coverage": "vitest run --coverage",
     "deploy": "npm run build && firebase deploy --only hosting,firestore:rules",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
-    "deploy:rules": "firebase deploy --only firestore:rules"
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "deploy:supabase:functions": "npx supabase functions deploy generate-simulation --no-verify-jwt --project-ref bflbswscuacqeokuidte"
   },
   "dependencies": {
     "firebase": "^12.15.0",

@@ -18,6 +18,9 @@ coverage
 firebase-debug.log
 firestore-debug.log
 
+# Supabase CLI local state (keep supabase/functions, ignore local link cache)
+supabase/.temp/
+
 # Local env files (never commit real config/secrets); keep the example template
 .env
 .env.*

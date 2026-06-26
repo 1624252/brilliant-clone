@@ -119,6 +119,35 @@ leaderboard/{uid}                displayName, totalCorrect, updatedAt   (public 
 | `npm run deploy` | Build, then deploy Hosting + Firestore rules (needs `firebase login`). |
 | `npm run deploy:hosting` | Build and deploy only Hosting. |
 | `npm run deploy:rules` | Deploy only the Firestore security rules. |
+| `npm run deploy:supabase:functions` | Deploy the Supabase Edge Function that proxies OpenAI for the Simulation Studio. |
+
+## AI Simulation Studio
+
+The Simulation Studio turns a natural-language prompt into a live, interactive
+React simulation that runs in a locked-down sandbox window. See
+[`docs/AI_SIMULATION_INTERFACE.md`](./docs/AI_SIMULATION_INTERFACE.md) for the full
+contract and security model.
+
+The OpenAI call is made only by a server-side Supabase Edge Function, never the
+browser. Configure it as follows:
+
+1. Store the private key as a Supabase secret (never in `.env`):
+
+   ```bash
+   npx supabase secrets set OPENAI_API_KEY=sk-...
+   ```
+
+2. Deploy the function: `npm run deploy:supabase:functions`.
+3. Point the app at it via `.env` (browser-visible, not secret):
+
+   ```bash
+   VITE_SUPABASE_GENERATE_SIMULATION_URL=https://<project-ref>.functions.supabase.co/generate-simulation
+   VITE_SUPABASE_ANON_KEY=<your-public-supabase-anon-key>
+   ```
+
+Generated code runs in an `allow-scripts`-only iframe whose CSP blocks all network
+access, so simulations can animate and respond to input but cannot reach the app,
+cookies, storage, or the network.
 
 ## Testing
 

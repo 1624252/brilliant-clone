@@ -17,6 +17,7 @@ import { Home } from './components/Home'
 import { Topics } from './components/Topics'
 import { LessonView } from './components/LessonView'
 import { PracticeView } from './components/PracticeView'
+import { SimulationStudio } from './components/SimulationStudio'
 import { Logo } from './components/Logo'
 import { chapters, lessons, lessonsByTopic } from './content'
 import './App.css'
@@ -84,6 +85,7 @@ function HomeRoute({ user, progress }: { user: User; progress: ProgressState }) 
       lessons={topicLessons}
       onOpen={(id) => navigate(`/lessons/${id}`)}
       onPractice={() => navigate(`/topics/${topicId}/practice`)}
+      onStudio={() => navigate(`/topics/${topicId}/studio`)}
       onBack={() => navigate('/')}
       // After sign-out the auth guard redirects to /login on its own.
       onSignOut={() => void logout()}
@@ -102,6 +104,20 @@ function PracticeRoute({ user, progress }: { user: User; progress: ProgressState
       uid={user.uid}
       displayName={displayName}
       progress={progress}
+      onBack={() => navigate(`/topics/${topicId}`)}
+    />
+  )
+}
+
+function StudioRoute() {
+  const { topicId } = useParams()
+  const navigate = useNavigate()
+  const selectedChapter = chapters.find((candidate) => candidate.id === topicId)
+  const topicLessons = topicId ? lessonsByTopic[topicId] : undefined
+  if (!topicId || !topicLessons || !selectedChapter) return <Navigate to="/" replace />
+  return (
+    <SimulationStudio
+      topicTitle={selectedChapter.title}
       onBack={() => navigate(`/topics/${topicId}`)}
     />
   )
@@ -185,6 +201,7 @@ function App() {
           path="/topics/:topicId/practice"
           element={<PracticeRoute user={user!} progress={progress} />}
         />
+        <Route path="/topics/:topicId/studio" element={<StudioRoute />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
