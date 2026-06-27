@@ -161,7 +161,14 @@ export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) 
             />
             <div className="studio__actions">
               <button type="submit" className="btn btn--primary" disabled={loading || !prompt.trim()}>
-                {loading ? 'Building…' : 'Build simulation'}
+                {loading ? (
+                  <>
+                    <span className="studio__spinner studio__spinner--inline" aria-hidden="true" />
+                    Building…
+                  </>
+                ) : (
+                  'Build simulation'
+                )}
               </button>
               <button
                 type="button"
@@ -170,7 +177,14 @@ export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) 
                 disabled={loading || suggesting}
                 title="Generate a fresh optics simulation prompt"
               >
-                {suggesting ? 'Generating…' : '✨ Generate prompt'}
+                {suggesting ? (
+                  <>
+                    <span className="studio__spinner studio__spinner--inline" aria-hidden="true" />
+                    Generating…
+                  </>
+                ) : (
+                  '✨ Generate prompt'
+                )}
               </button>
             </div>
           </form>

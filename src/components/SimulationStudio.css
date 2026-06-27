@@ -133,6 +133,14 @@
   align-items: center;
 }
 
+/* Keep the spinner and label centered on a single line inside the buttons. */
+.studio__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
 .studio__surprise {
   border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
   background: color-mix(in srgb, var(--accent) 16%, var(--bg-elev));
@@ -212,6 +220,15 @@
   border-top-color: var(--brand);
   animation: studio-spin 0.7s linear infinite;
   flex: none;
+}
+
+/* Inline spinner for buttons: inherits the button's text color so it stays
+   readable on both the primary and the accent button. */
+.studio__spinner--inline {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
 }
 
 @keyframes studio-spin {
