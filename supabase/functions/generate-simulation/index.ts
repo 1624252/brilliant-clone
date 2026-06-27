@@ -518,23 +518,25 @@ const systemPrompt = [
   exampleTelescope,
 ].join('\n')
 
-// Short, playful "Surprise me" idea generator. Returns just a one-line prompt
-// the learner can build, kept in the optics domain and novel vs. an avoid list.
+// "Generate prompt" idea generator. Returns one clean, well-posed build request
+// for a CANONICAL lenses/optics simulation — concrete and textbook-accurate, not
+// exotic — kept fresh against an avoid list.
 const ideaSystemPrompt = [
-  'You are a witty physics teacher brainstorming ONE genuinely COOL, UNIQUE interactive optics simulation a learner could build. Return ONLY JSON: {"idea": string}.',
-  'Requirements:',
-  '- One or two concrete sentences (max ~200 chars), phrased as a build request (what to simulate), about LENSES & OPTICS.',
-  '- Pick a SPECIFIC, vivid, real-world or playful scenario with a memorable object/setting — not a bland textbook phrase. Name the optical element (convex/concave lens, prism, magnifier, telescope, microscope, eye, camera, projector, raindrop, water surface, fiber, Fresnel lens), an interactive control (a slider or a draggable), AND the payoff the learner sees.',
-  '- Buildable as a small React + SVG diagram with sliders and animated rays — NOT a photo or video.',
-  '- Be NOVEL and surprising: choose a DIFFERENT scenario, object, and twist from anything in the AVOID list. Lean into fun, concrete hooks.',
-  'NEVER produce a bland, generic idea like "virtual image of a tree" or "image formed by a lens" — those are boring. Always give it a specific, cool hook with a real object and a satisfying thing to watch happen.',
-  'Examples of the vibe (do NOT copy):',
-  '- "Point a backyard telescope at Saturn: drag the eyepiece focal length and watch the rings snap from blurry to razor-sharp as the two lenses align."',
-  '- "A dewdrop acting as a tiny lens over an ant: slide the droplet size and watch the ant balloon up, then flip upside-down past the focus."',
-  '- "Fix blurry vision: an eye that cannot focus a candle on its retina until you drag a corrective lens into place."',
-  '- "A glass prism in a sunbeam: rotate it and watch white light fan into a rainbow, with violet bending the most."',
-  '- "A cinema projector throwing a tiny film frame onto a huge screen: slide the screen distance to find the one sharp, inverted image."',
-  '- "A lighthouse Fresnel lens turning a bare bulb into a tight beam: drag the bulb through the focus and watch the beam converge, collimate, then spread."',
+  'You are an optics teacher proposing ONE clear, well-posed interactive LENSES & OPTICS simulation a learner could build. Return ONLY JSON: {"idea": string}.',
+  'The idea MUST be a CANONICAL geometric-optics topic — the kind found in a physics textbook chapter on lenses and light. Pick from (or stay close to) these standard topics: convex (converging) lens image formation, concave (diverging) lens image formation, the thin-lens equation, ray tracing with the three principal rays, magnification, a magnifying glass (virtual image inside F), chromatic aberration, prism dispersion / a rainbow, a refracting telescope (two lenses), a compound microscope, the human eye and corrective lenses (myopia/hyperopia), a camera focusing, total internal reflection / critical angle, refraction at a flat surface (Snell\'s law), a Fresnel lens, or a spherical mirror.',
+  'Format requirements:',
+  '- One or two concrete sentences (max ~220 chars), phrased as a BUILD REQUEST that describes what to simulate.',
+  '- Name the optical element (lens/prism/mirror/eye/...), the interactive control(s) (1-2 sliders, e.g. object distance, focal length, dispersion, angle), AND the visible result (the formed image, the foci, the dispersed colors, a projection on a screen, etc.).',
+  '- Must be physically standard and buildable as a React + SVG diagram with sliders and rays — NOT a photo, video, or whimsical/biological gimmick.',
+  '- Vary the TOPIC from anything in the AVOID list, but stay within the canonical topics above. Do NOT invent exotic scenarios (no insect/compound eyes, no fictional setups). Prefer clarity and accuracy over cleverness.',
+  'GOOD examples (match this clean, concrete style; do NOT copy verbatim):',
+  '- "Chromatic aberration: a convex lens splitting white light into red, green, and blue foci at slightly different points, with a slider for dispersion intensity and a preview panel showing the colored edge fringing on a screen."',
+  '- "Convex lens image formation: a candle outside 2F forming a real, inverted image, with sliders for object distance and focal length, the principal ray diagram, and a screen showing the projected image."',
+  '- "Concave lens: a diverging lens forming a virtual, upright, reduced image of an arrow, with an object-distance slider, dashed back-traced rays, and live image-distance and magnification readouts."',
+  '- "Prism dispersion: white light entering a triangular glass prism and fanning into a spectrum, with a slider for the incidence angle, showing violet bending the most and red the least."',
+  '- "Refracting telescope: an objective and an eyepiece lens on one axis, with sliders for each focal length and their separation, tracing parallel rays from a distant star to show the angular magnification."',
+  '- "Magnifying glass: a convex lens with the object inside the focal length, sliders for object distance and focal length, showing the enlarged upright virtual image via dashed back-traced rays."',
+  'BAD examples (never produce these — too exotic or vague): "a dragonfly\'s multifaceted compound eyes merging images of a flower"; "image formed by a lens"; anything with insects, creatures, or fictional optics.',
   'No preamble and no markdown — just the JSON object.',
 ].join('\n')
 
@@ -605,8 +607,8 @@ Deno.serve(async (req) => {
 
       const ideaRes = await openAiChat(apiKey, {
         model: 'gpt-4o',
-        temperature: 1.1,
-        top_p: 0.95,
+        temperature: 0.85,
+        top_p: 0.9,
         max_tokens: 220,
         response_format: { type: 'json_object' },
         messages: [
