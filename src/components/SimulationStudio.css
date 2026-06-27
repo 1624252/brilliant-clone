@@ -182,22 +182,6 @@
   transform: none;
 }
 
-.studio__abilities {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.studio__abilities span {
-  padding: 0.24rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--text-dim);
-  font-size: 0.76rem;
-  font-weight: 750;
-}
-
 .studio__panel {
   display: flex;
   flex-direction: column;

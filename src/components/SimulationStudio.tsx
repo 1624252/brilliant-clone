@@ -39,14 +39,6 @@ const examples = [
   },
 ]
 
-const abilities = [
-  'React + TypeScript',
-  'Interactive controls',
-  'Live animation',
-  'Mobile friendly',
-  'Resizable window',
-]
-
 export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) {
   const [prompt, setPrompt] = useState('')
   const [generated, setGenerated] = useState<GeneratedState | null>(null)
@@ -198,12 +190,6 @@ export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) 
               >
                 {example.label}
               </button>
-            ))}
-          </div>
-
-          <div className="studio__abilities" aria-label="Simulation abilities">
-            {abilities.map((ability) => (
-              <span key={ability}>{ability}</span>
             ))}
           </div>
         </section>
