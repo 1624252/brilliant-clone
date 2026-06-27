@@ -52,6 +52,23 @@ describe('buildSandboxDoc', () => {
     expect(doc).toContain('https://unpkg.com')
   })
 
+  it('transpiles TypeScript + JSX in the sandbox (strips types, keeps JSX)', () => {
+    const doc = buildSandboxDoc(goodSpec)
+    // Babel must run the typescript preset (TSX) so generated code can use types.
+    expect(doc).toContain("'typescript'")
+    expect(doc).toContain('isTSX')
+    expect(doc).toContain("filename: 'simulation.tsx'")
+  })
+
+  it('accepts a typed Simulation component', () => {
+    const tsSpec: SimulationSpec = {
+      ...goodSpec,
+      code: 'function Simulation(): JSX.Element { const [n, setN] = useState<number>(0); return <button onClick={() => setN(n + 1)}>{n}</button> }',
+    }
+    expect(validateSimulationSpec(tsSpec).ok).toBe(true)
+    expect(buildSandboxDoc(tsSpec)).toContain('useState<number>(0)')
+  })
+
   it('escapes closing script tags in generated code', () => {
     const doc = buildSandboxDoc({ ...goodSpec, code: 'function Simulation() { return null } // </script>' })
     expect(doc).not.toContain('// </script>')

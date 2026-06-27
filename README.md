@@ -123,8 +123,10 @@ leaderboard/{uid}                displayName, totalCorrect, updatedAt   (public 
 
 ## AI Simulation Studio
 
-The Simulation Studio turns a natural-language prompt into a live, interactive
-React simulation that runs in a locked-down sandbox window. See
+The Simulation Studio turns a natural-language optics prompt into a live,
+interactive React + TypeScript simulation that runs in a locked-down sandbox
+window: it first enriches the prompt into a design brief, then generates the
+component (TSX, transpiled in-sandbox by Babel). See
 [`docs/AI_SIMULATION_INTERFACE.md`](./docs/AI_SIMULATION_INTERFACE.md) for the full
 contract and security model.
 

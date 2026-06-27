@@ -1,15 +1,15 @@
 # AI Simulation Studio Interface
 
 The Simulation Studio lets a learner describe a simulation in plain language. A
-server-side OpenAI proxy returns a single, self-contained interactive React
-component, and the app runs it live inside a locked-down sandbox window that is
-interactive, animated, and mobile/resizable friendly.
+server-side OpenAI proxy returns a single, self-contained interactive React +
+TypeScript component, and the app runs it live inside a locked-down sandbox window
+that is interactive, animated, and mobile/resizable friendly.
 
 ## Flow
 
 1. The learner enters a prompt in `SimulationStudio` ([src/components/SimulationStudio.tsx](../src/components/SimulationStudio.tsx)).
 2. `generateSimulation` ([src/ai/generateSimulation.ts](../src/ai/generateSimulation.ts)) POSTs the prompt to the Supabase Edge Function URL in `VITE_SUPABASE_GENERATE_SIMULATION_URL`.
-3. The Edge Function ([supabase/functions/generate-simulation/index.ts](../supabase/functions/generate-simulation/index.ts)) runs two OpenAI calls: **(1)** expand the short topic into a detailed, structured **plan** with labeled sections — Title, Concept, Scene, Controls, Animation, Physics & accuracy, Result & readouts, Visual style, Layout (fast `gpt-4o-mini`), then **(2)** generate the runnable React simulation from that plan (`gpt-4o`, lean system prompt + prompt→code gold exemplars). It validates the result and returns `{ result: { title, description, code } }`. (If the plan is malformed it falls back to the raw topic for stage 2.)
+3. The Edge Function ([supabase/functions/generate-simulation/index.ts](../supabase/functions/generate-simulation/index.ts)) runs two OpenAI calls: **(1)** expand the short topic into a detailed, structured **plan** with labeled sections — Title, Concept, Scene, Controls, Animation, Physics & accuracy, Result & readouts, Visual style, Layout (fast `gpt-4o-mini`), then **(2)** generate the runnable React + TypeScript (TSX) simulation from that plan (`gpt-4o`, lean system prompt + prompt→code gold exemplars). It validates the result and returns `{ result: { title, description, code } }`. (If the plan is malformed it falls back to the raw topic for stage 2.)
 4. The client re-validates with `validateSimulationSpec` and renders `SimulationSandbox` ([src/components/SimulationSandbox.tsx](../src/components/SimulationSandbox.tsx)).
 5. The sandbox builds an iframe document with `buildSandboxDoc` and runs the component.
 6. On any failure the Studio shows the error. There is no fallback simulation.
@@ -32,18 +32,21 @@ OpenAI returns one JSON object:
 {
   "title": "Chromatic Aberration",
   "description": "Adjust the dispersion intensity and see the fringing on a screen.",
-  "code": "function Simulation() { /* JSX using hooks; no imports */ }"
+  "code": "function Simulation() { /* React + TSX using hooks; no imports */ }"
 }
 ```
 
 ### Code rules
 
-- `code` must define `function Simulation() { ... }` returning JSX.
+- `code` must define `function Simulation() { ... }` returning JSX (TSX).
+- **React + TypeScript (TSX).** Types are stripped at runtime by Babel (no
+  type-checking), so light annotations are welcome but optional and must never
+  change behavior. Use `x as T` for casts, never angle-bracket `<T>` casts (they
+  are ambiguous with JSX in `.tsx`).
 - No imports, exports, modules, or `require`. `React` and `ReactDOM` are globals.
 - Hooks are pre-destructured and in scope: `useState`, `useEffect`, `useRef`,
   `useMemo`, `useCallback`, `useLayoutEffect`, `Fragment`.
 - The host mounts the component; generated code must not call `ReactDOM` itself.
-- Plain JSX/JavaScript only (no TypeScript types).
 - Must fill 100% of the window, be responsive (flex/grid, SVG `viewBox`), and use
   real `<input type="range">` sliders, `requestAnimationFrame` for motion, and
   SVG/Canvas for visuals.
@@ -68,8 +71,12 @@ frame-src 'none';
 
 `connect-src 'none'` blocks all network/exfiltration while still allowing rich
 local animation and input. React 18 (UMD) and Babel standalone load from a pinned
-CDN (`unpkg.com`); Babel transpiles the JSX at runtime. The window is a fixed,
-responsive size (`width: min(100%, 960px)`, `height: clamp(420px, 72vh, 760px)`).
+CDN (`unpkg.com`); Babel transpiles the **TypeScript + JSX** at runtime
+(`presets: [['typescript', { isTSX: true, allExtensions: true }], 'react']`), so a
+syntax or type-strip error surfaces a clear message instead of a blank window. The
+window is responsive (`max-width: 960px`, `height: clamp(420px, 72vh, 760px)`),
+can be drag-resized by its bottom edge, and has an **Expand** toggle that fills the
+viewport (handy on phones).
 
 ## Security Model
 

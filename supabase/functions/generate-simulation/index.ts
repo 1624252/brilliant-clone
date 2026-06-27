@@ -473,11 +473,11 @@ const exampleTelescope = [
 ].join('\n')
 
 const systemPrompt = [
-  'You build ONE complete, interactive React simulation about LENSES & OPTICS. Return ONLY JSON: {"title": string, "description": string, "code": string} and nothing else.',
+  'You build ONE complete, interactive React + TypeScript (TSX) simulation about LENSES & OPTICS. Return ONLY JSON: {"title": string, "description": string, "code": string} and nothing else.',
   '',
   'CONTRACT',
-  '- code defines `function Simulation() { ... }` returning JSX. Do NOT render or call ReactDOM yourself; the host mounts <Simulation/>.',
-  '- Plain JavaScript + JSX ONLY. NO TypeScript: no type annotations (no ": number"), no generics (no useState<number>()), no "as" casts, no interfaces/types. No import / export / require. Any of these cause a compile error and a blank screen.',
+  '- code defines `function Simulation() { ... }` returning JSX (TSX). Do NOT render or call ReactDOM yourself; the host mounts <Simulation/>.',
+  '- Write React + TypeScript (TSX). Types are STRIPPED at runtime (Babel, no type-checking), so light annotations are welcome but optional and must never change behavior. Prefer well-typed state and helpers (e.g. useState<number>(0), type Vec = [number, number]). Use "x as T" for casts, NEVER angle-bracket <T> casts (ambiguous with JSX). NO import / export / require — React and the toolkit are already in scope.',
   '- React hooks are in scope as bare names: useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, Fragment.',
   '',
   'TOOLKIT (already in scope — use it for correct physics; do not reinvent it or reference anything not listed here)',
@@ -501,7 +501,7 @@ const systemPrompt = [
   '',
   'SCOPE: stay in LENSES & OPTICS (lenses, rays, images, focal points, magnification, aberration, telescopes, microscopes, eyes, cameras, prisms). Within that, build whatever the user asks, creatively.',
   '',
-  'GOLD EXAMPLES — each item is a PROMPT followed by exactly the code you should generate for it (the five course lessons, plus chromatic and multi-lens). Study how each prompt maps to complete, correct, full-bleed, animated code with labels and readouts, then produce code of this same quality and structure for the user request (adapt to it; do not copy verbatim). For ANY multi-lens system (telescope/microscope/eye), copy the telescope approach — always draw EVERY lens and the bending ray bundle, never just a single image marker.',
+  'GOLD EXAMPLES — each item is a PROMPT followed by exactly the code you should generate for it (the five course lessons, plus chromatic and multi-lens). They are written in plain JS, which is valid TypeScript; match their quality and structure and feel free to add light TypeScript types. Study how each prompt maps to complete, correct, full-bleed, animated code with labels and readouts, then produce code of this same quality for the user request (adapt to it; do not copy verbatim). For ANY multi-lens system (telescope/microscope/eye), copy the telescope approach — always draw EVERY lens and the bending ray bundle, never just a single image marker.',
   'PROMPT: "Convex lens image visualizer with a candle. Sliders for object distance, focal length, and screen position; trace the principal rays; show a real inverted image outside F and a virtual upright image inside F; project the image on a movable screen with focus blur plus a preview panel; readouts for image distance and magnification." CODE TO GENERATE:',
   exampleComponent,
   'PROMPT: "Concave (diverging) lens forming the image of a candle, with an object-distance slider and a lens-strength slider. Show that the image is always virtual, upright, and reduced on the same side as the object, using diverging rays with dashed back-traces; readouts for image distance and magnification." CODE TO GENERATE:',
@@ -544,7 +544,7 @@ const ideaSystemPrompt = [
 // which the code model then implements. A structured plan yields nicer, more
 // accurate results than a loose paragraph.
 const designSystemPrompt = [
-  'A learner gives you a SHORT optics TOPIC (e.g. "chromatic aberration", "convex lens", "telescope"). Act as an expert optics teacher AND interface designer and write a DETAILED PLAN for ONE interactive React + SVG simulation of that topic. Return ONLY JSON: {"brief": string}, where brief is the full plan written as labeled sections separated by " | ".',
+  'A learner gives you a SHORT optics TOPIC (e.g. "chromatic aberration", "prism", "convex lens", "telescope"). Act as an expert optics teacher AND interface designer and ENRICH it into a DETAILED PLAN for ONE interactive, informative React + TypeScript + SVG simulation of that topic (rays, sliders, lenses, projections, candles, screens — whatever the concept needs). Return ONLY JSON: {"brief": string}, where brief is the full plan written as labeled sections separated by " | ".',
   'The plan MUST contain ALL of these labeled sections, each concrete and specific:',
   '- Title: a short, descriptive title.',
   '- Concept: one sentence on what the learner should understand.',

@@ -584,14 +584,16 @@ runs the generated code in a locked-down sandbox window.
 
 ### 22.1 How it works
 
-- The learner types a prompt (e.g. "chromatic aberration simulation").
+- The learner types a short optics prompt (e.g. "chromatic aberration", "prism").
 - A server-side OpenAI proxy (Supabase Edge Function `generate-simulation`, with
-  `OPENAI_API_KEY` in Supabase secrets) returns a single self-contained
-  interactive React component as `{ title, description, code }`.
-- The app validates the result and runs it inside a fixed-size, responsive,
-  mobile-friendly sandbox window (an `allow-scripts`-only iframe whose CSP blocks
-  all network access). React and Babel load from a pinned CDN to transpile and run
-  the component.
+  `OPENAI_API_KEY` in Supabase secrets) runs **two** calls: it first **enriches**
+  the prompt into a detailed design brief, then **generates** a single
+  self-contained interactive React + TypeScript (TSX) component as
+  `{ title, description, code }`.
+- The app validates the result and runs it inside a responsive, mobile-friendly,
+  drag-resizable / expandable sandbox window (an `allow-scripts`-only iframe whose
+  CSP blocks all network access). React and Babel load from a pinned CDN; Babel
+  transpiles the TypeScript + JSX and runs the component.
 - The simulation is fully interactive and animated: working sliders, draggable
   elements, `requestAnimationFrame` motion, and SVG/Canvas visuals.
 - On any failure the Studio shows the error; there is no canned fallback.

@@ -19,8 +19,14 @@
   font-weight: 800;
 }
 
-/* Fixed, responsive window. Width fills the column up to a max; height scales
-   with the viewport but stays within sensible bounds on phones and desktops. */
+.sim-sandbox__controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Responsive window. Width fills the column up to a max; height scales with the
+   viewport but stays within sensible bounds on phones and desktops. Users can
+   drag the bottom edge to resize it (resize handle needs overflow != visible). */
 .sim-sandbox__window {
   width: 100%;
   max-width: 960px;
@@ -31,6 +37,30 @@
   overflow: hidden;
   background: #0b1020;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  resize: vertical;
+  min-height: 320px;
+}
+
+/* Expanded: take over the viewport so the sim has maximum room (great on a
+   phone in particular). The bar stays accessible above it. */
+.sim-sandbox--expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0.6rem;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--bg) 92%, #000);
+  backdrop-filter: blur(6px);
+}
+
+.sim-sandbox--expanded .sim-sandbox__window {
+  max-width: none;
+  height: 100%;
+  flex: 1;
+  resize: none;
 }
 
 .sim-sandbox__frame {

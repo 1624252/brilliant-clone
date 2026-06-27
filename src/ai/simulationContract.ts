@@ -25,7 +25,7 @@ export interface SimulationSpec {
   title: string
   description: string
   prompt: string
-  /** Self-contained component source defining `function Simulation()` using JSX. */
+  /** Self-contained component source defining `function Simulation()` in React + TSX. */
   code: string
 }
 
@@ -398,9 +398,15 @@ export function buildSandboxDoc(spec: SimulationSpec): string {
     }
     try {
       var src = document.getElementById('sim-src').textContent;
-      // Transpile JSX -> JS HERE so a syntax error (stray TS types, typos, import,
-      // etc.) is caught and shown clearly instead of failing silently / blank.
-      var out = Babel.transform(src, { presets: ['react'], sourceType: 'unambiguous', filename: 'simulation.jsx' }).code;
+      // Transpile TypeScript + JSX -> JS HERE so a syntax error (typo, import,
+      // bad type, etc.) is caught and shown clearly instead of failing silently.
+      // preset-typescript only STRIPS types (no type-checking), so loose/imperfect
+      // annotations still run. isTSX keeps JSX parsing on; use "as" not <T> casts.
+      var out = Babel.transform(src, {
+        presets: [['typescript', { isTSX: true, allExtensions: true }], 'react'],
+        sourceType: 'unambiguous',
+        filename: 'simulation.tsx'
+      }).code;
       // Evaluate with React, the hooks, and the Lab toolkit in scope. Other bare
       // helpers (lerp, clamp, scene, ...) resolve via window globals.
       var factory = new Function(

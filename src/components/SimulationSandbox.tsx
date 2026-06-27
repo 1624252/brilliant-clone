@@ -12,15 +12,26 @@ interface SimulationSandboxProps {
 // freely but cannot reach out anywhere.
 export function SimulationSandbox({ spec }: SimulationSandboxProps) {
   const [reloadKey, setReloadKey] = useState(0)
+  const [expanded, setExpanded] = useState(false)
   const srcDoc = buildSandboxDoc(spec)
 
   return (
-    <div className="sim-sandbox">
+    <div className={`sim-sandbox${expanded ? ' sim-sandbox--expanded' : ''}`}>
       <div className="sim-sandbox__bar">
         <span className="sim-sandbox__label">Interactive simulation</span>
-        <button type="button" className="btn" onClick={() => setReloadKey((key) => key + 1)}>
-          Restart
-        </button>
+        <div className="sim-sandbox__controls">
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setExpanded((value) => !value)}
+            aria-pressed={expanded}
+          >
+            {expanded ? 'Collapse' : 'Expand'}
+          </button>
+          <button type="button" className="btn" onClick={() => setReloadKey((key) => key + 1)}>
+            Restart
+          </button>
+        </div>
       </div>
       <div className="sim-sandbox__window">
         <iframe

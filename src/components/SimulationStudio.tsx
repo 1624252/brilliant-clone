@@ -39,7 +39,13 @@ const examples = [
   },
 ]
 
-const abilities = ['Interactive controls', 'Live animation', 'Mobile friendly', 'Resizable window']
+const abilities = [
+  'React + TypeScript',
+  'Interactive controls',
+  'Live animation',
+  'Mobile friendly',
+  'Resizable window',
+]
 
 export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) {
   const [prompt, setPrompt] = useState('')
@@ -143,8 +149,8 @@ export function SimulationStudio({ topicTitle, onBack }: SimulationStudioProps) 
           </p>
           <h1>Describe a simulation. We build an interactive version you can play with.</h1>
           <p>
-            Type an idea and the studio generates a live, animated, mobile-friendly simulation with
-            working controls.
+            Type an optics idea and the studio enriches it into a design, then generates a live React
+            + TypeScript simulation — animated, mobile-friendly, and resizable — with working controls.
           </p>
           <p className="studio__disclaimer" role="note">
             Heads up: this is an experimental feature that is still under active development.
