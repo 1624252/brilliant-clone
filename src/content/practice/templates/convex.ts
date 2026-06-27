@@ -12,6 +12,7 @@ const TARGETS: Target[] = ['real', 'virtual', 'upright', 'inverted']
 export const convexImageTemplate: PracticeTemplate = {
   id: 'convex-image-type',
   topicId: 'convex-images',
+  difficulty: 2,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const target = rng.pick(TARGETS)

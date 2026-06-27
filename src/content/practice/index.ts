@@ -10,8 +10,20 @@ export { makeRng, liveRng, type Rng } from './rng'
 export {
   selectNextTopic,
   topicWeight,
+  retrievalWeight,
+  spacingWeight,
   type MasteryLike,
   type TopicMasteryLike,
 } from './select'
+export {
+  MAX_BOX,
+  reviewGap,
+  nextBox,
+  isMastered,
+  targetDifficulty,
+  masteryLevel,
+  type Difficulty,
+  type MasteryLevel,
+} from './scheduling'
 export { generateProblem, templatesByTopic, allTemplates } from './templates'
 export type { PracticeTemplate, GeneratedProblem } from './templates/types'

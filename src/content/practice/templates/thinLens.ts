@@ -7,6 +7,7 @@ import { FOCALS, objectControl, type PracticeTemplate } from './types'
 const magnifier: PracticeTemplate = {
   id: 'thin-lens-magnifier',
   topicId: 'thin-lens',
+  difficulty: 1,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)
@@ -31,6 +32,7 @@ const magnifier: PracticeTemplate = {
 const projector: PracticeTemplate = {
   id: 'thin-lens-projector',
   topicId: 'thin-lens',
+  difficulty: 2,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)
@@ -54,6 +56,7 @@ const projector: PracticeTemplate = {
 const sameSize: PracticeTemplate = {
   id: 'thin-lens-2f-same-size',
   topicId: 'thin-lens',
+  difficulty: 3,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)
@@ -83,6 +86,7 @@ const sameSize: PracticeTemplate = {
 const realReduced: PracticeTemplate = {
   id: 'thin-lens-real-reduced',
   topicId: 'thin-lens',
+  difficulty: 3,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)

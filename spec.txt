@@ -77,3 +77,43 @@ We test on your deployed app. Make it hold up under load.
 Depth Over Breadth
 This is the rule that decides Phase 1. We would rather see five excellent lessons that build on each other in one subject than thirty thin lessons spread across many. Pick a subject, map a real learning path through it, and make each lesson teach. A learner should be able to start your course knowing little and come out understanding something real. Breadth is easy and forgettable. Depth is what makes Brilliant Brilliant.
 
+Phase 2: AI Features (by Friday)
+Only start this once the MVP teaches well on its own. Phase 2 has two parts: decide, then build.
+Decide. Look at your app and your subject and pick the AI features that genuinely help. Do not bolt on a chatbot because everyone has one. Write down what you chose and why. 
+
+Build. Implement the features you chose. Ground every AI feature in the lesson's structured state, not raw text. Verify anything checkable against the subject's logic, and for math use an engine like SymPy or math.js so the AI never gives a wrong answer. The MVP must keep working with AI turned off, so build these as additions, not replacements.
+
+Document your decision in the Brainlift: what you considered, what you shipped, and what you deliberately left out.
+Phase 3: Learning Science (by Sunday)
+Now make the learning actually stick. Phase 3 layers evidence-based techniques on top of the working app. Pick the ones that fit your subject and implement them for real, not as buzzwords.
+Retrieval practice: make learners recall, not just recognize. Favor problems that pull the idea out of memory over passive review.
+Spaced repetition: bring concepts back at growing intervals, and resurface ones a learner got wrong sooner.
+Interleaving: mix problem types within a session instead of blocking them, so learners choose the right approach, not just the last one.
+Mastery learning: require real mastery of a concept before unlocking the next, with a clear mastery signal.
+Scaffolding and desirable difficulty: start supported, then fade the support so problems stay hard enough to grow from.
+Immediate, explanatory feedback: you have this from Phase 1. Sharpen it so wrong answers teach.
+Pick a few, do them well, and measure or show their effect. In the Brainlift, explain which principles you used, how you implemented them, and why they fit your subject.
+
+Submission Requirements
+Due Sunday 10:59 PM CT:
+GitHub repo, with your chosen subject stated up front, a setup guide, architecture overview, and deployed link.
+Demo video (3 to 5 minutes), showing a full lesson in your subject, the interactive and visual elements, instant feedback, the course path and progress, your AI features, the learning science you added, and your architecture.
+Brainlift (1 page).
+Deployed app, public, with auth, working on mobile, supporting multiple concurrent learners, and still teaching with AI turned off.
+Deploy on Vercel, Firebase Hosting, or Render for simplicity.
+Brainlift
+Submit a 1-page brainlift documenting your AI-first build process and the point of view you developed. Cover: (1) Tools and workflow, what AI coding tools you used and how; (2) Prompting strategies, 3 to 5 prompts that worked, including how you got AI to help build interactive lessons in your subject; (3) Phase decisions, which AI features you chose and skipped in Phase 2, and which learning science principles you added in Phase 3 and why; (4) Code analysis, rough split of AI-generated vs hand-written; (5) Key learnings, the spiky opinions and insights you walked away with.
+Technical Stack
+Recommended, not required:
+Backend: Firebase, Supabase, or a custom server for auth, progress, and content.
+Frontend: React, Vue, or Svelte. HTML5 Canvas, SVG, or a library like D3 or Konva.js for interactive visuals and simulations.
+Content: a structured lesson format (JSON or similar) so you can add lessons in your subject without rewriting code, and so AI can generate them later.
+Phase 2 AI: OpenAI or Anthropic Claude for problem generation and hints, with a math engine (SymPy or math.js) for ground-truth checks where relevant.
+
+Use whatever stack ships the best product.
+Final Note
+This is what the best learning companies are building right now: not videos, but experiences you learn by doing. Build the app first, make it smart second, make it stick third. Pick one subject, go deep, and build a lesson someone can touch, get wrong, and figure out on their own. The closer you get, the more you understand what it takes to put a world-class teacher in every pocket.
+
+One subject taught deeply, by an app that works before the AI is even turned on, beats a feature-rich app that covers everything and teaches nothing.
+
+Build something real.

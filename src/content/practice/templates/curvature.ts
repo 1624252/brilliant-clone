@@ -29,6 +29,7 @@ const OBJECT_DISTANCES = [30, 40, 50]
 const convergingTemplate: PracticeTemplate = {
   id: 'curvature-converging',
   topicId: 'curvature',
+  difficulty: 1,
   generate: (rng) => {
     const objectDistance = rng.pick(OBJECT_DISTANCES)
     const sfx = rng.int(0, 1_000_000_000)
@@ -53,6 +54,7 @@ const convergingTemplate: PracticeTemplate = {
 const divergingTemplate: PracticeTemplate = {
   id: 'curvature-diverging',
   topicId: 'curvature',
+  difficulty: 2,
   generate: (rng) => {
     const objectDistance = rng.pick(OBJECT_DISTANCES)
     const sfx = rng.int(0, 1_000_000_000)
@@ -77,6 +79,7 @@ const divergingTemplate: PracticeTemplate = {
 const flatTemplate: PracticeTemplate = {
   id: 'curvature-flat',
   topicId: 'curvature',
+  difficulty: 3,
   generate: (rng) => {
     const objectDistance = rng.pick(OBJECT_DISTANCES)
     const sfx = rng.int(0, 1_000_000_000)

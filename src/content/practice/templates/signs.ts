@@ -33,6 +33,7 @@ const CHOICES: Record<string, Omit<Choice, 'correct'>> = {
 export const signConventionTemplate: PracticeTemplate = {
   id: 'sign-conventions-read',
   topicId: 'sign-conventions',
+  difficulty: 2,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const kind = rng.pick(CASES)

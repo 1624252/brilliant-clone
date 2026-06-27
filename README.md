@@ -66,9 +66,16 @@ draw-the-rays, predict, curvature):
   deterministic templates (`src/content/practice/`) that randomize friendly
   numbers — there is no AI and no fixed count, so the stream never "runs out"
   and no question total is shown.
-- **Adaptive + interleaved.** Per-topic mastery (right/wrong counts) is tracked
-  in `users/{uid}.mastery`; weaker topics are surfaced more often, and the same
-  topic never repeats back-to-back (`selectNextTopic`).
+- **Adaptive, interleaved & spaced (Phase 3 learning science).** Topic selection
+  (`select.ts` + `scheduling.ts`) weights each topic by
+  `retrievalWeight × spacingWeight`: weak topics (high wrong-rate) recur more,
+  a Leitner box spaces well-known topics further out while resurfacing missed
+  ones within ~2 questions, and the previous topic is excluded each draw so types
+  interleave. See [`docs/PRD.md` §21](./docs/PRD.md) for the full formula.
+- **Fading scaffolds & mastery.** Early problems on a topic are the most supported
+  variants with diagram overlays on; as the Leitner box climbs the problems get
+  harder and the overlays fade (Guided → Core → Challenge → ★ Mastered). A topic
+  is "Mastered" after five suitably-spaced correct recalls (top box).
 - **Streak & milestones.** A correct-answer streak plus milestone badges (10/50/
   100 correct, 5/10 in a row) keep the habit loop going; a correct answer also
   advances the daily streak.
@@ -99,7 +106,7 @@ domains by default, so Google sign-in works there with no extra setup.
 ```
 users/{uid}                      displayName, email, createdAt, streak{current,longest,lastActiveDate},
                                  practiceStats{totalAttempts,totalCorrect,questionStreak{...}},
-                                 mastery{ [topicId]: {attempts,correct,wrong,lastSeenAt} }
+                                 mastery{ [topicId]: {attempts,correct,wrong,box,lastSeenIndex,lastSeenAt} }
 users/{uid}/progress/{lessonId}  status, currentStepIndex, completedAt, updatedAt
 leaderboard/{uid}                displayName, totalCorrect, updatedAt   (public read, owner write)
 ```

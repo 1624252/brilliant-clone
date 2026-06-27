@@ -32,8 +32,8 @@ LensLab fixes this with manipulable simulations and immediate, specific feedback
 | Phase | Deadline | What it adds | This PRD |
 |-------|----------|--------------|----------|
 | **1 — MVP** | "Wednesday" | The core learn-by-doing app. **No AI.** | ✅ Specified here |
-| **2 — AI** | "Friday" | AI does something genuinely useful (e.g., generated hints, free-form Q&A, lesson generation from the content model). | ⏳ Future (§17) |
-| **3 — Learning science** | "Sunday" | Evidence-based techniques (spacing, retrieval practice, deeper mastery modeling). | ⏳ Future (§17) |
+| **2 — AI** | "Friday" | AI does something genuinely useful (e.g., generated hints, free-form Q&A, lesson generation from the content model). | ✅ Shipped (§22 — AI Simulation Studio) |
+| **3 — Learning science** | "Sunday" | Evidence-based techniques (retrieval practice, spaced repetition, interleaving, mastery learning, fading scaffolds). | ✅ Shipped (§21 — Practice mode) |
 
 The rule behind the order: *if the app does not teach without AI, no AI will save it.* LensLab is therefore designed so the unaided experience already teaches.
 
@@ -475,8 +475,8 @@ These are deliberately **not** in the MVP but the door is left open:
 
 - **More lenses content:** the **Lensmaker's Equation** (reshape glass via radii/index to hit a target *f*) and **Chromatic Aberration** (dispersion; build a doublet). The `placeholder()` helper and sequential-unlock model already accommodate new lessons.
 - **Exam-prep layer:** optional drill sets, formula practice, or assessment-style questions. This would be useful for learners studying for a test, but it is intentionally separate from the MVP's visual-intuition goal.
-- **Phase 2 — AI:** generated hints tuned to the learner's wrong attempt, a free-form "explain this" tutor, or generating new lessons from the content model.
-- **Phase 3 — Learning science:** spaced repetition, retrieval-practice scheduling, per-step mastery tracking and "review this" prompts (which would reintroduce per-step attempt persistence in the schema).
+- **Phase 2 — AI:** *shipped as the AI Simulation Studio (§22).* Still open: generated hints tuned to the learner's wrong attempt, or generating new lessons from the content model.
+- **Phase 3 — Learning science:** *shipped in Practice mode (§21):* retrieval practice, spaced repetition (Leitner scheduling), interleaving, mastery learning, and fading scaffolds. Still open: per-lesson-step spaced "review this" prompts.
 - **Platform:** instructor dashboards, social/leaderboards, offline/PWA, i18n, full WCAG audit.
 
 ---
@@ -519,12 +519,17 @@ These are deliberately **not** in the MVP but the door is left open:
 Layered on top of the MVP (and beyond the original scope in §8). **No AI**:
 practice problems are generated from deterministic, hand-authored templates.
 
+This is also where **Phase 3 (learning science)** lives: the practice stream is
+the engine that makes the learning stick. See §21.5 for the principle-by-principle
+mapping.
+
 ### 21.1 Goals
 
 - An **endless** practice stream that reuses the lessons' interactions (drag,
   draw-the-rays, predict, curvature) rather than multiple-choice trivia.
 - **Mastery tracking** that drives **repetition** of weak topics while
-  **interleaving** so the same topic never repeats back-to-back.
+  **interleaving** so the same topic never repeats back-to-back, **spaces**
+  topics out as they're learned, and **fades the scaffolding** as mastery grows.
 - **Never show a question total** — practice should feel unlimited.
 - A habit loop: a **correct-answer streak**, **milestones**, and a global
   **leaderboard** of all users by total correct answers.
@@ -539,12 +544,42 @@ practice problems are generated from deterministic, hand-authored templates.
   (`InteractiveStep` / `PredictStep` / `PlotRaysStep`) with randomized friendly
   numbers — so a single shared renderer (`StepView`) handles both lessons and
   practice. A seeded RNG (`rng.ts`) keeps generation deterministic for tests.
-- **Adaptive selection** (`select.ts`, pure + unit-tested). Each topic's weight
-  is `1 + 4 · wrongRate` with a Laplace-smoothed error rate, so weak topics
-  recur more and unseen topics get a moderate exploratory weight. The previous
-  topic is excluded each draw to force interleaving.
-- **Mastery signal.** The **first** submission per question decides the recorded
-  outcome (standard retrieval-practice). Counts live in `users/{uid}.mastery`.
+  Each template is tagged with a `difficulty` (1 = most supported … 3 = challenge).
+- **Adaptive selection** (`select.ts` + `scheduling.ts`, pure + unit-tested).
+  Each candidate topic's selection weight is the **product** of two factors:
+
+  ```
+  weight(topic) = retrievalWeight × spacingWeight
+
+  retrievalWeight = 1 + 4 · wrongRate            wrongRate = (wrong + 1)/(attempts + 2)   [Laplace-smoothed]
+  spacingWeight   = clamp(elapsed / reviewGap(box), 0.2, 4)
+                    elapsed     = totalAttempts − lastSeenIndex   (questions since last seen)
+                    reviewGap(b)= round(2 · 1.6^b)  →  2, 3, 5, 8, 13, 21
+  ```
+
+  - **Retrieval emphasis** keeps pulling on weak topics; unseen topics get a
+    moderate exploratory weight.
+  - **Spacing dueness** damps a just-seen topic (`elapsed < gap`) and lifts an
+    overdue one. The review gap **grows with the Leitner box**, so well-known
+    topics are spaced further out; a missed topic resets to box 0 and resurfaces
+    within ~2 questions.
+  - The previous topic is **excluded** each draw to force interleaving.
+- **Leitner box & spaced repetition.** Each topic carries a `box` (0..5) that
+  `nextBox()` climbs on a correct first attempt and resets to 0 on a miss.
+  `lastSeenIndex` records the `totalAttempts` value when the topic was last shown,
+  giving the stream its own clock for measuring `elapsed`.
+- **Mastery learning + signal.** The **first** submission per question decides the
+  recorded outcome (standard retrieval practice). A topic is **Mastered** once its
+  box reaches the top (`MAX_BOX = 5`) — i.e. recalled correctly across five
+  suitably-spaced reviews, not crammed once. The mastery strip shows a ★ badge.
+  Course **lessons** unlock sequentially (you must complete a lesson to open the
+  next — `deriveChapterStatus`); practice mastery is the per-topic signal.
+- **Fading scaffolds / desirable difficulty.** `targetDifficulty(box)` maps the
+  box to a target difficulty (0–1 → guided, 2–3 → core, 4–5 → challenge);
+  `generateProblem(topic, rng, target)` then prefers templates nearest that
+  difficulty. While the box is low the diagram also shows measurement overlays
+  (f, dₒ, dᵢ) as support; those overlays fade away as the box climbs. The current
+  stage is surfaced as a **Guided / Core / Challenge / Mastered** chip.
 - **Stats & streak.** `users/{uid}.practiceStats` holds `totalAttempts`,
   `totalCorrect`, and a consecutive-correct `questionStreak`. A correct answer
   also bumps the daily learning streak.
@@ -574,6 +609,17 @@ leaderboard/{uid}
 - New route `/topics/:topicId/practice` → `PracticeView`.
 - Entry points: a **Practice problems** card on the roadmap and a **Practice
   problems** button on a lesson's finish screen.
+
+### 21.5 Phase 3 — learning-science principle mapping
+
+| Principle | Where it lives | How it's implemented |
+|-----------|----------------|----------------------|
+| **Retrieval practice** | every step | Problems make the learner *produce* an answer (drag/draw/predict), not recognize one; the **first** attempt is the recorded mastery signal. |
+| **Spaced repetition** | `scheduling.ts` `reviewGap`/`nextBox`, `select.ts` `spacingWeight` | A Leitner box per topic sets a review gap that **grows** (2→21 questions) as the topic is recalled correctly and **collapses to ~2** on a miss, so missed topics resurface sooner and known ones spread out. |
+| **Interleaving** | `select.ts` `selectNextTopic` | The previous topic is excluded every draw, so problem types are mixed and the learner must *choose* the right approach. |
+| **Mastery learning** | `scheduling.ts` `isMastered`, `lessonStatus.ts` | Lessons unlock only after the prior lesson is completed; a topic is "Mastered" only at the top Leitner box (5 spaced correct recalls), shown with a ★. |
+| **Scaffolding & desirable difficulty** | `scheduling.ts` `targetDifficulty`, `templates/index.ts` `generateProblem` | Early (low box) problems are the most supported variants with diagram overlays on; as the box climbs, harder variants are chosen and the overlays fade. |
+| **Immediate, explanatory feedback** | `StepView` (from Phase 1) | Every attempt gets <100 ms local correct/incorrect **plus** a specific explanation/hint; the live diagram is a continuous feedback channel. |
 
 ## 22. AI Simulation Studio (Phase 2)
 

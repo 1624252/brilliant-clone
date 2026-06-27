@@ -1,5 +1,6 @@
 import type { Control, StepDefinition } from '../../types'
 import type { Rng } from '../rng'
+import type { Difficulty } from '../scheduling'
 import type { PracticeTopicId } from '../topics'
 
 // A template produces a concrete lesson-style step from a seed, so one template
@@ -8,6 +9,11 @@ import type { PracticeTopicId } from '../topics'
 export interface PracticeTemplate {
   id: string
   topicId: PracticeTopicId
+  /**
+   * Relative difficulty within the topic (1 = most supported … 3 = challenge).
+   * Drives the fading-scaffold progression; defaults to 2 (core) when omitted.
+   */
+  difficulty?: Difficulty
   generate: (rng: Rng) => StepDefinition
 }
 

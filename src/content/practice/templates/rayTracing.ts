@@ -18,6 +18,7 @@ function fitHalfWidth(objectDistance: number, focalLength: number): number {
 export const rayTracingTemplate: PracticeTemplate = {
   id: 'ray-tracing-principal',
   topicId: 'ray-tracing',
+  difficulty: 2,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const kind = rng.pick(CASES)

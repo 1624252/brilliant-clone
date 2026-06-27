@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { StepView, isPredictStep, isPlotStep, type StepDefinition } from '../content'
 import {
   generateProblem,
+  isMastered,
   liveRng,
+  masteryLevel,
   practiceTopicById,
   practiceTopics,
   selectNextTopic,
+  targetDifficulty,
   type GeneratedProblem,
   type PracticeTopicId,
 } from '../content/practice'
@@ -30,7 +33,17 @@ interface PracticeViewProps {
 }
 
 const thinLensMeasures: MeasureFlags = { f: true, do: true, di: true, m: false }
+// Scaffold overlays shown while a topic is still being built (low Leitner box);
+// they fade as the box climbs so the learner reasons without the annotations.
+const scaffoldMeasures: MeasureFlags = { f: true, do: true, di: true, m: false }
 const PRAISE = ['Nice!', 'Sharp!', 'Brilliant!', 'Yes!', 'Spot on!', 'Crisp!', 'Boom!']
+
+const LEVEL_LABELS = {
+  guided: 'Guided',
+  core: 'Core',
+  challenge: 'Challenge',
+  mastered: 'Mastered',
+} as const
 
 /**
  * A diagram scene sized so the object, focal marks, and (finite) image stay
@@ -61,8 +74,8 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
   // render in a way the rules-of-refs lint disallows).
   const [rng] = useState(() => liveRng())
   const [problem, setProblem] = useState<GeneratedProblem>(() => {
-    const topic = selectNextTopic({}, null, rng)
-    return generateProblem(topic, rng)
+    const topic = selectNextTopic({}, null, rng, 0)
+    return generateProblem(topic, rng, targetDifficulty(0))
   })
   // Interleave from the very first problem onward.
   const [lastTopicId, setLastTopicId] = useState<PracticeTopicId | null>(problem.topicId)
@@ -123,9 +136,11 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
   }
 
   function nextQuestion() {
-    // Read the freshest mastery (from the latest snapshot) to weight selection.
-    const topic = selectNextTopic(progress.mastery, lastTopicId, rng)
-    setProblem(generateProblem(topic, rng))
+    // Read the freshest mastery + stream position (from the latest snapshot) so
+    // selection weights by error rate and spacing, and difficulty fades in.
+    const topic = selectNextTopic(progress.mastery, lastTopicId, rng, totalAttempts)
+    const box = progress.mastery[topic]?.box ?? 0
+    setProblem(generateProblem(topic, rng, targetDifficulty(box)))
     setLastTopicId(topic)
     recordedRef.current = false
     firstTryRef.current = true
@@ -133,6 +148,17 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
   }
 
   const topic = practiceTopicById[problem.topicId]
+  // Scaffold for the current problem: annotate the diagram while the topic's box
+  // is low, then fade the support away as mastery climbs (desirable difficulty).
+  const currentBox = progress.mastery[problem.topicId]?.box ?? 0
+  const level = masteryLevel(currentBox)
+  const scaffolded = currentBox <= 1
+  const isThinLens = problem.topicId === 'thin-lens'
+  const initialMeasures: MeasureFlags = isThinLens
+    ? thinLensMeasures
+    : scaffolded
+      ? scaffoldMeasures
+      : {}
 
   // Milestone celebration (mirrors the lesson roadmap pattern).
   const milestones = derivePracticeMilestones(stats)
@@ -204,7 +230,20 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
 
       <main className="practice__main">
         <section className="practice__problem card">
-          <span className="practice__topic-chip">{topic.label}</span>
+          <div className="practice__chips">
+            <span className="practice__topic-chip">{topic.label}</span>
+            <span
+              className={`practice__level-chip practice__level-chip--${level}`}
+              title={
+                level === 'mastered'
+                  ? `${topic.label} mastered — spaced reviews keep it fresh.`
+                  : `Support level: ${LEVEL_LABELS[level]}. Problems get harder and the diagram hints fade as you master this topic.`
+              }
+            >
+              {level === 'mastered' ? '★ ' : ''}
+              {LEVEL_LABELS[level]}
+            </span>
+          </div>
 
           {burst && (
             <div
@@ -232,8 +271,8 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
             onNext={nextQuestion}
             onAttempt={handleAttempt}
             onSolvedChange={handleSolvedChange}
-            featureNumbersTools={problem.topicId === 'thin-lens'}
-            initialMeasures={problem.topicId === 'thin-lens' ? thinLensMeasures : {}}
+            featureNumbersTools={isThinLens}
+            initialMeasures={initialMeasures}
           />
         </section>
 
@@ -261,15 +300,23 @@ export function PracticeView({ uid, displayName, progress, onBack }: PracticeVie
             const m = progress.mastery[t.id]
             const seen = (m?.attempts ?? 0) > 0
             const strength = seen ? Math.round(((m?.correct ?? 0) / (m?.attempts ?? 1)) * 100) : 0
+            const mastered = isMastered(m?.box)
             return (
               <div
                 key={t.id}
                 className={`mastery-pip ${t.id === problem.topicId ? 'is-current' : ''} ${
                   seen ? '' : 'is-new'
-                }`}
+                } ${mastered ? 'is-mastered' : ''}`}
                 title={`${t.label}: ${t.description}`}
               >
-                <span className="mastery-pip__label">{t.label}</span>
+                <span className="mastery-pip__label">
+                  {t.label}
+                  {mastered && (
+                    <span className="mastery-pip__badge" title="Mastered — recalled across spaced reviews">
+                      ★
+                    </span>
+                  )}
+                </span>
                 <span className="mastery-pip__track">
                   <span className="mastery-pip__fill" style={{ width: `${strength}%` }} />
                 </span>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { makeRng } from './rng'
-import { templatesByTopic } from './templates'
+import { generateProblem, templatesByTopic } from './templates'
 import { objectControl } from './templates/types'
 import { practiceTopicIds, type PracticeTopicId } from './topics'
 import { isPredictStep, isPlotStep, type InteractiveStep, type StepDefinition } from '../types'
@@ -76,6 +76,25 @@ describe('practice templates', () => {
       }
     })
   }
+
+  it('targets the nearest available difficulty for a topic with a range', () => {
+    // thin-lens has templates at difficulty 1, 2, 3, 3.
+    const easy = new Set<string>()
+    const hard = new Set<string>()
+    for (let seed = 0; seed < 200; seed++) {
+      easy.add(generateProblem('thin-lens', makeRng(seed + 1), 1).templateId)
+      hard.add(generateProblem('thin-lens', makeRng(seed + 1), 3).templateId)
+    }
+    // Easiest target only ever yields the difficulty-1 magnifier.
+    expect([...easy]).toEqual(['thin-lens-magnifier'])
+    // Hardest target only yields the two difficulty-3 templates.
+    expect([...hard].sort()).toEqual(['thin-lens-2f-same-size', 'thin-lens-real-reduced'])
+  })
+
+  it('still generates a problem when a topic has a single template', () => {
+    const p = generateProblem('convex-images', makeRng(7), 1)
+    expect(p.templateId).toBe('convex-image-type')
+  })
 
   it('sign-convention answers match the engine classification', () => {
     const template = templatesByTopic['sign-conventions'][0]

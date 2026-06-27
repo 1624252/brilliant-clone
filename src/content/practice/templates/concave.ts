@@ -7,6 +7,7 @@ import { FOCALS, objectControl, type PracticeTemplate } from './types'
 const concaveRealImpossible: PracticeTemplate = {
   id: 'concave-real-impossible',
   topicId: 'concave-images',
+  difficulty: 1,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)
@@ -45,6 +46,7 @@ const concaveRealImpossible: PracticeTemplate = {
 const concaveMagnify: PracticeTemplate = {
   id: 'concave-magnify',
   topicId: 'concave-images',
+  difficulty: 2,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)
@@ -82,6 +84,7 @@ const concaveMagnify: PracticeTemplate = {
 const concaveMinify: PracticeTemplate = {
   id: 'concave-minify-far',
   topicId: 'concave-images',
+  difficulty: 3,
   generate: (rng) => {
     const f = rng.pick(FOCALS)
     const sfx = rng.int(0, 1_000_000_000)

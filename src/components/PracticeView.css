@@ -123,6 +123,13 @@
   gap: 1.1rem;
 }
 
+.practice__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .practice__topic-chip {
   align-self: flex-start;
   padding: 0.2rem 0.7rem;
@@ -131,6 +138,47 @@
   color: var(--text);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+/* Support-level chip: signals the fading-scaffold / desirable-difficulty stage. */
+.practice__level-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: var(--bg-elev);
+}
+
+.practice__level-chip--guided {
+  border-color: color-mix(in srgb, var(--c-do) 55%, var(--border));
+  color: var(--c-do);
+}
+.practice__level-chip--core {
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--border));
+  color: var(--text);
+}
+.practice__level-chip--challenge {
+  border-color: color-mix(in srgb, var(--c-di) 60%, var(--border));
+  color: var(--c-di);
+}
+.practice__level-chip--mastered {
+  border-color: color-mix(in srgb, var(--c-f) 60%, var(--border));
+  color: var(--c-f);
+  background: color-mix(in srgb, var(--c-f) 14%, transparent);
+}
+
+.mastery-pip__badge {
+  margin-left: 0.3rem;
+  color: var(--c-f);
+}
+
+.mastery-pip.is-mastered {
+  border-color: color-mix(in srgb, var(--c-f) 50%, var(--border));
+}
+.mastery-pip.is-mastered .mastery-pip__fill {
+  background: linear-gradient(90deg, var(--c-f), var(--accent));
 }
 
 /* Milestone toast (self-contained so practice works without the home screen). */

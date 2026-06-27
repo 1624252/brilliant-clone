@@ -7,6 +7,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { nextBox } from '../content/practice'
 import { localDay, type Streak } from './progress'
 
 // Practice persistence: aggregate stats and per-topic mastery on the user doc,
@@ -30,6 +31,10 @@ export interface TopicMastery {
   attempts: number
   correct: number
   wrong: number
+  /** Leitner box (0..MAX_BOX): climbs on a correct answer, resets to 0 on a miss. */
+  box?: number
+  /** The `practiceStats.totalAttempts` value when this topic was last shown. */
+  lastSeenIndex?: number
   lastSeenAt?: Timestamp | null
 }
 
@@ -69,7 +74,8 @@ export async function recordPracticeAttempt(
   }
 
   const prevStats = data.practiceStats ?? emptyPracticeStats()
-  const prevTopic = data.mastery?.[attempt.topicId] ?? { attempts: 0, correct: 0, wrong: 0 }
+  const prevTopic =
+    data.mastery?.[attempt.topicId] ?? { attempts: 0, correct: 0, wrong: 0, box: 0 }
   const prevStreak = data.streak ?? { current: 0, longest: 0, lastActiveDate: '' }
 
   const nextQCurrent = attempt.correct ? (prevStats.questionStreak?.current ?? 0) + 1 : 0
@@ -87,6 +93,10 @@ export async function recordPracticeAttempt(
     attempts: (prevTopic.attempts ?? 0) + 1,
     correct: (prevTopic.correct ?? 0) + (attempt.correct ? 1 : 0),
     wrong: (prevTopic.wrong ?? 0) + (attempt.correct ? 0 : 1),
+    // Leitner box drives spaced repetition; lastSeenIndex marks where in the
+    // stream the topic was last shown so selection can measure "elapsed".
+    box: nextBox(prevTopic.box ?? 0, attempt.correct),
+    lastSeenIndex: nextStats.totalAttempts,
     lastSeenAt: serverTimestamp(),
   }
 
