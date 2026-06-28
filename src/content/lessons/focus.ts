@@ -7,14 +7,15 @@ const FOCAL_LENGTH = 20
 const objectControl = {
   key: 'objectDistance',
   type: 'drag-axis' as const,
-  min: 5,
+  // Allow the candle all the way to the lens (0); don't clamp at 5.
+  min: 0,
   // 80 is the visible left edge of the scene; sliding/dragging to it means ∞.
   max: 80,
   step: 0.01,
   label: 'Object distance',
   allowInfinity: true,
-  // Snap to F, 2F, and 3F so key positions are easy to hit.
-  snaps: [FOCAL_LENGTH, 2 * FOCAL_LENGTH, 3 * FOCAL_LENGTH],
+  // Snap to 0, F, 2F, and 3F so key positions are easy to hit.
+  snaps: [0, FOCAL_LENGTH, 2 * FOCAL_LENGTH, 3 * FOCAL_LENGTH],
 }
 
 export const focusLesson: LessonDefinition = {

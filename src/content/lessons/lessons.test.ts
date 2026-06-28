@@ -40,11 +40,14 @@ describe('lesson roadmap integrity', () => {
     }
   })
 
-  it('allows every concave-lens drag step to reach zero object distance', () => {
-    const concaveLesson = lessons.find((l) => l.id === 'concave-lenses')
+  it.each([
+    ['concave-lenses', 'concave'],
+    ['focusing-light', 'convex'],
+  ])('allows every %s drag step to reach zero object distance', (lessonId) => {
+    const lesson = lessons.find((l) => l.id === lessonId)
 
-    expect(concaveLesson).toBeDefined()
-    for (const step of concaveLesson?.steps ?? []) {
+    expect(lesson).toBeDefined()
+    for (const step of lesson?.steps ?? []) {
       if (isPredictStep(step) || isPlotStep(step)) continue
       const objectControl = step.controls.find(
         (control) => control.key === 'objectDistance' && control.type === 'drag-axis',
